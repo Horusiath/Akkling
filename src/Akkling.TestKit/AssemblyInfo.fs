@@ -2,7 +2,7 @@
 open System.Reflection
 open System.Runtime.InteropServices
 
-[<assembly: AssemblyTitleAttribute("Akkling")>]
+[<assembly: AssemblyTitleAttribute("Akkling.TestKit")>]
 [<assembly: AssemblyProductAttribute("Akkling")>]
 [<assembly: AssemblyDescriptionAttribute("F# wrapper library for Akka.NET")>]
 [<assembly: AssemblyCopyrightAttribute("Copyright © 2015 Bartosz Sypytkowski")>]
@@ -10,6 +10,7 @@ open System.Runtime.InteropServices
 [<assembly: CLSCompliantAttribute(true)>]
 [<assembly: AssemblyVersionAttribute("0.1")>]
 [<assembly: AssemblyFileVersionAttribute("0.1")>]
+
 do ()
 
 module internal AssemblyVersionInformation =

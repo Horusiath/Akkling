@@ -1,4 +1,12 @@
-﻿[<AutoOpen>]
+﻿//-----------------------------------------------------------------------
+// <copyright file="FsApi.fs" company="Akka.NET Project">
+//     Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
+//     Copyright (C) 2013-2015 Akka.NET project <https://github.com/akkadotnet/akka.net>
+//     Copyright (C) 2013-2015 Bartosz Sypytkowski <gttps://github.com/Horusiath>
+// </copyright>
+//-----------------------------------------------------------------------
+
+[<AutoOpen>]
 module Akkling.Actors
 
 open Akka.Actor
@@ -149,18 +157,18 @@ let inline (<!) (actorRef : #ICanTell<'Message>) (msg : 'Message) : unit =
 let inline (<?) (tell : #ICanTell<'Message>) (msg : 'Message) : Async<'Response> = tell.Ask<'Response>(msg, None)
 
 /// Pipes an output of asynchronous expression directly to the recipients mailbox.
-let pipeTo (computation : Async<'Message>) (recipient : ICanTell<'Message>) (sender : IActorRef) : unit = 
+let pipeTo (sender : IActorRef) (recipient : ICanTell<'Message>) (computation : Async<'Message>): unit = 
     let success (result : 'Message) : unit = recipient.Tell(result, sender)
     let failure (err : exn) : unit = recipient.Tell(Status.Failure(err), sender)
     Async.StartWithContinuations(computation, success, failure, failure)
 
 /// Pipe operator which sends an output of asynchronous expression directly to the recipients mailbox.
 let inline (|!>) (computation : Async<'Message>) (recipient : ICanTell<'Message>) = 
-    pipeTo computation recipient ActorRefs.NoSender
+    pipeTo ActorRefs.NoSender recipient computation
 
 /// Pipe operator which sends an output of asynchronous expression directly to the recipients mailbox
 let inline (<!|) (recipient : ICanTell<'Message>) (computation : Async<'Message>) = 
-    pipeTo computation recipient ActorRefs.NoSender
+    pipeTo ActorRefs.NoSender recipient computation
 
 type IO<'T> = 
     | Input

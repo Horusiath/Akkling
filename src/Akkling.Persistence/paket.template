@@ -14,7 +14,7 @@ requireLicenseAcceptance
 copyright
     Copyright 2015
 tags
-    akka.net fsharp
+    akka.net fsharp persistence
 summary
     F# wrapper library for Akka.NET
 description
