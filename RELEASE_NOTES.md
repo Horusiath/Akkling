@@ -2,3 +2,4 @@
 * Initial release
 * Typed actor refs
 * Simplified API
+* Akka.Persistence plugin
