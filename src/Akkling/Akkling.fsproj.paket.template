@@ -1,0 +1,13 @@
+type project
+id Akkling
+authors Bartosz Sypytkowski
+projectUrl http://github.com/Horusiath/Akklingh/Akkling
+licenseUrl http://github.com/Horusiath/Akkling/blob/master/LICENSE
+requireLicenseAcceptance false
+copyright Copyright 2015
+tags
+    akka.net fsharp
+summary
+    F# wrapper library for Akka.NET
+description
+    Library used for working with Akka.NET using F# in type safe manner with functional principles in mind

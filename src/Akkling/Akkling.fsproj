@@ -70,7 +70,7 @@
     <Compile Include="Logging.fs" />
     <Compile Include="Utils.fs" />
     <None Include="paket.references" />
-    <None Include="paket.template" />
+    <None Include="Akkling.fsproj.paket.template" />
     <None Include="app.config.install.xdt" />
   </ItemGroup>
   <ItemGroup>

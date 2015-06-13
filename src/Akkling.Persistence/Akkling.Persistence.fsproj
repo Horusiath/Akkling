@@ -56,7 +56,7 @@
     <Compile Include="AtLeastOnceDelivery.fs" />
     <Compile Include="Spawning.fs" />
     <None Include="paket.references" />
-    <None Include="paket.template" />
+    <None Include="Akkling.Persistence.fsproj.paket.template" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
