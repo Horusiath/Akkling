@@ -1,14 +1,14 @@
 NUGET
   remote: https://nuget.org/api/v2
   specs:
-    Akka (1.0.2)
+    Akka (1.0.3)
       Newtonsoft.Json (>= 6.0.8)
-    Akka.Persistence (1.0.2.9-beta)
-      Akka (>= 1.0.2)
+    Akka.Persistence (1.0.3.0-beta)
+      Akka (>= 1.0.3)
       Google.ProtocolBuffers (>= 2.4.1.521)
       Newtonsoft.Json (>= 6.0.8)
-    Akka.TestKit (1.0.2)
-      Akka (>= 1.0.2)
+    Akka.TestKit (1.0.3)
+      Akka (>= 1.0.3)
     FAKE (3.35.1)
     FsCheck (2.0.1)
       FSharp.Core (>= 3.1.2.1)

@@ -1,8 +1,8 @@
 ﻿//-----------------------------------------------------------------------
-// <copyright file="FsApi.fs" company="Akka.NET Project">
+// <copyright file="Schedulers.fs" company="Akka.NET Project">
 //     Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
 //     Copyright (C) 2013-2015 Akka.NET project <https://github.com/akkadotnet/akka.net>
-//     Copyright (C) 2013-2015 Bartosz Sypytkowski <gttps://github.com/Horusiath>
+//     Copyright (C) 2015 Bartosz Sypytkowski <gttps://github.com/Horusiath>
 // </copyright>
 //-----------------------------------------------------------------------
 
@@ -12,7 +12,7 @@ module Akkling.Schedulers
 open Akka.Actor
 open System
 
-type Akka.Actor.IActionScheduler with
+type IActionScheduler with
     
     /// <summary>
     /// Schedules a function to be invoked repeatedly in the provided time intervals. 
@@ -39,7 +39,7 @@ type Akka.Actor.IActionScheduler with
         | Some c -> this.ScheduleOnce(after, action, c)
         | None -> this.ScheduleOnce(after, action)
 
-type Akka.Actor.ITellScheduler with
+type ITellScheduler with
     
     /// <summary>
     /// Schedules a <paramref name="message"/> to be sent to the provided <paramref name="receiver"/> in specified time intervals.

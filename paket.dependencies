@@ -1,14 +1,14 @@
 source https://nuget.org/api/v2
 
-nuget Akka
-nuget Akka.Persistence
-nuget Akka.TestKit
+nuget Akka >= 1.0.0
+nuget Akka.Persistence >= 1.0.0
+nuget Akka.TestKit >= 1.0.0
 nuget FAKE
 nuget FSPowerPack.Linq.Community
 nuget FSharp.Formatting
 nuget FsCheck
 nuget FsCheck.Xunit
-nuget FsPickler
+nuget FsPickler >= 0.9.11
 nuget Newtonsoft.Json >= 7.0.1-beta3
 nuget Octokit
 nuget SourceLink
