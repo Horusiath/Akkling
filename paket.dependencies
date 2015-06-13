@@ -9,7 +9,7 @@ nuget FSharp.Formatting
 nuget FsCheck
 nuget FsCheck.Xunit
 nuget FsPickler
-nuget Newtonsoft.Json >= 7
+nuget Newtonsoft.Json >= 7.0.1-beta3
 nuget Octokit
 nuget SourceLink
 nuget xunit.runner.console
