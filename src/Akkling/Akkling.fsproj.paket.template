@@ -1,7 +1,7 @@
 type project
 id Akkling
 authors Bartosz Sypytkowski
-projectUrl http://github.com/Horusiath/Akklingh/Akkling
+projectUrl http://github.com/Horusiath/Akkling
 licenseUrl http://github.com/Horusiath/Akkling/blob/master/LICENSE
 requireLicenseAcceptance false
 copyright Copyright 2015

@@ -5,7 +5,6 @@
 //     Copyright (C) 2013-2015 Bartosz Sypytkowski <gttps://github.com/Horusiath>
 // </copyright>
 //-----------------------------------------------------------------------
-
 module Akkling.Tests.Api
 
 open Akkling
@@ -13,62 +12,68 @@ open Akka.Actor
 open System
 open Xunit
 
-
 [<Fact>]
-let ``configuration loader should load data from app.config`` () =
+let ``configuration loader should load data from app.config``() = 
     let config = Configuration.load()
-    config.HasPath "akka.test.value" 
-    |> equals true
-    config.GetInt "akka.test.value"
-    |> equals 10
+    config.HasPath "akka.test.value" |> equals true
+    config.GetInt "akka.test.value" |> equals 10
 
 [<Fact>]
-let ``can serialize expression decider`` () =
+let ``can serialize expression decider``() = 
     let decider = ExprDecider <@ fun e -> Directive.Resume @>
     use sys = System.create "system" (Configuration.defaultConfig())
     let serializer = sys.Serialization.FindSerializerFor decider
     let bytes = serializer.ToBinary decider
-    let des = serializer.FromBinary (bytes, typeof<ExprDecider>) :?> IDecider
-    des.Decide (Exception())
-    |> equals (Directive.Resume)
+    let des = serializer.FromBinary(bytes, typeof<ExprDecider>) :?> IDecider
+    des.Decide(Exception()) |> equals (Directive.Resume)
 
-type TestUnion = 
-    | A of string
-    | B of int * string
+type TraceableMessage<'a> = 
+    { Trace : TraceMetadata
+      Message : 'a }
 
-type TestUnion2 = 
-    | C of string * TestUnion
-    | D of int
+and TraceMetadata = 
+    | NoTrace
+    | Trace of TraceId : uint64 * SpanId : uint64 * ParentSpanId : uint64 option
 
+type Availability = 
+    | NotFound
+    | UnableToDetermineAvailability of Reason : string
+    | Availability of AvailabilityAtTimeHorizon list
+
+and AvailabilityAtTimeHorizon = 
+    { AvailableAsOf : DateTime
+      Quantity : decimal }
+
+type ItemAvailabilityMessage = 
+    | QueryItemAvailability of Handle : string * Options : AvailabilityOptions
+    | Reconfigure
+
+and AvailabilityOptions = 
+    { SkipCache : bool }
+    static member Defaults = { SkipCache = false }
+
+type ItemAvailabilityReply = 
+    | AvailabilityReply of Handle : string * Availability : Availability
 
 [<Fact>]
-let ``can serialize discriminated unions`` () =
-    let x = B (23,"hello")
+let ``can serialize discriminated unions``() = 
+    let x = 
+        { Trace = Trace(10UL, 1000UL, Some 11000UL)
+          Message = 
+              Availability([ { AvailableAsOf = DateTime.Now
+                               Quantity = 10M } ]) }
+    
     use sys = System.create "system" (Configuration.defaultConfig())
     let serializer = sys.Serialization.FindSerializerFor x
     let bytes = serializer.ToBinary x
-    let des = serializer.FromBinary (bytes, typeof<TestUnion>) :?> TestUnion
-    des
-    |> equals x
+    let des = serializer.FromBinary(bytes, typeof<TraceableMessage<Availability>>) :?> TraceableMessage<Availability>
+    des |> equals x
 
 [<Fact>]
-let ``can serialize nested discriminated unions`` () =
-    let x = C("bar",B (23,"hello"))
-    use sys = System.create "system" (Configuration.defaultConfig())
-    let serializer = sys.Serialization.FindSerializerFor x
-    let bytes = serializer.ToBinary x
-    let des = serializer.FromBinary (bytes, typeof<TestUnion2>) :?> TestUnion2
-    des
-    |> equals x
-
-[<Fact>]
-let ``can serialize typed actor ref`` () =
+let ``can serialize typed actor ref``() = 
     use sys = System.create "system" (Configuration.defaultConfig())
     let echo = spawn sys "echo" <| actorOf2 (fun mailbox msg -> mailbox.Sender() <! msg)
-
     let serializer = sys.Serialization.FindSerializerFor echo
     let bytes = serializer.ToBinary echo
-    let des = serializer.FromBinary (bytes, echo.GetType()) :?> IActorRef<string>
-    des
-    |> equals echo
-
+    let des = serializer.FromBinary(bytes, echo.GetType()) :?> IActorRef<string>
+    des |> equals echo

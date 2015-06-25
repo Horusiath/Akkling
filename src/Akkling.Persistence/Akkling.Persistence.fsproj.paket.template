@@ -1,14 +1,13 @@
 type project
 id Akkling.Persistence
 authors Bartosz Sypytkowski
-projectUrl http://github.com/Horusiath/Akklingh
+projectUrl http://github.com/Horusiath/Akkling
 licenseUrl http://github.com/Horusiath/Akkling/blob/master/LICENSE
 requireLicenseAcceptance false
 copyright Copyright 2015
 tags
     akka.net fsharp
 summary
-    F# wrapper library for Akka.NET
+    F# wrapper library for Akka.NET with persistence support
 description
     Library used for working with Akka.NET using F# in type safe manner with functional principles in mind
-
