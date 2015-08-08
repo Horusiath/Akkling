@@ -81,15 +81,23 @@ type Deliverer<'Command, 'Event, 'State>(actor : Delivery<'Command, 'Event, 'Sta
             behavior <- match msg with
                         | :? 'Command as cmd -> f cmd
                         | _ -> 
-                            x.Unhandled msg
-                            behavior
+                            let serializer = UntypedActor.Context.System.Serialization.FindSerializerForType typeof<obj> :?> Akka.Serialization.NewtonSoftJsonSerializer
+                            match Serialization.tryDeserializeJObject serializer.Serializer msg with
+                            | Some(cmd) -> f cmd
+                            | None -> 
+                                x.Unhandled msg
+                                behavior
         | Return _ -> x.PostStop()
         true
     
     override x.ReceiveRecover(msg : obj) = 
         match msg with
         | :? 'Event as e -> state <- aggregate.apply state e
-        | _ -> this.Unhandled() // ignore?      
+        | _ -> 
+            let serializer = UntypedActor.Context.System.Serialization.FindSerializerForType typeof<obj> :?> Akka.Serialization.NewtonSoftJsonSerializer
+            match Serialization.tryDeserializeJObject serializer.Serializer msg with
+            | Some(e) -> state <- aggregate.apply state e
+            | None -> x.Unhandled msg
         true
     
     override x.PostStop() = 

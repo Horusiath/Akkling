@@ -117,10 +117,14 @@ type FunPersistentView<'Message, 'State>(actor : View<'Message, 'State> -> Cont<
         match state with
         | Func f -> 
             state <- match msg with
-                     | :? 'Message as m -> f m
-                     | _ -> 
-                         x.Unhandled msg
-                         state
+                    | :? 'Message as m -> f m
+                    | _ -> 
+                        let serializer = UntypedActor.Context.System.Serialization.FindSerializerForType typeof<obj> :?> Akka.Serialization.NewtonSoftJsonSerializer
+                        match Serialization.tryDeserializeJObject serializer.Serializer msg with
+                        | Some(e) -> 
+                            state <- f e
+                            state
+                        | None -> state 
         | Return _ -> x.PostStop()
         true
     

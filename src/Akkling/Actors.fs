@@ -13,8 +13,22 @@ open Akka.Actor
 open Akka.Util
 open System
 open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Linq.QuotationEvaluation
-    
+open Microsoft.FSharp.Linq.QuotationEvaluation    
+open System.Threading.Tasks
+
+let private tryCast (t:Task<obj>) : 'Message =
+    match t.Result with
+    | :? 'Message as m -> m
+    | o ->
+        let context = Akka.Actor.Internal.InternalCurrentActorCellKeeper.Current
+        if context = null 
+        then failwith "Cannot cast JObject outside the actor system context "
+        else
+            let serializer = context.System.Serialization.FindSerializerForType typeof<'Message> :?> Akka.Serialization.NewtonSoftJsonSerializer
+            match Serialization.tryDeserializeJObject serializer.Serializer o with
+            | Some m -> m
+            | None -> raise (InvalidCastException("Tried to cast JObject to " + typeof<'Message>.ToString()))
+
 /// <summary>
 /// Typed version of <see cref="ICanTell"/> interface. Allows to tell/ask using only messages of restricted type.
 /// </summary>
@@ -58,7 +72,8 @@ type TypedActorRef<'Message>(underlyingRef : IActorRef) =
         
         member __.Tell(message : 'Message, sender : IActorRef) = underlyingRef.Tell(message :> obj, sender)
         member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<'Response> = 
-            Async.AwaitTask(underlyingRef.Ask<'Response>(message, Option.toNullable timeout))
+            underlyingRef.Ask(message, Option.toNullable timeout).ContinueWith(Func<_,'Response>(tryCast), TaskContinuationOptions.AttachedToParent|||TaskContinuationOptions.ExecuteSynchronously)
+            |> Async.AwaitTask
         member __.Path = underlyingRef.Path
         
         member __.Equals other = 
@@ -142,7 +157,7 @@ type TypedActorSelection<'Message>(selection : ActorSelection) =
         member __.Tell(message : 'Message, sender : IActorRef) : unit = selection.Tell(message, sender)
         member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<'Response> = 
             Async.AwaitTask(selection.Ask<'Response>(message, Option.toNullable timeout))    
-
+            
 /// <summary>
 /// Unidirectional send operator. 
 /// Sends a message object directly to actor tracked by actorRef. 
@@ -372,7 +387,11 @@ type FunActor<'Message, 'Returned>(actor : Actor<'Message> -> Cont<'Message, 'Re
         | Func f -> 
             match msg with
             | :? 'Message as m -> state <- f m
-            | _ -> x.Unhandled msg
+            | _ -> 
+                let serializer = UntypedActor.Context.System.Serialization.FindSerializerForType typeof<obj> :?> Akka.Serialization.NewtonSoftJsonSerializer
+                match Serialization.tryDeserializeJObject serializer.Serializer msg with
+                | Some(m) -> state <- f m
+                | None -> x.Unhandled msg
         | Return _ -> x.PostStop()
     
     override x.PostStop() = 

@@ -166,14 +166,22 @@ type FunPersistentActor<'Command, 'Event, 'State>(actor : Eventsourced<'Command,
             behavior <- match msg with
                         | :? 'Command as cmd -> f cmd
                         | _ -> 
-                            x.Unhandled msg
-                            behavior
+                            let serializer = UntypedActor.Context.System.Serialization.FindSerializerForType typeof<obj> :?> Akka.Serialization.NewtonSoftJsonSerializer
+                            match Serialization.tryDeserializeJObject serializer.Serializer msg with
+                            | Some(cmd) -> f cmd
+                            | None -> 
+                                x.Unhandled msg
+                                behavior
         | Return _ -> x.PostStop()
     
     override x.OnRecover(msg : obj) = 
         match msg with
         | :? 'Event as e -> state <- aggregate.apply state e
-        | _ -> this.Unhandled() // ignore?        
+        | _ -> 
+            let serializer = UntypedActor.Context.System.Serialization.FindSerializerForType typeof<obj> :?> Akka.Serialization.NewtonSoftJsonSerializer
+            match Serialization.tryDeserializeJObject serializer.Serializer msg with
+            | Some(e) -> state <- aggregate.apply state e
+            | None -> x.Unhandled msg      
     
     override x.PostStop() = 
         base.PostStop()

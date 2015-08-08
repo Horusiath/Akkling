@@ -77,3 +77,45 @@ let ``can serialize typed actor ref``() =
     let bytes = serializer.ToBinary echo
     let des = serializer.FromBinary(bytes, echo.GetType()) :?> IActorRef<string>
     des |> equals echo
+    
+type InnerUnion = 
+    | Inner of int * string
+
+type OuterUnion = 
+    | Succeed of string * InnerUnion
+    | Fail
+    
+let testBehavior (mailbox:Actor<_>) msg =
+    match msg with
+    | Succeed("a-11", Inner(11, "a-12")) -> mailbox.Sender() <! msg
+    | _ -> mailbox.Sender() <! Fail  
+
+[<Fact>]
+let ``can serialize and deserialize discriminated unions over remote nodes`` () =   
+
+    let remoteConfig port = 
+        sprintf """
+        akka { 
+            actor {
+                ask-timeout = 10s
+                provider = "Akka.Remote.RemoteActorRefProvider, Akka.Remote"
+            }
+            remote {
+                helios.tcp {
+                    port = %i
+                    hostname = localhost
+                }
+            }
+        }
+        """ port
+        |> Configuration.parse
+
+    use server = System.create "server-system" (remoteConfig 9911)
+    use client = System.create "client-system" (remoteConfig 0)
+
+    let aref = 
+        spawne client "a-1" <@ actorOf2 testBehavior @> [SpawnOption.Deploy (Deploy(RemoteScope (Address.Parse "akka.tcp://server-system@localhost:9911")))]
+    let msg = Succeed("a-11", Inner(11, "a-12"))
+    let response : OuterUnion = aref <? msg |> Async.RunSynchronously
+    response
+    |> equals msg
