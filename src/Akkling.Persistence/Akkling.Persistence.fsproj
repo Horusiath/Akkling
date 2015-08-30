@@ -52,7 +52,6 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="PersistentActors.fs" />
     <Compile Include="PersistentActor.fs" />
     <Compile Include="PersistentView.fs" />
     <Compile Include="AtLeastOnceDelivery.fs" />
