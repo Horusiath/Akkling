@@ -70,6 +70,7 @@
     <Compile Include="Schedulers.fs" />
     <Compile Include="Logging.fs" />
     <Compile Include="Utils.fs" />
+    <Compile Include="Extensions.fs" />
     <None Include="paket.references" />
     <None Include="Akkling.fsproj.paket.template" />
     <None Include="app.config.install.xdt" />

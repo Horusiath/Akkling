@@ -229,6 +229,7 @@ type Actor<'Message> =
     /// <summary>
     /// Defers provided function to be invoked when actor stops, regardless of reasons.
     /// </summary>
+    [<Obsolete("Defer is going to be removed. Handle PostStop message in actor behavior instead.")>]
     abstract Defer : (unit -> unit) -> unit
     
     /// <summary>
@@ -354,6 +355,12 @@ type ActorBuilder() =
         | Func fx -> Func(fun m -> this.Combine(fx m, g))
         | Return _ -> g
 
+type LifecycleEvent =
+    | PreStart
+    | PostStop
+    | PreRestart of cause:exn * message:obj
+    | PostRestart of cause:exn
+
 type FunActor<'Message, 'Returned>(actor : Actor<'Message> -> Cont<'Message, 'Returned>) as this = 
     inherit Actor()
     let mutable deferables = []
@@ -382,7 +389,7 @@ type FunActor<'Message, 'Returned>(actor : Actor<'Message> -> Cont<'Message, 'Re
     member __.Sender() : IActorRef = base.Sender
     member __.Unhandled msg = base.Unhandled msg
     
-    override x.OnReceive msg = 
+    member private x.Handle (msg: obj) =
         match state with
         | Func f -> 
             match msg with
@@ -393,10 +400,26 @@ type FunActor<'Message, 'Returned>(actor : Actor<'Message> -> Cont<'Message, 'Re
                 | Some(m) -> state <- f m
                 | None -> x.Unhandled msg
         | Return _ -> x.PostStop()
+
+    override x.OnReceive msg = 
+        x.Handle msg
     
     override x.PostStop() = 
         base.PostStop()
         List.iter (fun fn -> fn()) deferables
+        x.Handle PostStop
+
+    override x.PreStart() =
+        base.PreStart()
+        x.Handle PreStart
+        
+    override x.PreRestart(cause, msg) =
+        base.PreRestart(cause, msg)
+        x.Handle (PreRestart(cause, msg))
+
+    override x.PostRestart(cause) =
+        base.PostRestart cause
+        x.Handle (PostRestart cause)
 
 /// Builds an actor message handler using an actor expression syntax.
 let actor = ActorBuilder()

@@ -62,6 +62,7 @@ type Eventsourced<'Command, 'Event, 'State> =
     /// Defers a function execution to the moment, when actor is suposed to end it's lifecycle.
     /// Provided function is guaranteed to be invoked no matter of actor stop reason.
     /// </summary>
+    [<Obsolete("Defer is going to be removed. Handle PostStop message in actor behavior instead.")>]
     abstract Defer : (unit -> unit) -> unit
     
     /// <summary>
@@ -161,6 +162,20 @@ type FunPersistentActor<'Command, 'Event, 'State>(actor : Eventsourced<'Command,
     member __.Unhandled msg = base.Unhandled msg
     
     override x.OnCommand(msg : obj) = 
+        x.Handle msg
+    
+    override x.OnRecover(msg : obj) = 
+        match msg with
+        | :? 'Event as e -> state <- aggregate.apply state e
+        | _ -> 
+            let serializer = UntypedActor.Context.System.Serialization.FindSerializerForType typeof<obj> :?> Akka.Serialization.NewtonSoftJsonSerializer
+            match Serialization.tryDeserializeJObject serializer.Serializer msg with
+            | Some(e) -> state <- aggregate.apply state e
+            | None -> x.Unhandled msg      
+        
+    override x.PersistenceId = name
+    
+    member private x.Handle (msg: obj) =
         match behavior with
         | Func f -> 
             behavior <- match msg with
@@ -173,18 +188,20 @@ type FunPersistentActor<'Command, 'Event, 'State>(actor : Eventsourced<'Command,
                                 x.Unhandled msg
                                 behavior
         | Return _ -> x.PostStop()
-    
-    override x.OnRecover(msg : obj) = 
-        match msg with
-        | :? 'Event as e -> state <- aggregate.apply state e
-        | _ -> 
-            let serializer = UntypedActor.Context.System.Serialization.FindSerializerForType typeof<obj> :?> Akka.Serialization.NewtonSoftJsonSerializer
-            match Serialization.tryDeserializeJObject serializer.Serializer msg with
-            | Some(e) -> state <- aggregate.apply state e
-            | None -> x.Unhandled msg      
-    
+            
     override x.PostStop() = 
         base.PostStop()
         List.iter (fun fn -> fn()) deferables
-    
-    override x.PersistenceId = name
+        x.Handle PostStop
+
+    override x.PreStart() =
+        base.PreStart()
+        x.Handle PreStart
+        
+    override x.PreRestart(cause, msg) =
+        base.PreRestart(cause, msg)
+        x.Handle (PreRestart(cause, msg :?> 'Command))
+
+    override x.PostRestart(cause) =
+        base.PostRestart cause
+        x.Handle (PostRestart cause)

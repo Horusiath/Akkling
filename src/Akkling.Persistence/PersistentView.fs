@@ -53,6 +53,7 @@ type View<'Event, 'State> =
     /// Defers a function execution to the moment, when actor is suposed to end it's lifecycle.
     /// Provided function is guaranteed to be invoked no matter of actor stop reason.
     /// </summary>
+    [<Obsolete("Defer is going to be removed. Handle PostStop message in actor behavior instead.")>]
     abstract Defer : (unit -> unit) -> unit
     
     /// <summary>
@@ -92,7 +93,7 @@ type FunPersistentView<'Message, 'State>(actor : View<'Message, 'State> -> Cont<
                     member __.Receive() = Input
                     member __.Context = context
                     member __.Sender<'Response>() = typed (this.Sender()) :> IActorRef<'Response>
-                    member __.Unhandled msg = this.Unhandled msg
+                    member __.Unhandled msg = this.NotHandled msg
                     member __.ActorOf(props, name) = context.ActorOf(props, name)
                     member __.ActorSelection(path : string) = context.ActorSelection(path)
                     member __.ActorSelection(path : ActorPath) = context.ActorSelection(path)
@@ -111,9 +112,16 @@ type FunPersistentView<'Message, 'State>(actor : View<'Message, 'State> -> Cont<
                     member __.DeleteSnapshots criteria = this.DeleteSnapshots(criteria) }
     
     member __.Sender() : IActorRef = base.Sender
-    member __.Unhandled msg = base.Unhandled msg
+    member __.NotHandled msg = base.Unhandled msg
     
     override x.Receive msg = 
+        x.Handle msg
+        true
+    
+    override x.PersistenceId = name
+    override x.ViewId = viewId
+
+    member private x.Handle (msg: obj) =
         match state with
         | Func f -> 
             state <- match msg with
@@ -126,11 +134,20 @@ type FunPersistentView<'Message, 'State>(actor : View<'Message, 'State> -> Cont<
                             state
                         | None -> state 
         | Return _ -> x.PostStop()
-        true
-    
+            
     override x.PostStop() = 
         base.PostStop()
         List.iter (fun fn -> fn()) deferables
-    
-    override x.PersistenceId = name
-    override x.ViewId = viewId
+        x.Handle PostStop
+
+    override x.PreStart() =
+        base.PreStart()
+        x.Handle PreStart
+        
+    override x.PreRestart(cause, msg) =
+        base.PreRestart(cause, msg)
+        x.Handle (PreRestart(cause, msg :?> 'Command))
+
+    override x.PostRestart(cause) =
+        base.PostRestart cause
+        x.Handle (PostRestart cause)
