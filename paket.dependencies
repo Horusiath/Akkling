@@ -14,5 +14,6 @@ nuget Newtonsoft.Json >= 7.0.1
 nuget Octokit
 nuget SourceLink
 nuget xunit.runner.console
+nuget Akka.TestKit.Xunit2
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx
