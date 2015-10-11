@@ -18,7 +18,7 @@ type ExprDeciderSurrogate(serializedExpr : byte array) =
     member __.SerializedExpr = serializedExpr
     interface ISurrogate with
         member this.FromSurrogate _ = 
-            let fsp = Nessos.FsPickler.FsPickler.CreateBinary()
+            let fsp = Nessos.FsPickler.FsPickler.CreateBinarySerializer()
             let expr: Expr<(exn->Directive)> = Serialization.deserializeFromBinary fsp (this.SerializedExpr)
             ExprDecider(expr) :> ISurrogated
 
@@ -31,7 +31,7 @@ and ExprDecider(expr : Expr<exn -> Directive>) =
     
     interface ISurrogated with
         member this.ToSurrogate _ = 
-            let fsp = Nessos.FsPickler.FsPickler.CreateBinary()
+            let fsp = Nessos.FsPickler.FsPickler.CreateBinarySerializer()
             ExprDeciderSurrogate(Serialization.serializeToBinary fsp this.Expr) :> ISurrogate
 
 type Strategy = 

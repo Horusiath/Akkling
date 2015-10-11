@@ -9,181 +9,10 @@
 [<AutoOpen>]
 module Akkling.Actors
 
-open Akka.Actor
-open Akka.Util
 open System
+open Akka.Actor
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Linq.QuotationEvaluation    
-open System.Threading.Tasks
-
-let private tryCast (t:Task<obj>) : 'Message =
-    match t.Result with
-    | :? 'Message as m -> m
-    | o ->
-        let context = Akka.Actor.Internal.InternalCurrentActorCellKeeper.Current
-        if context = null 
-        then failwith "Cannot cast JObject outside the actor system context "
-        else
-            let serializer = context.System.Serialization.FindSerializerForType typeof<'Message> :?> Akka.Serialization.NewtonSoftJsonSerializer
-            match Serialization.tryDeserializeJObject serializer.Serializer o with
-            | Some m -> m
-            | None -> raise (InvalidCastException("Tried to cast JObject to " + typeof<'Message>.ToString()))
-
-/// <summary>
-/// Typed version of <see cref="ICanTell"/> interface. Allows to tell/ask using only messages of restricted type.
-/// </summary>
-[<Interface>]
-type ICanTell<'Message> = 
-    inherit ICanTell
-    abstract Tell : 'Message * IActorRef -> unit
-    abstract Ask : 'Message * TimeSpan option -> Async<'Response>
-
-/// <summary>
-/// Typed version of <see cref="IActorRef"/> interface. Allows to tell/ask using only messages of restricted type.
-/// </summary>
-[<Interface>]
-type IActorRef<'Message> = 
-    inherit ICanTell<'Message>
-    inherit IActorRef
-    /// <summary>
-    /// Changes the type of handled messages, returning new typed ActorRef.
-    /// </summary>
-    abstract Switch<'T> : unit -> IActorRef<'T>
-
-/// <summary>
-/// Wrapper around untyped instance of IActorRef interface.
-/// </summary>
-type TypedActorRef<'Message>(underlyingRef : IActorRef) = 
-    
-    /// <summary>
-    /// Gets an underlying actor reference wrapped by current object.
-    /// </summary>
-    member __.Underlying = underlyingRef
-    
-    interface ICanTell with
-        member __.Tell(message : obj, sender : IActorRef) = underlyingRef.Tell(message, sender)
-    
-    interface IActorRef<'Message> with
-        
-        /// <summary>
-        /// Changes the type of handled messages, returning new typed ActorRef.
-        /// </summary>
-        member __.Switch<'T>() = TypedActorRef<'T>(underlyingRef) :> IActorRef<'T>
-        
-        member __.Tell(message : 'Message, sender : IActorRef) = underlyingRef.Tell(message :> obj, sender)
-        member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<'Response> = 
-            underlyingRef.Ask(message, Option.toNullable timeout).ContinueWith(Func<_,'Response>(tryCast), TaskContinuationOptions.AttachedToParent|||TaskContinuationOptions.ExecuteSynchronously)
-            |> Async.AwaitTask
-        member __.Path = underlyingRef.Path
-        
-        member __.Equals other = 
-            match other with
-            | :? TypedActorRef<'Message> as typed -> underlyingRef.Equals(typed.Underlying)
-            | _ -> underlyingRef.Equals other
-        
-        member __.CompareTo other = 
-            match other with
-            | :? TypedActorRef<'Message> as typed -> underlyingRef.CompareTo(typed.Underlying)
-            | _ -> underlyingRef.CompareTo(other)
-    
-    interface ISurrogated with
-        member this.ToSurrogate system = 
-            let surrogate : TypedActorRefSurrogate<'Message> = { Wrapped = underlyingRef.ToSurrogate system }
-            surrogate :> ISurrogate
-
-and TypedActorRefSurrogate<'Message> = 
-    { Wrapped : ISurrogate }
-    interface ISurrogate with
-        member this.FromSurrogate system = 
-            let tref = TypedActorRef<'Message>((this.Wrapped.FromSurrogate system) :?> IActorRef)
-            tref :> ISurrogated
-
-/// <summary>
-/// Returns typed wrapper over provided actor reference.
-/// </summary>
-let inline typed (actorRef : IActorRef) : IActorRef<'Message> = 
-    (TypedActorRef<'Message> actorRef) :> IActorRef<'Message>
-
-/// <summary>
-/// Typed wrapper for <see cref="ActorSelection"/> objects.
-/// </summary>
-type TypedActorSelection<'Message>(selection : ActorSelection) = 
-
-    /// <summary>
-    /// Returns an underlying untyped <see cref="ActorSelection"/> instance.
-    /// </summary>
-    member __.Underlying = selection
-
-    /// <summary>
-    /// Gets and actor ref anchor for current selection.
-    /// </summary>
-    member __.Anchor with get (): IActorRef<'Message> = typed selection.Anchor
-
-    /// <summary>
-    /// Gets string representation for all elements in actor selection path.
-    /// </summary>
-    member __.PathString with get () = selection.PathString
-
-    /// <summary>
-    /// Gets collection of elements, actor selection path is build from.
-    /// </summary>
-    member __.Path with get () = selection.Path
-
-    /// <summary>
-    /// Sets collection of elements, actor selection path is build from.
-    /// </summary>
-    member __.Path with set (e) = selection.Path <- e
-
-    /// <summary>
-    /// Tries to resolve an actor reference from current actor selection.
-    /// </summary>
-    member __.ResolveOne (timeout: TimeSpan): Async<IActorRef<'Message>> = 
-        let convertToTyped (t: System.Threading.Tasks.Task<IActorRef>) = typed t.Result
-        selection.ResolveOne(timeout).ContinueWith(convertToTyped)
-        |> Async.AwaitTask
-
-    override x.Equals (o:obj) = 
-        if obj.ReferenceEquals(x, o) then true
-        else match o with
-        | :? TypedActorSelection<'Message> as t -> x.Underlying.Equals t.Underlying
-        | _ -> x.Underlying.Equals o
-
-    override __.GetHashCode () = selection.GetHashCode() ^^^ typeof<'Message>.GetHashCode() 
-
-    interface ICanTell with
-        member __.Tell(message : obj, sender : IActorRef) = selection.Tell(message, sender)
-    
-    interface ICanTell<'Message> with
-        member __.Tell(message : 'Message, sender : IActorRef) : unit = selection.Tell(message, sender)
-        member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<'Response> = 
-            Async.AwaitTask(selection.Ask<'Response>(message, Option.toNullable timeout))    
-            
-/// <summary>
-/// Unidirectional send operator. 
-/// Sends a message object directly to actor tracked by actorRef. 
-/// </summary>
-let inline (<!) (actorRef : #ICanTell<'Message>) (msg : 'Message) : unit = 
-    actorRef.Tell(msg, ActorCell.GetCurrentSelfOrNoSender())
-
-/// <summary> 
-/// Bidirectional send operator. Sends a message object directly to actor 
-/// tracked by actorRef and awaits for response send back from corresponding actor. 
-/// </summary>
-let inline (<?) (tell : #ICanTell<'Message>) (msg : 'Message) : Async<'Response> = tell.Ask<'Response>(msg, None)
-
-/// Pipes an output of asynchronous expression directly to the recipients mailbox.
-let pipeTo (sender : IActorRef) (recipient : ICanTell<'Message>) (computation : Async<'Message>): unit = 
-    let success (result : 'Message) : unit = recipient.Tell(result, sender)
-    let failure (err : exn) : unit = recipient.Tell(Status.Failure(err), sender)
-    Async.StartWithContinuations(computation, success, failure, failure)
-
-/// Pipe operator which sends an output of asynchronous expression directly to the recipients mailbox.
-let inline (|!>) (computation : Async<'Message>) (recipient : ICanTell<'Message>) = 
-    pipeTo ActorRefs.NoSender recipient computation
-
-/// Pipe operator which sends an output of asynchronous expression directly to the recipients mailbox
-let inline (<!|) (recipient : ICanTell<'Message>) (computation : Async<'Message>) = 
-    pipeTo ActorRefs.NoSender recipient computation
 
 type IO<'T> = 
     | Input
@@ -205,33 +34,17 @@ type Actor<'Message> =
     /// Gets <see cref="IActorRef" /> for the current actor.
     /// </summary>
     abstract Self : IActorRef<'Message>
-    
-    /// <summary>
-    /// Gets the current actor context.
-    /// </summary>
-    abstract Context : IActorContext
-    
+        
     /// <summary>
     /// Returns a sender of current message or <see cref="ActorRefs.NoSender" />, if none could be determined.
     /// </summary>
     abstract Sender<'Response> : unit -> IActorRef<'Response>
-    
-    /// <summary>
-    /// Explicit signalization of unhandled message.
-    /// </summary>
-    abstract Unhandled : 'Message -> unit
-    
+        
     /// <summary>
     /// Lazy logging adapter. It won't be initialized until logging function will be called. 
     /// </summary>
     abstract Log : Lazy<Akka.Event.ILoggingAdapter>
-    
-    /// <summary>
-    /// Defers provided function to be invoked when actor stops, regardless of reasons.
-    /// </summary>
-    [<Obsolete("Defer is going to be removed. Handle PostStop message in actor behavior instead.")>]
-    abstract Defer : (unit -> unit) -> unit
-    
+        
     /// <summary>
     /// Stashes the current message (the message that the actor received last)
     /// </summary>
@@ -249,177 +62,104 @@ type Actor<'Message> =
     /// </summary>
     abstract UnstashAll : unit -> unit
 
+    /// <summary>
+    /// Sets or clears a timeout before <see="ReceiveTimeout"/> message will be send to an actor.
+    /// </summary>
+    abstract SetReceiveTimeout : TimeSpan option -> unit
+
+    /// <summary>
+    /// Schedules a message to be transmited in specified delay.
+    /// </summary>
+    abstract Schedule<'Scheduled> : TimeSpan -> IActorRef<'Scheduled> -> 'Scheduled -> ICancelable
+
+    /// <summary>
+    /// Schedules a message to be repeatedly transmited, starting at specified delay with provided intervals.
+    /// </summary>
+    abstract ScheduleRepeatedly<'Scheduled>  : TimeSpan -> TimeSpan -> IActorRef<'Scheduled> -> 'Scheduled -> ICancelable
+
+type TypedContext<'Message>(context: IActorContext, stashed: IWithUnboundedStash) as this =
+    let self = context.Self
+    interface Actor<'Message> with
+        member __.Receive() = Input
+        member __.Self = typed self
+        member __.Sender<'Response>() = typed (context.Sender) :> IActorRef<'Response>
+        member __.ActorOf(props, name) = context.ActorOf(props, name)
+        member __.ActorSelection(path : string) = context.ActorSelection(path)
+        member __.ActorSelection(path : ActorPath) = context.ActorSelection(path)
+        member __.Watch(aref : IActorRef) = context.Watch aref
+        member __.Unwatch(aref : IActorRef) = context.Unwatch aref
+        member __.Log = lazy (Akka.Event.Logging.GetLogger(context))
+        member __.Stash() = stashed.Stash.Stash()
+        member __.Unstash() = stashed.Stash.Unstash()
+        member __.UnstashAll() = stashed.Stash.UnstashAll() 
+        member __.SetReceiveTimeout timeout = context.SetReceiveTimeout (Option.toNullable timeout)
+        member __.Schedule (delay: TimeSpan) target message = context.System.Scheduler.ScheduleTellOnceCancelable(delay, target, message, self)
+        member __.ScheduleRepeatedly (delay: TimeSpan) (interval: TimeSpan) target message = context.System.Scheduler.ScheduleTellOnceCancelable(delay, target, message, self)
+        
 [<AbstractClass>]
 type Actor() = 
     inherit UntypedActor()
     interface IWithUnboundedStash with
         member val Stash = null with get, set
-
-/// <summary>
-/// Returns an instance of <see cref="ActorSelection" /> for specified path. 
-/// If no matching receiver will be found, a <see cref="ActorRefs.NoSender" /> instance will be returned. 
-/// </summary>
-let inline select (path : string) (selector : IActorRefFactory) : TypedActorSelection<'Message> = 
-    TypedActorSelection(selector.ActorSelection path)
-
-/// Gives access to the next message throu let! binding in actor computation expression.
-type Cont<'In, 'Out> = 
-    | Func of ('In -> Cont<'In, 'Out>)
-    | Return of 'Out
-
-/// The builder for actor computation expression.
-type ActorBuilder() = 
-    
-    /// Binds the next message.
-    member __.Bind(m : IO<'In>, f : 'In -> _) = Func(fun m -> f m)
-    
-    /// Binds the result of another actor computation expression.
-    member this.Bind(x : Cont<'In, 'Out1>, f : 'Out1 -> Cont<'In, 'Out2>) : Cont<'In, 'Out2> = 
-        match x with
-        | Func fx -> Func(fun m -> this.Bind(fx m, f))
-        | Return v -> f v
-    
-    member __.ReturnFrom(x) = x
-    member __.Return x = Return x
-    member __.Zero() = Return()
-    
-    member this.TryWith(f : unit -> Cont<'In, 'Out>, c : exn -> Cont<'In, 'Out>) : Cont<'In, 'Out> = 
-        try 
-            true, f()
-        with ex -> false, c ex
-        |> function 
-        | true, Func fn -> Func(fun m -> this.TryWith((fun () -> fn m), c))
-        | _, v -> v
-    
-    member this.TryFinally(f : unit -> Cont<'In, 'Out>, fnl : unit -> unit) : Cont<'In, 'Out> = 
-        try 
-            match f() with
-            | Func fn -> Func(fun m -> this.TryFinally((fun () -> fn m), fnl))
-            | r -> 
-                fnl()
-                r
-        with ex -> 
-            fnl()
-            reraise()
-    
-    member this.Using(d : #IDisposable, f : _ -> Cont<'In, 'Out>) : Cont<'In, 'Out> = 
-        this.TryFinally((fun () -> f d), 
-                        fun () -> 
-                            if d <> null then d.Dispose())
-    
-    member this.While(condition : unit -> bool, f : unit -> Cont<'In, unit>) : Cont<'In, unit> = 
-        if condition() then 
-            match f() with
-            | Func fn -> 
-                Func(fun m -> 
-                    fn m |> ignore
-                    this.While(condition, f))
-            | v -> this.While(condition, f)
-        else Return()
-    
-    member __.For(source : 'Iter seq, f : 'Iter -> Cont<'In, unit>) : Cont<'In, unit> = 
-        use e = source.GetEnumerator()
         
-        let rec loop() = 
-            if e.MoveNext() then 
-                match f e.Current with
-                | Func fn -> 
-                    Func(fun m -> 
-                        fn m |> ignore
-                        loop())
-                | r -> loop()
-            else Return()
-        loop()
-    
-    member __.Delay(f : unit -> Cont<_, _>) = f
-    member __.Run(f : unit -> Cont<_, _>) = f()
-    member __.Run(f : Cont<_, _>) = f
-    
-    member this.Combine(f : unit -> Cont<'In, _>, g : unit -> Cont<'In, 'Out>) : Cont<'In, 'Out> = 
-        match f() with
-        | Func fx -> Func(fun m -> this.Combine((fun () -> fx m), g))
-        | Return _ -> g()
-    
-    member this.Combine(f : Cont<'In, _>, g : unit -> Cont<'In, 'Out>) : Cont<'In, 'Out> = 
-        match f with
-        | Func fx -> Func(fun m -> this.Combine(fx m, g))
-        | Return _ -> g()
-    
-    member this.Combine(f : unit -> Cont<'In, _>, g : Cont<'In, 'Out>) : Cont<'In, 'Out> = 
-        match f() with
-        | Func fx -> Func(fun m -> this.Combine((fun () -> fx m), g))
-        | Return _ -> g
-    
-    member this.Combine(f : Cont<'In, _>, g : Cont<'In, 'Out>) : Cont<'In, 'Out> = 
-        match f with
-        | Func fx -> Func(fun m -> this.Combine(fx m, g))
-        | Return _ -> g
-
 type LifecycleEvent =
     | PreStart
     | PostStop
     | PreRestart of cause:exn * message:obj
     | PostRestart of cause:exn
 
-type FunActor<'Message, 'Returned>(actor : Actor<'Message> -> Cont<'Message, 'Returned>) as this = 
+type Behavior<'Message, 'Out> = 
+    | Become of ('Message->Behavior<'Message, 'Out>)
+    | Unhandled of Behavior<'Message, 'Out>
+    | Return of 'Out
+
+
+type FunActor<'Message, 'Out>(actor : Actor<'Message> -> Behavior<'Message, 'Out>) as this = 
     inherit Actor()
-    let mutable deferables = []
-    
-    let mutable state = 
-        let self' = this.Self
-        let context = UntypedActor.Context :> IActorContext
-        actor { new Actor<'Message> with
-                    member __.Receive() = Input
-                    member __.Self = typed self'
-                    member __.Context = context
-                    member __.Sender<'Response>() = typed (this.Sender()) :> IActorRef<'Response>
-                    member __.Unhandled msg = this.Unhandled msg
-                    member __.ActorOf(props, name) = context.ActorOf(props, name)
-                    member __.ActorSelection(path : string) = context.ActorSelection(path)
-                    member __.ActorSelection(path : ActorPath) = context.ActorSelection(path)
-                    member __.Watch(aref : IActorRef) = context.Watch aref
-                    member __.Unwatch(aref : IActorRef) = context.Unwatch aref
-                    member __.Log = lazy (Akka.Event.Logging.GetLogger(context))
-                    member __.Defer fn = deferables <- fn :: deferables
-                    member __.Stash() = (this :> IWithUnboundedStash).Stash.Stash()
-                    member __.Unstash() = (this :> IWithUnboundedStash).Stash.Unstash()
-                    member __.UnstashAll() = (this :> IWithUnboundedStash).Stash.UnstashAll() }
-    
-    new(actor : Expr<Actor<'Message> -> Cont<'Message, 'Returned>>) = FunActor(actor.Compile () ())
+
+    let untypedContext = UntypedActor.Context :> IActorContext
+    let ctx = TypedContext<'Message>(untypedContext, this)
+    let mutable behavior = actor ctx
+        
+    let next (current: Behavior<'Message, 'Out>) (context: Actor<'Message>) (message: obj)  : Behavior<'Message, 'Out> =
+        match message with
+        | :? 'Message as msg ->
+            match current with
+            | Become(fn) -> fn msg
+            | Unhandled wrapped ->
+                this.Unhandled message
+                wrapped
+            | Return _ ->
+                failwith <| sprintf "Actor %A has been stopped" context.Self
+        | other -> 
+            this.Unhandled other
+            current
+
+    let handle msg = 
+        behavior <- next behavior ctx msg
+        match behavior with
+        | Return _ -> untypedContext.Stop(untypedContext.Self)
+        | _ -> ()
+
+    new(actor : Expr<Actor<'Message> -> Behavior<'Message, 'Out>>) = FunActor(actor.Compile () ())
     member __.Sender() : IActorRef = base.Sender
     member __.Unhandled msg = base.Unhandled msg
-    
-    member private x.Handle (msg: obj) =
-        match state with
-        | Func f -> 
-            match msg with
-            | :? 'Message as m -> state <- f m
-            | _ -> 
-                let serializer = UntypedActor.Context.System.Serialization.FindSerializerForType typeof<obj> :?> Akka.Serialization.NewtonSoftJsonSerializer
-                match Serialization.tryDeserializeJObject serializer.Serializer msg with
-                | Some(m) -> state <- f m
-                | None -> x.Unhandled msg
-        | Return _ -> x.PostStop()
 
-    override x.OnReceive msg = 
-        x.Handle msg
+    override this.OnReceive msg = 
+        handle msg
     
     override x.PostStop() = 
         base.PostStop()
-        List.iter (fun fn -> fn()) deferables
-        x.Handle PostStop
+        handle PostStop
 
     override x.PreStart() =
         base.PreStart()
-        x.Handle PreStart
+        handle PreStart
         
     override x.PreRestart(cause, msg) =
         base.PreRestart(cause, msg)
-        x.Handle (PreRestart(cause, msg))
+        handle (PreRestart(cause, msg))
 
     override x.PostRestart(cause) =
         base.PostRestart cause
-        x.Handle (PostRestart cause)
-
-/// Builds an actor message handler using an actor expression syntax.
-let actor = ActorBuilder()
+        handle (PostRestart cause)

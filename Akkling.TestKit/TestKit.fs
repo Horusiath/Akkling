@@ -31,7 +31,7 @@ let testDefault = test (Configuration.defaultConfig())
 
 let inline monitor (tck : Tck) (ref : IActorRef<'t>) : unit = tck.Watch ref |> ignore
 
-let expect (tck : Tck) (msg : 't) : 't option = 
+let expectMsg (tck : Tck) (msg : 't) : 't option = 
     let reply = tck.ExpectMsg<'t>(msg, Nullable(), "")
     if reply <> Unchecked.defaultof<'t> then Some reply
     else None

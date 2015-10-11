@@ -22,9 +22,9 @@ let ``Actor defined by recursive function responds on series of primitive messag
     echo <! 2
     echo <! 3
     
-    expect tck 1 |> ignore
-    expect tck 2 |> ignore
-    expect tck 3 |> ignore
+    expectMsg tck 1 |> ignore
+    expectMsg tck 2 |> ignore
+    expectMsg tck 3 |> ignore
 
 [<Fact>]
 let ``Actor defined by recursive function stops on return escape`` () = testDefault <| fun tck -> 
@@ -36,6 +36,7 @@ let ``Actor defined by recursive function stops on return escape`` () = testDefa
                     let! msg = mailbox.Receive ()
                     match msg with
                     | "stop" -> return 0
+                    | "unhandled" -> unhandled
                     | x -> 
                         mailbox.Sender() <! x
                         return! loop ()
@@ -47,9 +48,10 @@ let ``Actor defined by recursive function stops on return escape`` () = testDefa
     aref <! "a"
     aref <! "b"
     aref <! "stop"
+    aref <! "unhandled"
     aref <! "c"
     
-    expect tck "a" |> ignore
-    expect tck "b" |> ignore
+    expectMsg tck "a" |> ignore
+    expectMsg tck "b" |> ignore
     expectTerminated tck aref |> ignore
     expectNoMsg tck 

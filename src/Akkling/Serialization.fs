@@ -37,7 +37,7 @@ let tryDeserializeJObject jsonSerializer o : 'Message option =
 // used for top level serialization
 type ExprSerializer(system) = 
     inherit Serializer(system)
-    let fsp = FsPickler.CreateBinary()
+    let fsp = FsPickler.CreateBinarySerializer()
     override __.Identifier = 9
     override __.IncludeManifest = true
     override __.ToBinary(o) = serializeToBinary fsp (o :?> Expr)

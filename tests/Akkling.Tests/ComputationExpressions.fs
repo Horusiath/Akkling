@@ -14,7 +14,7 @@ open Xunit
 
 let send m =
     function
-    | Func f -> f m
+    | Become f -> f m
     | r -> r
 
 let value =
