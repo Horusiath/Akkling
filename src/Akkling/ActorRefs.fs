@@ -51,7 +51,7 @@ type IActorRef<'Message> =
 /// <summary>
 /// Wrapper around untyped instance of IActorRef interface.
 /// </summary>
-type TypedActorRef<'Message>(underlyingRef : IActorRef) = 
+type TypedActorRef<'Message>(underlyingRef : IActorRef) as this = 
     
     /// <summary>
     /// Gets an underlying actor reference wrapped by current object.
@@ -78,8 +78,13 @@ type TypedActorRef<'Message>(underlyingRef : IActorRef) =
             match other with
             | :? TypedActorRef<'Message> as typed -> underlyingRef.Equals(typed.Underlying)
             | _ -> underlyingRef.Equals other
+
+        member __.CompareTo (other: obj) = 
+            match other with
+            | :? TypedActorRef<'Message> as typed -> underlyingRef.CompareTo(typed.Underlying)
+            | _ -> underlyingRef.CompareTo(other)
         
-        member __.CompareTo other = 
+        member __.CompareTo (other: IActorRef) =
             match other with
             | :? TypedActorRef<'Message> as typed -> underlyingRef.CompareTo(typed.Underlying)
             | _ -> underlyingRef.CompareTo(other)

@@ -18,21 +18,17 @@ open System
 
 /// The builder for actor computation expression.
 type ActorBuilder() =
-    member __.Bind(_ : IO<'In>, continuation : 'In -> Behavior<'In, 'Returned>) = Become(fun message -> continuation message)
-    member this.Bind(behavior : Behavior<'In, 'Out1>, continuation : 'Out1 -> Behavior<'In, 'Out2>) : Behavior<'In, 'Out2> = 
+    member __.Bind(_ : IO<'In>, continuation : 'In -> Behavior<'In>) = Become(fun message -> continuation message)
+    member this.Bind(behavior : Behavior<'In>, continuation : Effect -> Behavior<'In>) : Behavior<'In> = 
         match behavior with
         | Become next -> Become(fun message -> this.Bind(next message, continuation))
-        //| Unhandled -> Become(fun message -> continuation message)
         | Return returned -> continuation returned    
     member __.ReturnFrom behavior = behavior
     member __.Return value = Return value
-    member __.Zero () = Return ()    
+    member __.Zero () = Return Ignore    
     member __.Yield value = value
 
-    [<CustomOperation("unhandled")>]
-    member __.Unhandled (wrapped : unit -> Behavior<'In, 'Out>) = Unhandled (wrapped ())
-
-    member this.TryWith(tryExpr : unit -> Behavior<'In, 'Out>, catchExpr : exn -> Behavior<'In, 'Out>) : Behavior<'In, 'Out> = 
+    member this.TryWith(tryExpr : unit -> Behavior<'In>, catchExpr : exn -> Behavior<'In>) : Behavior<'In> = 
         try 
             true, tryExpr ()
         with error -> false, catchExpr error
@@ -40,7 +36,7 @@ type ActorBuilder() =
         | true, Become next -> Become(fun message -> this.TryWith((fun () -> next message), catchExpr))
         | _, value -> value    
 
-    member this.TryFinally(tryExpr : unit -> Behavior<'In, 'Out>, finallyExpr : unit -> unit) : Behavior<'In, 'Out> = 
+    member this.TryFinally(tryExpr : unit -> Behavior<'In>, finallyExpr : unit -> unit) : Behavior<'In> = 
         try 
             match tryExpr() with
             | Become next -> Become(fun message -> this.TryFinally((fun () -> next message), finallyExpr))
@@ -51,10 +47,10 @@ type ActorBuilder() =
             finallyExpr()
             reraise()
     
-    member this.Using(disposable : #IDisposable, continuation : _ -> Behavior<'In, 'Out>) : Behavior<'In, 'Out> = 
+    member this.Using(disposable : #IDisposable, continuation : _ -> Behavior<'In>) : Behavior<'In> = 
         this.TryFinally((fun () -> continuation disposable), fun () -> if disposable <> null then disposable.Dispose())
     
-    member this.While(condition : unit -> bool, continuation : unit -> Behavior<'In, unit>) : Behavior<'In, unit> = 
+    member this.While(condition : unit -> bool, continuation : unit -> Behavior<'In>) : Behavior<'In> = 
         if condition() then 
             match continuation() with
             | Become next -> 
@@ -62,9 +58,9 @@ type ActorBuilder() =
                     next message |> ignore
                     this.While(condition, continuation))
             | _ -> this.While(condition, continuation)
-        else Return ()
+        else Return Ignore
     
-    member __.For(iterable : 'Iter seq, continuation : 'Iter -> Behavior<'In, unit>) : Behavior<'In, unit> = 
+    member __.For(iterable : 'Iter seq, continuation : 'Iter -> Behavior<'In>) : Behavior<'In> = 
         use e = iterable.GetEnumerator()
         
         let rec loop() = 
@@ -75,35 +71,31 @@ type ActorBuilder() =
                         fn m |> ignore
                         loop())
                 | _ -> loop()
-            else Return()
+            else Return Ignore
         loop()
     
-    member __.Delay(continuation : unit -> Behavior<'In, 'Out>) = continuation
-    member __.Run(continuation : unit -> Behavior<'In, 'Out>) = continuation ()
-    member __.Run(continuation : Behavior<'In, 'Out>) = continuation
+    member __.Delay(continuation : unit -> Behavior<'In>) = continuation
+    member __.Run(continuation : unit -> Behavior<'In>) = continuation ()
+    member __.Run(continuation : Behavior<'In>) = continuation
     
-    member this.Combine(first : unit -> Behavior<'In, _>, second : unit -> Behavior<'In, 'Out>) : Behavior<'In, 'Out> = 
+    member this.Combine(first : unit -> Behavior<'In>, second : unit -> Behavior<'In>) : Behavior<'In> = 
         match first () with
         | Become next -> Become(fun message -> this.Combine((fun () -> next message), second))
-        | Unhandled wrapped -> this.Combine(wrapped, second)
         | Return _ -> second ()
     
-    member this.Combine(first : Behavior<'In, _>, second : unit -> Behavior<'In, 'Out>) : Behavior<'In, 'Out> = 
+    member this.Combine(first : Behavior<'In>, second : unit -> Behavior<'In>) : Behavior<'In> = 
         match first with
         | Become next -> Become(fun message -> this.Combine(next message, second))
-        | Unhandled wrapped -> this.Combine(wrapped, second)
         | Return _ -> second ()
     
-    member this.Combine(first : unit -> Behavior<'In, _>, second : Behavior<'In, 'Out>) : Behavior<'In, 'Out> = 
+    member this.Combine(first : unit -> Behavior<'In>, second : Behavior<'In>) : Behavior<'In> = 
         match first () with
         | Become next -> Become(fun message -> this.Combine((fun () -> next message), second))
-        | Unhandled wrapped -> this.Combine(wrapped, second)
         | Return _ -> second
     
-    member this.Combine(first : Behavior<'In, _>, second : Behavior<'In, 'Out>) : Behavior<'In, 'Out> = 
+    member this.Combine(first : Behavior<'In>, second : Behavior<'In>) : Behavior<'In> = 
         match first with
         | Become next -> Become(fun message -> this.Combine(next message, second))
-        | Unhandled wrapped -> this.Combine(wrapped, second)
         | Return _ -> second
         
 /// Builds an actor message handler using an actor expression syntax.

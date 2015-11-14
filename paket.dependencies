@@ -1,9 +1,8 @@
 source https://nuget.org/api/v2
 
-nuget Akka >= 1.0.0
-nuget Akka.Persistence >= 1.0.0
-nuget Akka.Remote
-nuget Akka.TestKit >= 1.0.0
+nuget Wire
+nuget Helios
+nuget Google.ProtocolBuffers
 nuget FAKE
 nuget FSPowerPack.Linq.Community
 nuget FSharp.Formatting
@@ -14,6 +13,14 @@ nuget Newtonsoft.Json >= 7.0.1
 nuget Octokit
 nuget SourceLink
 nuget xunit.runner.console
-nuget Akka.TestKit.Xunit2
+
+source https://www.myget.org/F/akkadotnet/api/v2
+
+nuget Akka >= 1.0.5
+nuget Akka.Persistence >= 1.0.5
+nuget Akka.Remote >= 1.0.5
+nuget Akka.TestKit >= 1.0.5
+nuget Akka.TestKit.Xunit2 >= 1.0.5
+
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx

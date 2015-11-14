@@ -35,8 +35,8 @@ let ``Actor defined by recursive function stops on return escape`` () = testDefa
                 actor {
                     let! msg = mailbox.Receive ()
                     match msg with
-                    | "stop" -> return 0
-                    | "unhandled" -> unhandled
+                    | "stop" -> return Stop
+                    | "unhandled" -> return Unhandled
                     | x -> 
                         mailbox.Sender() <! x
                         return! loop ()

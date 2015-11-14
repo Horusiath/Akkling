@@ -108,58 +108,70 @@ type LifecycleEvent =
     | PreRestart of cause:exn * message:obj
     | PostRestart of cause:exn
 
-type Behavior<'Message, 'Out> = 
-    | Become of ('Message->Behavior<'Message, 'Out>)
-    | Unhandled of Behavior<'Message, 'Out>
-    | Return of 'Out
+type Effect = interface end
+type ActorEffect = 
+    | Unhandled 
+    | Stop
+    | Ignore
+    interface Effect
+
+type Behavior<'Message> = 
+    | Become of ('Message->Behavior<'Message>)
+    | Return of Effect
 
 
-type FunActor<'Message, 'Out>(actor : Actor<'Message> -> Behavior<'Message, 'Out>) as this = 
+type FunActor<'Message>(actor : Actor<'Message> -> Behavior<'Message>) as this = 
     inherit Actor()
 
     let untypedContext = UntypedActor.Context :> IActorContext
     let ctx = TypedContext<'Message>(untypedContext, this)
     let mutable behavior = actor ctx
-        
-    let next (current: Behavior<'Message, 'Out>) (context: Actor<'Message>) (message: obj)  : Behavior<'Message, 'Out> =
+
+    new(actor : Expr<Actor<'Message> -> Behavior<'Message>>) = FunActor(actor.Compile () ())
+
+    member __.Next (current: Behavior<'Message>) (context: Actor<'Message>) (message: obj)  : Behavior<'Message> =
         match message with
         | :? 'Message as msg ->
             match current with
             | Become(fn) -> fn msg
-            | Unhandled wrapped ->
-                this.Unhandled message
-                wrapped
-            | Return _ ->
-                failwith <| sprintf "Actor %A has been stopped" context.Self
+            | _ -> current             
+        | :? LifecycleEvent ->
+            // we don't treat unhandled lifecycle events as casual unhandled messages
+            current
         | other -> 
             this.Unhandled other
             current
 
-    let handle msg = 
-        behavior <- next behavior ctx msg
-        match behavior with
-        | Return _ -> untypedContext.Stop(untypedContext.Self)
-        | _ -> ()
+    member __.Handle msg = 
+        let nextBehavior = this.Next behavior ctx msg
+        match nextBehavior with
+        | Return effect ->
+            match effect with
+            | :? ActorEffect as actorEffect -> 
+                match actorEffect with
+                | Ignore -> ()
+                | Unhandled -> this.Unhandled (msg :> obj)
+                | Stop -> untypedContext.Stop(untypedContext.Self)
+            | _ -> ()
+        | _ -> behavior <- nextBehavior
 
-    new(actor : Expr<Actor<'Message> -> Behavior<'Message, 'Out>>) = FunActor(actor.Compile () ())
     member __.Sender() : IActorRef = base.Sender
-    member __.Unhandled msg = base.Unhandled msg
 
     override this.OnReceive msg = 
-        handle msg
+        this.Handle msg
     
-    override x.PostStop() = 
+    override this.PostStop() = 
         base.PostStop()
-        handle PostStop
+        this.Handle PostStop
 
-    override x.PreStart() =
+    override this.PreStart() =
         base.PreStart()
-        handle PreStart
+        this.Handle PreStart
         
-    override x.PreRestart(cause, msg) =
+    override this.PreRestart(cause, msg) =
         base.PreRestart(cause, msg)
-        handle (PreRestart(cause, msg))
+        this.Handle (PreRestart(cause, msg))
 
-    override x.PostRestart(cause) =
+    override this.PostRestart(cause) =
         base.PostRestart cause
-        handle (PostRestart cause)
+        this.Handle (PostRestart cause)
