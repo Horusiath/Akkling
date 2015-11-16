@@ -39,10 +39,10 @@ let counter =
                     | GetState -> 
                         mailbox.Sender() <! state
                         return! loop state
-                    | Inc -> return Persist [ { Delta = 1 } ]
-                    | Dec -> return Persist [ { Delta = -1 } ]
+                    | Inc -> return Persist [ Event { Delta = 1 } ]
+                    | Dec -> return Persist [ Event { Delta = -1 } ]
             }
-        loop 1
+        loop 0
 
 counter <! Command Inc
 counter <! Command Inc
