@@ -12,75 +12,14 @@ open System
 open Akka.Actor
 open Akka.Persistence
 open Akkling
+open Microsoft.FSharp.Quotations
+open Microsoft.FSharp.Linq.QuotationEvaluation
 
-type PersistenceId = string
-
-[<Interface>]
-type Snapshotter<'State> = 
-    abstract LoadSnapshot : PersistenceId -> SnapshotSelectionCriteria -> int64 -> unit
-    abstract SaveSnapshot : 'State -> unit
-    abstract DeleteSnapshot : int64 -> DateTime -> unit
-    abstract DeleteSnapshots : SnapshotSelectionCriteria -> unit
+type PID = string
 
 [<Interface>]
-type Eventsourced<'Command, 'Event, 'State> = 
-    inherit IActorRefFactory
-    inherit ICanWatch
-    inherit Snapshotter<'State>
-    
-    /// <summary>
-    /// Gets <see cref="IActorRef" /> for the current actor.
-    /// </summary>
-    abstract Self : IActorRef
-    
-    /// <summary>
-    /// Gets the current actor context.
-    /// </summary>
-    abstract Context : IActorContext
-    
-    /// <summary>
-    /// Explicitly retrieves next incoming message from the mailbox.
-    /// </summary>
-    abstract Receive : unit -> IO<'Command>
-    
-    /// <summary>
-    /// Returns a sender of current message or <see cref="ActorRefs.NoSender" />, if none could be determined.
-    /// </summary>
-    abstract Sender<'Response> : unit -> IActorRef<'Response>
-    
-    /// <summary>
-    /// Explicit signalization of unhandled message.
-    /// </summary>
-    abstract Unhandled : obj -> unit
-    
-    /// <summary>
-    /// Lazy logging adapter. It won't be initialized until logging function will be called. 
-    /// </summary>
-    abstract Log : Lazy<Akka.Event.ILoggingAdapter>
-    
-    /// <summary>
-    /// Defers a function execution to the moment, when actor is suposed to end it's lifecycle.
-    /// Provided function is guaranteed to be invoked no matter of actor stop reason.
-    /// </summary>
-    abstract Defer : (unit -> unit) -> unit
-    
-    /// <summary>
-    /// Persists sequence of events in the event journal. Use second argument to define 
-    /// function which will update state depending on events.
-    /// </summary>
-    abstract PersistEvent : ('Event -> 'State) -> 'Event seq -> unit
-    
-    /// <summary>
-    /// Asynchronously persists sequence of events in the event journal. Use second argument 
-    /// to define function which will update state depending on events.
-    /// </summary>
-    abstract AsyncPersistEvent : ('Event -> 'State) -> 'Event seq -> unit
-    
-    /// <summary>
-    /// Defers a second argument (update state callback) to be called after persisting target
-    /// event will be confirmed.
-    /// </summary>
-    abstract DeferEvent : ('Event -> 'State) -> 'Event seq -> unit
+type Eventsourced<'Message> = 
+    inherit Actor<'Message>
     
     /// <summary>
     /// Returns currently attached journal actor reference.
@@ -105,86 +44,135 @@ type Eventsourced<'Command, 'Event, 'State> =
     /// <summary>
     /// Persistent actor's identifier that doesn't change across different actor incarnations.
     /// </summary>
-    abstract PersistenceId : PersistenceId
+    abstract Pid : PID
+
+and [<Interface>]PersistentContext<'Event> =
     
     /// <summary>
-    /// Returns current state of an actor
+    /// Persists sequence of events in the event journal. Use second argument to define 
+    /// function which will update state depending on events.
     /// </summary>
-    abstract State : unit -> 'State
+    abstract PersistEvent : 'Event seq -> unit
+    
+    /// <summary>
+    /// Asynchronously persists sequence of events in the event journal. Use second argument 
+    /// to define function which will update state depending on events.
+    /// </summary>
+    abstract AsyncPersistEvent : 'Event seq -> unit
+    
+    /// <summary>
+    /// Defers a second argument (update state callback) to be called after persisting target
+    /// event will be confirmed.
+    /// </summary>
+    abstract DeferEvent : 'Event seq -> unit
 
-type Aggregate<'Command, 'Event, 'State> = 
-    { apply : 'State -> 'Event -> 'State
-      exec : Cont<'Command, 'Command> }
 
-type FunPersistentActor<'Command, 'Event, 'State>(actor : Eventsourced<'Command, 'Event, 'State> -> Aggregate<'Command, 'Event, 'State>, initState : 'State, name : PersistenceId) as this = 
+and [<Interface>]ExtEventsourced<'Message> =
+    inherit Eventsourced<'Message>
+    inherit PersistentContext<'Message>
+    inherit ExtActor<'Message>
+
+and PersistentEffect<'Message> =
+    | Persist of 'Message seq
+    | PersistAsync of 'Message seq
+    | Defer of 'Message seq
+    interface IEffect with
+        member this.OnApplied(context, message) = 
+            match context with
+            | :? ExtEventsourced<'Message> as persistentContext ->
+                match this with
+                | Persist(events) -> persistentContext.PersistEvent events
+                | PersistAsync(events) -> persistentContext.AsyncPersistEvent events
+                | Defer(events) -> persistentContext.DeferEvent events
+            | _ -> raise (Exception("Cannot use persistent effects in context of non-persistent actor"))
+            
+and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'Message>>(context : IActorContext, actor : 'Actor) as this = 
+    let self = context.Self
+    interface ExtEventsourced<'Message> with
+        member __.Receive() = Input
+        member __.Self = typed self
+        member __.Sender<'Response>() = typed (context.Sender) :> IActorRef<'Response>
+        member __.System = context.System
+        member __.ActorOf(props, name) = context.ActorOf(props, name)
+        member __.ActorSelection(path : string) = context.ActorSelection(path)
+        member __.ActorSelection(path : ActorPath) = context.ActorSelection(path)
+        member __.Watch(aref : IActorRef) = context.Watch aref
+        member __.Unwatch(aref : IActorRef) = context.Unwatch aref
+        member __.Log = lazy (Akka.Event.Logging.GetLogger(context))
+        member __.Stash() = actor.Stash.Stash()
+        member __.Unstash() = actor.Stash.Unstash()
+        member __.UnstashAll() = actor.Stash.UnstashAll()
+        member __.SetReceiveTimeout timeout = context.SetReceiveTimeout(Option.toNullable timeout)
+        member __.Schedule (delay : TimeSpan) target message = 
+            context.System.Scheduler.ScheduleTellOnceCancelable(delay, target, message, self)
+        member __.ScheduleRepeatedly (delay : TimeSpan) (interval : TimeSpan) target message = 
+            context.System.Scheduler.ScheduleTellOnceCancelable(delay, target, message, self)
+        member __.Incarnation() = actor :> ActorBase
+        member __.Stop(ref : IActorRef<'T>) = context.Stop(untyped ref)
+        member __.Unhandled(msg) = 
+            match box actor with
+            | :? FunActor<'Message> as act -> act.InternalUnhandled(msg)
+            | _ -> raise (Exception("Couldn't use actor in typed context"))
+        member __.Journal = actor.Journal
+        member __.SnapshotStore = actor.SnapshotStore
+        member __.IsRecovering () = actor.IsRecovering
+        member __.LastSequenceNr () = actor.LastSequenceNr
+        member __.Pid = actor.PersistenceId
+        member __.PersistEvent(events) = 
+            actor.Persist(events, Action<'Message>(actor.Handle))
+        member __.AsyncPersistEvent(events) = 
+            actor.PersistAsync(events, Action<'Message>(actor.Handle))
+        member __.DeferEvent(events)  = 
+            actor.Defer(events, Action<'Message>(actor.Handle))
+
+and PersistentLifecycleEvent =
+    | ReplaySucceed
+    | ReplayFailed
+    
+and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Behavior<'Message>, pid: PID) as this = 
     inherit UntypedPersistentActor()
-    let mutable deferables = []
-    let mutable state = initState
+    let untypedContext = UntypedActor.Context :> IActorContext
+    let ctx = TypedPersistentContext<'Message, FunPersistentActor<'Message>>(untypedContext, this)
+    let mutable behavior = actor ctx
+    new(actor : Expr<Eventsourced<'Message> -> Behavior<'Message>>, pid: PID) = FunPersistentActor(actor.Compile () (), pid)
     
-    let aggregate = 
-        let self' = this.Self
-        let context = UntypedPersistentActor.Context :> IActorContext
-        
-        let updateState (updater : 'Event -> 'State) e : unit = 
-            state <- updater e
-            ()
-        actor { new Eventsourced<'Command, 'Event, 'State> with
-                    member __.Self = self'
-                    member __.Receive() = Input
-                    member __.Context = context
-                    member __.Sender<'Response>() = typed (this.Sender()) :> IActorRef<'Response>
-                    member __.State() = state
-                    member __.Unhandled msg = this.Unhandled msg
-                    member __.ActorOf(props, name) = context.ActorOf(props, name)
-                    member __.ActorSelection(path : string) = context.ActorSelection(path)
-                    member __.ActorSelection(path : ActorPath) = context.ActorSelection(path)
-                    member __.Watch(aref : IActorRef) = context.Watch aref
-                    member __.Unwatch(aref : IActorRef) = context.Unwatch aref
-                    member __.Log = lazy (Akka.Event.Logging.GetLogger(context))
-                    member __.Defer fn = deferables <- fn :: deferables
-                    member __.DeferEvent callback events = this.Defer(events, Action<_>(updateState callback))
-                    member __.PersistEvent callback events = this.Persist(events, Action<_>(updateState callback))
-                    member __.AsyncPersistEvent callback events = 
-                        this.PersistAsync(events, Action<_>(updateState callback))
-                    member __.Journal = this.Journal
-                    member __.SnapshotStore = this.SnapshotStore
-                    member __.PersistenceId = this.PersistenceId
-                    member __.IsRecovering() = this.IsRecovering
-                    member __.LastSequenceNr() = this.LastSequenceNr
-                    member __.LoadSnapshot pid criteria seqNr = this.LoadSnapshot(pid, criteria, seqNr)
-                    member __.SaveSnapshot state = this.SaveSnapshot(state)
-                    member __.DeleteSnapshot seqNr timestamp = this.DeleteSnapshot(seqNr, timestamp)
-                    member __.DeleteSnapshots criteria = this.DeleteSnapshots(criteria) }
+    member __.Next (current : Behavior<'Message>) (context : Actor<'Message>) (message : obj) : Behavior<'Message> = 
+        match message with
+        | :? 'Message as msg -> 
+            match current with
+            | Become(fn) -> fn msg
+            | _ -> current
+        | :? LifecycleEvent | :? PersistentLifecycleEvent -> 
+            // we don't treat unhandled lifecycle events as casual unhandled messages
+            current
+        | other -> 
+            base.Unhandled other
+            current
     
-    let mutable behavior = aggregate.exec
+    member __.Handle (msg: obj) : unit = 
+        let nextBehavior = this.Next behavior ctx msg
+        match nextBehavior with
+        | Return effect -> effect.OnApplied(ctx, msg :?> 'Message)
+        | _ -> behavior <- nextBehavior
+    
     member __.Sender() : IActorRef = base.Sender
-    member __.Unhandled msg = base.Unhandled msg
+    member __.InternalUnhandled(message: obj) : unit = base.Unhandled message
+    override this.PersistenceId = pid
+    override this.OnCommand msg = this.Handle msg
+    override this.OnRecover msg = this.Handle msg
     
-    override x.OnCommand(msg : obj) = 
-        match behavior with
-        | Func f -> 
-            behavior <- match msg with
-                        | :? 'Command as cmd -> f cmd
-                        | _ -> 
-                            let serializer = UntypedActor.Context.System.Serialization.FindSerializerForType typeof<obj> :?> Akka.Serialization.NewtonSoftJsonSerializer
-                            match Serialization.tryDeserializeJObject serializer.Serializer msg with
-                            | Some(cmd) -> f cmd
-                            | None -> 
-                                x.Unhandled msg
-                                behavior
-        | Return _ -> x.PostStop()
-    
-    override x.OnRecover(msg : obj) = 
-        match msg with
-        | :? 'Event as e -> state <- aggregate.apply state e
-        | _ -> 
-            let serializer = UntypedActor.Context.System.Serialization.FindSerializerForType typeof<obj> :?> Akka.Serialization.NewtonSoftJsonSerializer
-            match Serialization.tryDeserializeJObject serializer.Serializer msg with
-            | Some(e) -> state <- aggregate.apply state e
-            | None -> x.Unhandled msg      
-    
-    override x.PostStop() = 
+    override this.PostStop() = 
         base.PostStop()
-        List.iter (fun fn -> fn()) deferables
+        this.Handle PostStop
     
-    override x.PersistenceId = name
+    override this.PreStart() = 
+        base.PreStart()
+        this.Handle PreStart
+    
+    override this.PreRestart(cause, msg) = 
+        base.PreRestart(cause, msg)
+        this.Handle(PreRestart(cause, msg))
+    
+    override this.PostRestart(cause) = 
+        base.PostRestart cause
+        this.Handle(PostRestart cause)

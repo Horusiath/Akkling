@@ -1,4 +1,5 @@
 FsCheck.Xunit
 Akka
+Akka.TestKit.Xunit2
 Akka.Remote
 Newtonsoft.Json

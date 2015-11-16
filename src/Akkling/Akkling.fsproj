@@ -63,13 +63,16 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Prelude.fs" />
     <Compile Include="Serialization.fs" />
+    <Compile Include="ActorRefs.fs" />
     <Compile Include="Actors.fs" />
+    <Compile Include="ActorBuilder.fs" />
     <Compile Include="Linq.fs" />
     <Compile Include="FaultHandling.fs" />
     <Compile Include="Spawning.fs" />
     <Compile Include="Schedulers.fs" />
     <Compile Include="Logging.fs" />
     <Compile Include="Utils.fs" />
+    <Compile Include="Extensions.fs" />
     <None Include="paket.references" />
     <None Include="Akkling.fsproj.paket.template" />
     <None Include="app.config.install.xdt" />
@@ -298,4 +301,11 @@
       </ItemGroup>
     </When>
   </Choose>
+  <ItemGroup>
+    <Reference Include="Wire">
+      <HintPath>..\..\packages\Wire\lib\Wire.dll</HintPath>
+      <Private>True</Private>
+      <Paket>True</Paket>
+    </Reference>
+  </ItemGroup>
 </Project>

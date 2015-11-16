@@ -18,8 +18,10 @@ module Configuration =
     /// Parses provided HOCON string into a valid Akka configuration object.
     let parse = Akka.Configuration.ConfigurationFactory.ParseString
     
-    /// Returns default Akka configuration.
-    let defaultConfig = Akka.Configuration.ConfigurationFactory.Default
+    /// Returns default Akka for F# configuration.
+    let defaultConfig () = Akka.Configuration.ConfigurationFactory.Default().WithFallback(parse """
+        akka.actor.serialization-bindings = { "System.Object" = wire }
+    """)
     
     /// Loads Akka configuration from the project's .config file.
     let load = Akka.Configuration.ConfigurationFactory.Load
@@ -62,8 +64,8 @@ module Spawn =
     /// <param name="expr">F# expression compiled down to receive function used by actor for response for incoming request</param>
     /// <param name="options">List of options used to configure actor creation</param>
     let spawne (actorFactory : IActorRefFactory) (name : string) 
-        (expr : Expr<Actor<'Message> -> Cont<'Message, 'Returned>>) (options : SpawnOption list) : IActorRef<'Message> = 
-        let e = Linq.Expression.ToExpression(fun () -> new FunActor<'Message, 'Returned>(expr))
+        (expr : Expr<Actor<'Message> -> Behavior<'Message>>) (options : SpawnOption list) : IActorRef<'Message> = 
+        let e = Linq.Expression.ToExpression(fun () -> new FunActor<'Message>(expr))
         let props = applySpawnOptions (Props.Create e) options
         typed (actorFactory.ActorOf(props, name)) :> IActorRef<'Message>
     
@@ -75,12 +77,11 @@ module Spawn =
     /// <param name="name">Name of spawned child actor</param>
     /// <param name="f">Used by actor for handling response for incoming request</param>
     /// <param name="options">List of options used to configure actor creation</param>
-    let spawnOpt (actorFactory : IActorRefFactory) (name : string) (f : Actor<'Message> -> Cont<'Message, 'Returned>) 
-        (options : SpawnOption list) : IActorRef<'Message> = 
-        let e = Linq.Expression.ToExpression(fun () -> new FunActor<'Message, 'Returned>(f))
+    let spawnOpt (options : SpawnOption list) (actorFactory : IActorRefFactory) (name : string) (f : Actor<'Message> -> Behavior<'Message>) : IActorRef<'Message> = 
+        let e = Linq.Expression.ToExpression(fun () -> new FunActor<'Message>(f))
         let props = applySpawnOptions (Props.Create e) options
         typed (actorFactory.ActorOf(props, name)) :> IActorRef<'Message>
-    
+            
     /// <summary>
     /// Spawns an actor using specified actor computation expression.
     /// The actor can only be used locally. 
@@ -88,8 +89,8 @@ module Spawn =
     /// <param name="actorFactory">Either actor system or parent actor</param>
     /// <param name="name">Name of spawned child actor</param>
     /// <param name="f">Used by actor for handling response for incoming request</param>
-    let spawn (actorFactory : IActorRefFactory) (name : string) (f : Actor<'Message> -> Cont<'Message, 'Returned>) : IActorRef<'Message> = 
-        spawnOpt actorFactory name f []
+    let spawn (actorFactory : IActorRefFactory) (name : string) (f : Actor<'Message> -> Behavior<'Message>) : IActorRef<'Message> = 
+        spawnOpt [] actorFactory name f 
     
     /// <summary>
     /// Spawns an actor using specified actor quotation, with custom spawn option settings.
@@ -119,7 +120,7 @@ module Spawn =
     /// Wraps provided function with actor behavior. 
     /// It will be invoked each time, an actor will receive a message. 
     /// </summary>
-    let actorOf (fn : 'Message -> unit) (mailbox : Actor<'Message>) : Cont<'Message, 'Returned> = 
+    let actorOf (fn : 'Message -> unit) (mailbox : Actor<'Message>) : Behavior<'Message> = 
         let rec loop() = 
             actor { 
                 let! msg = mailbox.Receive()
@@ -132,7 +133,7 @@ module Spawn =
     /// Wraps provided function with actor behavior. 
     /// It will be invoked each time, an actor will receive a message. 
     /// </summary>
-    let actorOf2 (fn : Actor<'Message> -> 'Message -> unit) (mailbox : Actor<'Message>) : Cont<'Message, 'Returned> = 
+    let actorOf2 (fn : Actor<'Message> -> 'Message -> unit) (mailbox : Actor<'Message>) : Behavior<'Message> = 
         let rec loop() = 
             actor { 
                 let! msg = mailbox.Receive()
