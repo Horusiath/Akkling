@@ -8,7 +8,7 @@ nuget FSPowerPack.Linq.Community
 nuget FSharp.Formatting
 nuget FsCheck
 nuget FsCheck.Xunit
-nuget FsPickler >= 0.9.11
+nuget FsPickler >= 1.2
 nuget Newtonsoft.Json >= 7.0.1
 nuget Octokit
 nuget SourceLink
@@ -16,11 +16,11 @@ nuget xunit.runner.console
 
 source https://www.myget.org/F/akkadotnet/api/v2
 
-nuget Akka >= 1.0.5
-nuget Akka.Persistence >= 1.0.5
-nuget Akka.Remote >= 1.0.5
-nuget Akka.TestKit >= 1.0.5
-nuget Akka.TestKit.Xunit2 >= 1.0.5
+nuget Akka prerelease
+nuget Akka.Persistence prerelease
+nuget Akka.Remote prerelease
+nuget Akka.TestKit prerelease
+nuget Akka.TestKit.Xunit2 prerelease
 
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx

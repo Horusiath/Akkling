@@ -7,7 +7,7 @@
 //-----------------------------------------------------------------------
 
 [<RequireQualifiedAccess>]
-module internal Akkling.Option
+module Akkling.Option
 
 open System
 

@@ -41,6 +41,13 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Akkling.TestKit", "Akkling.
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "TestConsole", "TestConsole\TestConsole.fsproj", "{E888A71B-E660-48FF-A420-A76300ABC5FA}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{8CC185AC-1D97-41F9-BBF1-09D892CA18B9}"
+	ProjectSection(SolutionItems) = preProject
+		examples\basic.fsx = examples\basic.fsx
+		examples\lifecycle.fsx = examples\lifecycle.fsx
+		examples\persistence.fsx = examples\persistence.fsx
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -14,19 +14,6 @@ open Akka.Util
 open System
 open System.Threading.Tasks
 
-let private tryCast (t:Task<obj>) : 'Message =
-    match t.Result with
-    | :? 'Message as m -> m
-    | o ->
-        let context = Akka.Actor.Internal.InternalCurrentActorCellKeeper.Current
-        if context = null 
-        then failwith "Cannot cast JObject outside the actor system context "
-        else
-            let serializer = context.System.Serialization.FindSerializerForType typeof<'Message> :?> Akka.Serialization.NewtonSoftJsonSerializer
-            match Serialization.tryDeserializeJObject serializer.Serializer o with
-            | Some m -> m
-            | None -> raise (InvalidCastException("Tried to cast JObject to " + typeof<'Message>.ToString()))
-
 /// <summary>
 /// Typed version of <see cref="ICanTell"/> interface. Allows to tell/ask using only messages of restricted type.
 /// </summary>
@@ -57,6 +44,13 @@ type TypedActorRef<'Message>(underlyingRef : IActorRef) as this =
     /// Gets an underlying actor reference wrapped by current object.
     /// </summary>
     member __.Underlying = underlyingRef
+
+    override __.ToString () = underlyingRef.ToString ()
+    override __.GetHashCode () = underlyingRef.GetHashCode ()
+    override __.Equals o = 
+        match o with
+        | :? IActorRef as ref -> (this :> IActorRef).Equals(ref)
+        | _ -> false
     
     interface ICanTell with
         member __.Tell(message : obj, sender : IActorRef) = underlyingRef.Tell(message, sender)
@@ -70,7 +64,9 @@ type TypedActorRef<'Message>(underlyingRef : IActorRef) as this =
         
         member __.Tell(message : 'Message, sender : IActorRef) = underlyingRef.Tell(message :> obj, sender)
         member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<'Response> = 
-            underlyingRef.Ask(message, Option.toNullable timeout).ContinueWith(Func<_,'Response>(tryCast), TaskContinuationOptions.AttachedToParent|||TaskContinuationOptions.ExecuteSynchronously)
+            underlyingRef
+                .Ask(message, Option.toNullable timeout)
+                .ContinueWith(Func<Task<obj>,'Response>(fun t -> t.Result :?> 'Response), TaskContinuationOptions.ExecuteSynchronously)
             |> Async.AwaitTask
         member __.Path = underlyingRef.Path
         
@@ -105,8 +101,16 @@ and TypedActorRefSurrogate<'Message> =
 /// Returns typed wrapper over provided actor reference.
 /// </summary>
 let inline typed (actorRef : IActorRef) : IActorRef<'Message> = 
-    (TypedActorRef<'Message> actorRef) :> IActorRef<'Message>
+    if actorRef :? TypedActorRef<'Message> then actorRef :?> TypedActorRef<'Message> :> IActorRef<'Message>
+    else (TypedActorRef<'Message> actorRef) :> IActorRef<'Message>
 
+/// <summary>
+/// Returns untyped <see cref="IActorRef" /> form of current typed actor.
+/// </summary>
+/// <param name="typedRef"></param>
+let inline untyped (typedRef: IActorRef<'Message>) : IActorRef =
+    (typedRef :?> TypedActorRef<'Message>).Underlying
+    
 /// <summary>
 /// Typed wrapper for <see cref="ActorSelection"/> objects.
 /// </summary>
@@ -137,6 +141,8 @@ type TypedActorSelection<'Message>(selection : ActorSelection) =
     /// </summary>
     member __.Path with set (e) = selection.Path <- e
 
+    override __.ToString () = selection.ToString ()
+
     /// <summary>
     /// Tries to resolve an actor reference from current actor selection.
     /// </summary>
@@ -159,7 +165,7 @@ type TypedActorSelection<'Message>(selection : ActorSelection) =
     interface ICanTell<'Message> with
         member __.Tell(message : 'Message, sender : IActorRef) : unit = selection.Tell(message, sender)
         member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<'Response> = 
-            Async.AwaitTask(selection.Ask<'Response>(message, Option.toNullable timeout))    
+            Async.AwaitTask(selection.Ask<'Response>(message, Option.toNullable timeout))
             
 /// <summary>
 /// Unidirectional send operator. 

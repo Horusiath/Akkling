@@ -27,7 +27,7 @@ let ``Actor defined by recursive function responds on series of primitive messag
     expectMsg tck 3 |> ignore
 
 [<Fact>]
-let ``Actor defined by recursive function stops on return escape`` () = testDefault <| fun tck -> 
+let ``Actor defined by recursive function stops on return Stop`` () = testDefault <| fun tck -> 
     let aref = 
         spawn tck "actor"
         <| fun mailbox ->
@@ -36,7 +36,6 @@ let ``Actor defined by recursive function stops on return escape`` () = testDefa
                     let! msg = mailbox.Receive ()
                     match msg with
                     | "stop" -> return Stop
-                    | "unhandled" -> return Unhandled
                     | x -> 
                         mailbox.Sender() <! x
                         return! loop ()
@@ -48,10 +47,38 @@ let ``Actor defined by recursive function stops on return escape`` () = testDefa
     aref <! "a"
     aref <! "b"
     aref <! "stop"
-    aref <! "unhandled"
     aref <! "c"
     
     expectMsg tck "a" |> ignore
     expectMsg tck "b" |> ignore
     expectTerminated tck aref |> ignore
     expectNoMsg tck 
+
+[<Fact>]
+let ``Actor defined by recursive function unhandles message on return Unhandled`` () = testDefault <| fun tck ->
+    let aref = 
+        spawn tck "actor"
+        <| fun mailbox ->
+            let rec loop () =
+                actor {
+                    let! msg = mailbox.Receive ()
+                    match msg with
+                    | "unhandled" -> return Unhandled
+                    | x -> 
+                        mailbox.Sender() <! x
+                        return! loop ()
+                }
+            loop ()
+
+    expectEvent 1 
+    <| deadLettersEvents tck
+    <| fun () ->
+        aref <! "a"
+        aref <! "b"
+        aref <! "unhandled"
+        aref <! "c"
+
+        expectMsg tck "a" |> ignore
+        expectMsg tck "b" |> ignore
+        expectMsg tck "c" |> ignore
+        expectNoMsg tck

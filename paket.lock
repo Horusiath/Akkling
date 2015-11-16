@@ -23,12 +23,12 @@ NUGET
       xunit.extensibility.core (>= 2.0.0)
   remote: https://nuget.org/api/v2
   specs:
-    FAKE (4.7.2)
-    FsCheck (2.1.0)
+    FAKE (4.9.1)
+    FsCheck (2.2.2)
       FSharp.Core (>= 3.1.2.5)
-    FsCheck.Xunit (2.1.0)
-      FsCheck (>= 2.1.0)
-      xunit.extensibility.execution (>= 2.1.0)
+    FsCheck.Xunit (2.2.2)
+      FsCheck (>= 2.2.2)
+      xunit.extensibility.execution (>= 2.1.0 < 2.2.0)
     FSharp.Compiler.Service (1.4.0.6)
     FSharp.Core (4.0.0.1)
     FSharp.Formatting (2.12.0)
@@ -220,5 +220,5 @@ NUGET
 GITHUB
   remote: fsharp/FAKE
   specs:
-    modules/Octokit/Octokit.fsx (0cedad490fa06bd072823b2215f3f05cf917a7ba)
+    modules/Octokit/Octokit.fsx (35561a758d7a299e57832375cad11ad6213e70c8)
       Octokit

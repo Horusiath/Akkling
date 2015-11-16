@@ -77,26 +77,11 @@ module Spawn =
     /// <param name="name">Name of spawned child actor</param>
     /// <param name="f">Used by actor for handling response for incoming request</param>
     /// <param name="options">List of options used to configure actor creation</param>
-    let spawnOpt (actorFactory : IActorRefFactory) (name : string) (f : Actor<'Message> -> Behavior<'Message>) 
-        (options : SpawnOption list) : IActorRef<'Message> = 
+    let spawnOpt (options : SpawnOption list) (actorFactory : IActorRefFactory) (name : string) (f : Actor<'Message> -> Behavior<'Message>) : IActorRef<'Message> = 
         let e = Linq.Expression.ToExpression(fun () -> new FunActor<'Message>(f))
         let props = applySpawnOptions (Props.Create e) options
         typed (actorFactory.ActorOf(props, name)) :> IActorRef<'Message>
-        
-    /// <summary>
-    /// Spawns an anoynous actor using specified actor computation expression, with custom spawn option settings.
-    /// The actor can only be used locally. 
-    /// </summary>
-    /// <param name="actorFactory">Either actor system or parent actor</param>
-    /// <param name="name">Name of spawned child actor</param>
-    /// <param name="f">Used by actor for handling response for incoming request</param>
-    /// <param name="options">List of options used to configure actor creation</param>
-    let spawnAnonymous (actorFactory : IActorRefFactory) (f : Actor<'Message> -> Behavior<'Message>) 
-        (options : SpawnOption list) : IActorRef<'Message> = 
-        let e = Linq.Expression.ToExpression(fun () -> new FunActor<'Message>(f))
-        let props = applySpawnOptions (Props.Create e) options
-        typed (actorFactory.ActorOf(props)) :> IActorRef<'Message>
-    
+            
     /// <summary>
     /// Spawns an actor using specified actor computation expression.
     /// The actor can only be used locally. 
@@ -105,7 +90,7 @@ module Spawn =
     /// <param name="name">Name of spawned child actor</param>
     /// <param name="f">Used by actor for handling response for incoming request</param>
     let spawn (actorFactory : IActorRefFactory) (name : string) (f : Actor<'Message> -> Behavior<'Message>) : IActorRef<'Message> = 
-        spawnOpt actorFactory name f []
+        spawnOpt [] actorFactory name f 
     
     /// <summary>
     /// Spawns an actor using specified actor quotation, with custom spawn option settings.
