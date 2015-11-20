@@ -155,7 +155,7 @@ and PersistentLifecycleEvent =
     
 and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Behavior<'Message>, pid: PID) as this = 
     inherit UntypedPersistentActor()
-    let untypedContext = UntypedActor.Context :> IActorContext
+    let untypedContext = UntypedActor.Context
     let ctx = TypedPersistentContext<'Message, FunPersistentActor<'Message>>(untypedContext, this)
     let mutable behavior = actor ctx
     new(actor : Expr<Eventsourced<'Message> -> Behavior<'Message>>, pid: PID) = FunPersistentActor(actor.Compile () (), pid)

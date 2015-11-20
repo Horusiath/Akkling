@@ -86,7 +86,7 @@ and TypedViewContext<'Message, 'Actor when 'Actor :> FunPersistentView<'Message>
             
 and FunPersistentView<'Message>(actor : View<'Message> -> Behavior<'Message>, pid: PID, viewId: PID) as this = 
     inherit PersistentView()
-    let untypedContext = UntypedActor.Context :> IActorContext
+    let untypedContext = UntypedActor.Context
     let ctx = TypedViewContext<'Message, FunPersistentView<'Message>>(untypedContext, this)
     let mutable behavior = actor ctx
     new(actor : Expr<View<'Message> -> Behavior<'Message>>, pid: PID, viewId: PID) = FunPersistentView(actor.Compile () (), pid, viewId)

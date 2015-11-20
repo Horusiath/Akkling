@@ -127,7 +127,7 @@ type TypedContext<'Message, 'Actor when 'Actor :> ActorBase and 'Actor :> IWithU
         member __.Schedule (delay : TimeSpan) target message = 
             context.System.Scheduler.ScheduleTellOnceCancelable(delay, target, message, self)
         member __.ScheduleRepeatedly (delay : TimeSpan) (interval : TimeSpan) target message = 
-            context.System.Scheduler.ScheduleTellOnceCancelable(delay, target, message, self)
+            context.System.Scheduler.ScheduleTellRepeatedlyCancelable(delay, interval, target, message, self)
         member __.Incarnation() = actor :> ActorBase
         member __.Stop(ref : IActorRef<'T>) = context.Stop(untyped ref)
         member __.Unhandled(msg) = 
