@@ -148,23 +148,23 @@ and LifecycleEvent =
     | PostRestart of cause : exn
 
 
-and [<Interface>]IEffect = 
+and [<Interface>]Effect = 
     abstract OnApplied : ExtActor<'Message> * 'Message -> unit
 
 and ActorEffect = 
     | Unhandled
     | Stop
     | Ignore
-    interface IEffect with
+    interface Effect with
         member this.OnApplied(context : ExtActor<'Message>, message : 'Message) = 
             match this with
             | Unhandled -> context.Unhandled message
             | Stop -> context.Stop (context.Self)
-            | Ignore -> ()
+            | Ignore -> ()    
 
 and Behavior<'Message> = 
     | Become of ('Message -> Behavior<'Message>)
-    | Return of IEffect
+    | Return of Effect
 
 and FunActor<'Message>(actor : Actor<'Message> -> Behavior<'Message>) as this = 
     inherit Actor()

@@ -54,6 +54,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="PersistentActor.fs" />
     <Compile Include="PersistentView.fs" />
+    <Compile Include="Patterns.fs" />
     <Compile Include="Spawning.fs" />
     <None Include="paket.references" />
     <None Include="Akkling.Persistence.fsproj.paket.template" />

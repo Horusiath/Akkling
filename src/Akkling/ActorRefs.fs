@@ -33,12 +33,15 @@ type IActorRef<'Message> =
     /// <summary>
     /// Changes the type of handled messages, returning new typed ActorRef.
     /// </summary>
-    abstract Switch<'T> : unit -> IActorRef<'T>
+    abstract Retype<'T> : unit -> IActorRef<'T>
 
 /// <summary>
 /// Wrapper around untyped instance of IActorRef interface.
 /// </summary>
-type TypedActorRef<'Message>(underlyingRef : IActorRef) as this = 
+[<Struct>]
+[<CustomEquality>]
+[<CustomComparison>]
+type TypedActorRef<'Message>(underlyingRef : IActorRef) = 
     
     /// <summary>
     /// Gets an underlying actor reference wrapped by current object.
@@ -47,7 +50,7 @@ type TypedActorRef<'Message>(underlyingRef : IActorRef) as this =
 
     override __.ToString () = underlyingRef.ToString ()
     override __.GetHashCode () = underlyingRef.GetHashCode ()
-    override __.Equals o = 
+    override this.Equals o = 
         match o with
         | :? IActorRef as ref -> (this :> IActorRef).Equals(ref)
         | _ -> false
@@ -60,7 +63,7 @@ type TypedActorRef<'Message>(underlyingRef : IActorRef) as this =
         /// <summary>
         /// Changes the type of handled messages, returning new typed ActorRef.
         /// </summary>
-        member __.Switch<'T>() = TypedActorRef<'T>(underlyingRef) :> IActorRef<'T>
+        member __.Retype<'T>() = TypedActorRef<'T>(underlyingRef) :> IActorRef<'T>
         
         member __.Tell(message : 'Message, sender : IActorRef) = underlyingRef.Tell(message :> obj, sender)
         member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<'Response> = 
@@ -107,13 +110,20 @@ let inline typed (actorRef : IActorRef) : IActorRef<'Message> =
 /// <summary>
 /// Returns untyped <see cref="IActorRef" /> form of current typed actor.
 /// </summary>
-/// <param name="typedRef"></param>
 let inline untyped (typedRef: IActorRef<'Message>) : IActorRef =
     (typedRef :?> TypedActorRef<'Message>).Underlying
+
+/// <summary>
+/// Changes type of messages handled by provided typedRef, returning new typed actor ref.
+/// </summary>
+let inline retype (typedRef: IActorRef<'T>) : IActorRef<'U> = typedRef.Retype<'U>()
     
 /// <summary>
 /// Typed wrapper for <see cref="ActorSelection"/> objects.
 /// </summary>
+[<Struct>]
+[<CustomEquality>]
+[<CustomComparison>]
 type TypedActorSelection<'Message>(selection : ActorSelection) = 
 
     /// <summary>
@@ -166,6 +176,13 @@ type TypedActorSelection<'Message>(selection : ActorSelection) =
         member __.Tell(message : 'Message, sender : IActorRef) : unit = selection.Tell(message, sender)
         member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<'Response> = 
             Async.AwaitTask(selection.Ask<'Response>(message, Option.toNullable timeout))
+
+    interface IComparable with
+        member this.CompareTo other =
+            match other with
+            | :? TypedActorSelection<_> as typed -> typed.Underlying.PathString.CompareTo (this.Underlying.PathString)
+            | :? ActorSelection as untyped -> untyped.PathString.CompareTo (this.Underlying.PathString)
+            | _ -> -1
             
 /// <summary>
 /// Unidirectional send operator. 

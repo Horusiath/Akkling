@@ -19,7 +19,7 @@ open System
 /// The builder for actor computation expression.
 type ActorBuilder() =
     member __.Bind(_ : IO<'In>, continuation : 'In -> Behavior<'In>) = Become(fun message -> continuation message)
-    member this.Bind(behavior : Behavior<'In>, continuation : IEffect -> Behavior<'In>) : Behavior<'In> = 
+    member this.Bind(behavior : Behavior<'In>, continuation : Effect -> Behavior<'In>) : Behavior<'In> = 
         match behavior with
         | Become next -> Become(fun message -> this.Bind(next message, continuation))
         | Return returned -> continuation returned    

@@ -1,3 +1,11 @@
+### New in 0.2 (Released 2015/11/20)
+* New effects-based actor expression API
+* New Persistence API based on effects
+* Actor/persistent actor lifecycle events handled as messages
+* using Akka nightly builds
+* switched to Wire as default serializer
+* minor function arguments precedence redesign
+
 ### New in 0.1.1 (Released 2015/08/08)
 * Fixed problem with Discriminated Unions serialization
 * Upgraded to Akka 1.0.4 and FsPickler 1.2
