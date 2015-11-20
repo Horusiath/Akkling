@@ -43,12 +43,9 @@ let counter =
                     | Dec -> return Persist [ Event { Delta = -1 } ]
             }
         loop 0
-
+        
 counter <! Command Inc
 counter <! Command Inc
 counter <! Command Dec
-
-async {
-    let! reply = counter <? Command GetState
-    printfn "Current state of %A: %i" counter reply
-} |> Async.RunSynchronously
+async { let! reply = counter <? Command GetState
+        printfn "Current state of %A: %i" counter reply } |> Async.RunSynchronously

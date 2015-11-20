@@ -45,6 +45,16 @@ type Eventsourced<'Message> =
     /// Persistent actor's identifier that doesn't change across different actor incarnations.
     /// </summary>
     abstract Pid : PID
+    
+    /// <summary>
+    /// Flag which informs if current actor is acutally during execution of persisting handler.
+    /// </summary>
+    abstract HasPersisted: unit -> bool
+
+    /// <summary>
+    /// Flag which informs if current actor is acutally during execution of deffered handler.
+    /// </summary>
+    abstract HasDeffered : unit -> bool
 
 and [<Interface>]PersistentContext<'Event> =
     
@@ -76,7 +86,7 @@ and PersistentEffect<'Message> =
     | Persist of 'Message seq
     | PersistAsync of 'Message seq
     | Defer of 'Message seq
-    interface IEffect with
+    interface Effect with
         member this.OnApplied(context, message) = 
             match context with
             | :? ExtEventsourced<'Message> as persistentContext ->
@@ -88,7 +98,21 @@ and PersistentEffect<'Message> =
             
 and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'Message>>(context : IActorContext, actor : 'Actor) as this = 
     let self = context.Self
+    let mutable hasPersisted = false
+    let mutable hasDeffered = false
+    member private this.Persisting =
+        Action<'Message>( fun e ->
+            hasPersisted <- true
+            actor.Handle e
+            hasPersisted <- false)
+    member private this.Deffering =
+        Action<'Message>( fun e ->
+            hasDeffered <- true
+            actor.Handle e
+            hasDeffered <- false)
     interface ExtEventsourced<'Message> with
+        member __.HasPersisted () = hasPersisted
+        member __.HasDeffered () = hasDeffered
         member __.Receive() = Input
         member __.Self = typed self
         member __.Sender<'Response>() = typed (context.Sender) :> IActorRef<'Response>
@@ -118,12 +142,12 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
         member __.IsRecovering () = actor.IsRecovering
         member __.LastSequenceNr () = actor.LastSequenceNr
         member __.Pid = actor.PersistenceId
-        member __.PersistEvent(events) = 
-            actor.Persist(events, Action<'Message>(actor.Handle))
+        member this.PersistEvent(events) = 
+            actor.Persist(events, this.Persisting)
         member __.AsyncPersistEvent(events) = 
-            actor.PersistAsync(events, Action<'Message>(actor.Handle))
+            actor.PersistAsync(events, this.Persisting)
         member __.DeferEvent(events)  = 
-            actor.Defer(events, Action<'Message>(actor.Handle))
+            actor.Defer(events, this.Deffering)
 
 and PersistentLifecycleEvent =
     | ReplaySucceed
