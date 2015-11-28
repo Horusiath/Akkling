@@ -17,7 +17,7 @@ type IO<'T> =
     | Input
 
 /// <summary>
-/// Exposes an Akka.NET actor API accessible from inside of F# continuations -> <see cref="Cont{'In, 'Out}" />
+/// Exposes an Akka.NET actor API accessible from inside of F# continuations
 /// </summary>
 [<Interface>]
 type Actor<'Message> = 
@@ -100,7 +100,7 @@ type ExtContext =
 
 
 /// <summary>
-/// Exposes an Akka.NET extended actor API accessible from inside of F# continuations -> <see cref="Cont{'In, 'Out}" />
+/// Exposes an Akka.NET extended actor API accessible from inside of F# continuations 
 /// </summary>
 [<Interface>]
 type ExtActor<'Message> = 

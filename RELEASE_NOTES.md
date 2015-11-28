@@ -1,4 +1,4 @@
-### New in 0.2 (Released 2015/11/20)
+### New in 0.2.0 (Released 2015/11/20)
 * New effects-based actor expression API
 * New Persistence API based on effects
 * Actor/persistent actor lifecycle events handled as messages
