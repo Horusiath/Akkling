@@ -19,9 +19,7 @@ module Configuration =
     let parse = Akka.Configuration.ConfigurationFactory.ParseString
     
     /// Returns default Akka for F# configuration.
-    let defaultConfig () = Akka.Configuration.ConfigurationFactory.Default().WithFallback(parse """
-        akka.actor.serialization-bindings = { "System.Object" = wire }
-    """)
+    let defaultConfig () = Akka.Configuration.ConfigurationFactory.Default()
     
     /// Loads Akka configuration from the project's .config file.
     let load = Akka.Configuration.ConfigurationFactory.Load
@@ -29,8 +27,20 @@ module Configuration =
 module System = 
     /// Creates an actor system with remote deployment serialization enabled.
     let create (name : string) (config : Akka.Configuration.Config) : ActorSystem = 
-        let system = ActorSystem.Create(name, config)
-        Serialization.exprSerializationSupport system
+        let extConfig = config.WithFallback(Configuration.parse """
+            akka.actor {
+                serializers {
+                    wire = "Akkling.Serialization.WireSerializer, Akkling"
+                }
+                serialization-bindings {
+                  "System.Object" = wire
+                }
+            }
+        """)
+        let system = ActorSystem.Create(name, extConfig)
+        let exprSerializer = Akkling.Serialization.ExprSerializer(system :?> ExtendedActorSystem)
+        system.Serialization.AddSerializer(exprSerializer)
+        system.Serialization.AddSerializationMap(typeof<Expr>, exprSerializer)
         system
 
 [<AutoOpen>]
@@ -63,8 +73,8 @@ module Spawn =
     /// <param name="name">Name of spawned child actor</param>
     /// <param name="expr">F# expression compiled down to receive function used by actor for response for incoming request</param>
     /// <param name="options">List of options used to configure actor creation</param>
-    let spawne (actorFactory : IActorRefFactory) (name : string) 
-        (expr : Expr<Actor<'Message> -> Behavior<'Message>>) (options : SpawnOption list) : IActorRef<'Message> = 
+    let spawne (options : SpawnOption list) (actorFactory : IActorRefFactory) (name : string) 
+        (expr : Expr<Actor<'Message> -> Behavior<'Message>>) : IActorRef<'Message> = 
         let e = Linq.Expression.ToExpression(fun () -> new FunActor<'Message>(expr))
         let props = applySpawnOptions (Props.Create e) options
         typed (actorFactory.ActorOf(props, name)) :> IActorRef<'Message>

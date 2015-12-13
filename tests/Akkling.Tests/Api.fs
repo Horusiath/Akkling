@@ -114,7 +114,7 @@ let ``can serialize and deserialize discriminated unions over remote nodes`` () 
     use client = System.create "client-system" (remoteConfig 0)
 
     let aref = 
-        spawne client "a-1" <@ actorOf2 testBehavior @> [SpawnOption.Deploy (Deploy(RemoteScope (Address.Parse "akka.tcp://server-system@localhost:9911")))]
+        spawne [SpawnOption.Deploy (Deploy(RemoteScope (Address.Parse "akka.tcp://server-system@localhost:9911")))] client "a-1" <@ actorOf2 testBehavior @> 
     let msg = Succeed("a-11", Inner(11, "a-12"))
     let response : OuterUnion = aref <? msg |> Async.RunSynchronously
     response

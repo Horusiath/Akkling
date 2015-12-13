@@ -5,34 +5,43 @@
 //     Copyright (C) 2015 Bartosz Sypytkowski <gttps://github.com/Horusiath>
 // </copyright>
 //-----------------------------------------------------------------------
-
-module Akkling.Serialization
+namespace Akkling.Serialization
 
 open Akka.Actor
+open Akka.Util
 open System
+open System.IO
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Linq.QuotationEvaluation
-open Nessos.FsPickler
-open Akka.Serialization
 
-let internal serializeToBinary (fsp:BinarySerializer) o : byte array = fsp.Pickle o
-
-let internal deserializeFromBinary (fsp:BinarySerializer) (bytes: byte array) : 'Deserialized = fsp.UnPickle bytes
+type WireSerializer(system) = 
+    inherit Akka.Serialization.Serializer(system)
+    let surrogate = 
+        Wire.Surrogate.Create<ISurrogated, ISurrogate>
+            (Func<ISurrogated, ISurrogate>(fun from -> from.ToSurrogate(system)), 
+             Func<ISurrogate, ISurrogated>(fun dst -> dst.FromSurrogate(system)))
+    let serializer = Wire.Serializer(Wire.SerializerOptions(true, [ surrogate ], true))
+    override __.Identifier = -14
+    override __.IncludeManifest = false
+    
+    override __.ToBinary(o) = 
+        use stream = new MemoryStream()
+        serializer.Serialize(o, stream)
+        stream.ToArray()
+    
+    override __.FromBinary(bytes, _) = 
+        use stream = new MemoryStream(bytes)
+        serializer.Deserialize(stream)
         
+open Nessos.FsPickler
 
 // used for top level serialization
 type ExprSerializer(system) = 
-    inherit Serializer(system)
+    inherit Akka.Serialization.Serializer(system)
     let fsp = FsPickler.CreateBinarySerializer()
     override __.Identifier = 9
     override __.IncludeManifest = true
-    override __.ToBinary(o) = serializeToBinary fsp (o :?> Expr)
+    override __.ToBinary(o) = fsp.Pickle (o :?> Expr)
     override __.FromBinary(bytes, _) =
-        let deserialized: Expr = deserializeFromBinary fsp bytes
+        let deserialized: Expr = fsp.UnPickle bytes
         upcast deserialized
-
-let internal exprSerializationSupport (system : ActorSystem) = 
-    let serializer = ExprSerializer(system :?> ExtendedActorSystem)
-    system.Serialization.AddSerializer(serializer)
-    system.Serialization.AddSerializationMap(typeof<Expr>, serializer)
-

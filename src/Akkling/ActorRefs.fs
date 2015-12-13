@@ -34,6 +34,7 @@ type IActorRef<'Message> =
     /// Changes the type of handled messages, returning new typed ActorRef.
     /// </summary>
     abstract Retype<'T> : unit -> IActorRef<'T>
+    abstract Forward : 'Message -> unit
 
 /// <summary>
 /// Wrapper around untyped instance of IActorRef interface.
@@ -66,6 +67,7 @@ type TypedActorRef<'Message>(underlyingRef : IActorRef) =
         member __.Retype<'T>() = TypedActorRef<'T>(underlyingRef) :> IActorRef<'T>
         
         member __.Tell(message : 'Message, sender : IActorRef) = underlyingRef.Tell(message :> obj, sender)
+        member __.Forward(message : 'Message) = underlyingRef.Forward(message)
         member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<'Response> = 
             underlyingRef
                 .Ask(message, Option.toNullable timeout)
@@ -197,6 +199,13 @@ let inline (<!) (actorRef : #ICanTell<'Message>) (msg : 'Message) : unit =
 /// </summary>
 let inline (<?) (tell : #ICanTell<'Message>) (msg : 'Message) : Async<'Response> = tell.Ask<'Response>(msg, None)
 
+/// <summary>
+/// Unidirectional forward operator. 
+/// Sends a message object directly to actor tracked by actorRef without overriding it's sender. 
+/// </summary>
+let inline (<<!) (actorRef : #IActorRef<'Message>) (msg : 'Message) : unit = 
+    actorRef.Forward(msg)
+
 /// Pipes an output of asynchronous expression directly to the recipients mailbox.
 let pipeTo (sender : IActorRef) (recipient : ICanTell<'Message>) (computation : Async<'Message>): unit = 
     let success (result : 'Message) : unit = recipient.Tell(result, sender)
@@ -215,5 +224,5 @@ let inline (<!|) (recipient : ICanTell<'Message>) (computation : Async<'Message>
 /// Returns an instance of <see cref="ActorSelection" /> for specified path. 
 /// If no matching receiver will be found, a <see cref="ActorRefs.NoSender" /> instance will be returned. 
 /// </summary>
-let inline select (path : string) (selector : IActorRefFactory) : TypedActorSelection<'Message> = 
+let inline select (selector : IActorRefFactory) (path : string) : TypedActorSelection<'Message> = 
     TypedActorSelection(selector.ActorSelection path)
