@@ -1,5 +1,6 @@
 source https://nuget.org/api/v2
 
+nuget FsPickler
 nuget Wire
 nuget Helios
 nuget Google.ProtocolBuffers
@@ -8,7 +9,6 @@ nuget FSPowerPack.Linq.Community
 nuget FSharp.Formatting
 nuget FsCheck
 nuget FsCheck.Xunit
-nuget FsPickler >= 1.2
 nuget Newtonsoft.Json >= 7.0.1
 nuget Octokit
 nuget SourceLink

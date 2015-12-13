@@ -1,13 +1,13 @@
 #r "../src/Akkling/bin/Debug/Akka.dll"
 #r "../src/Akkling/bin/Debug/Wire.dll"
 #r "../src/Akkling/bin/Debug/Newtonsoft.Json.dll"
-#r "../src/Akkling/bin/Debug/FsPickler.dll"
 #r "../src/Akkling/bin/Debug/FSharp.PowerPack.dll"
 #r "../src/Akkling/bin/Debug/FSharp.PowerPack.Linq.dll"
 #r "../src/Akkling/bin/Debug/Akkling.dll"
 
 open System
 open Akkling
+open Akka.Actor
 
 let system = System.create "basic-sys" <| Configuration.defaultConfig()
 
@@ -26,5 +26,3 @@ let helloRef = spawn system "hello-actor" <| fun m ->
 helloRef <! "ok"
 helloRef <! "unhandle"
 helloRef <! "ok"
-helloRef <! "stop"
-helloRef <! "never received"
