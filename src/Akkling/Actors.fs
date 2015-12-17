@@ -45,6 +45,11 @@ type Actor<'Message> =
     abstract Sender<'Response> : unit -> IActorRef<'Response>
     
     /// <summary>
+    /// Returns a parrent of current actor.
+    /// </summary>
+    abstract Parent<'Other> : unit -> IActorRef<'Other>
+
+    /// <summary>
     /// Lazy logging adapter. It won't be initialized until logging function will be called. 
     /// </summary>
     abstract Log : Lazy<Akka.Event.ILoggingAdapter>
@@ -113,6 +118,7 @@ type TypedContext<'Message, 'Actor when 'Actor :> ActorBase and 'Actor :> IWithU
         member __.Receive() = Input
         member __.Self = typed self
         member __.Sender<'Response>() = typed (context.Sender) :> IActorRef<'Response>
+        member __.Parent<'Other>() = typed (context.Parent) :> IActorRef<'Other>
         member __.System = context.System
         member __.ActorOf(props, name) = context.ActorOf(props, name)
         member __.ActorSelection(path : string) = context.ActorSelection(path)

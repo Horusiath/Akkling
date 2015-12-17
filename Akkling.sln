@@ -42,6 +42,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{8CC185AC-1D97-41F9-BBF1-09D892CA18B9}"
 	ProjectSection(SolutionItems) = preProject
 		examples\basic.fsx = examples\basic.fsx
+		examples\io.fsx = examples\io.fsx
 		examples\lifecycle.fsx = examples\lifecycle.fsx
 		examples\persistence.fsx = examples\persistence.fsx
 		examples\remote.fsx = examples\remote.fsx
