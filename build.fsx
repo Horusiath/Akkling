@@ -264,16 +264,16 @@ Target "AddLangDocs" (fun _ ->
 // --------------------------------------------------------------------------------------
 // Release Scripts
 
-Target "ReleaseDocs" (fun _ ->
-    let tempDocsDir = "temp/gh-pages"
-    CleanDir tempDocsDir
-    Repository.cloneSingleBranch "" (gitHome + "/" + gitName + ".git") "gh-pages" tempDocsDir
-
-    CopyRecursive "docs/output" tempDocsDir true |> tracefn "%A"
-    StageAll tempDocsDir
-    Git.Commit.Commit tempDocsDir (sprintf "Update generated documentation for version %s" release.NugetVersion)
-    Branches.push tempDocsDir
-)
+//Target "ReleaseDocs" (fun _ ->
+//    let tempDocsDir = "temp/gh-pages"
+//    CleanDir tempDocsDir
+//    Repository.cloneSingleBranch "" (gitHome + "/" + gitName + ".git") "gh-pages" tempDocsDir
+//
+//    CopyRecursive "docs/output" tempDocsDir true |> tracefn "%A"
+//    StageAll tempDocsDir
+//    Git.Commit.Commit tempDocsDir (sprintf "Update generated documentation for version %s" release.NugetVersion)
+//    Branches.push tempDocsDir
+//)
 
 #load "paket-files/fsharp/FAKE/modules/Octokit/Octokit.fsx"
 open Octokit
@@ -309,7 +309,6 @@ Target "All" DoNothing
   //==> "GenerateReferenceDocs"
   ==> "GenerateDocs"
   ==> "All"
-  =?> ("ReleaseDocs",isLocalBuild)
 
 "All" 
   ==> "NuGet"
@@ -326,9 +325,6 @@ Target "All" DoNothing
 "GenerateHelp"
   ==> "KeepRunning"
     
-"ReleaseDocs"
-  ==> "Release"
-
 "BuildPackage"
   ==> "PublishNuget"
   ==> "Release"

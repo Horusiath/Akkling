@@ -14,12 +14,25 @@ open System
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Linq.QuotationEvaluation
 
-type ExprDecider(expr : Expr<exn -> Directive>) = 
+type ExprDeciderSurrogate(serializedExpr : byte array) = 
+    member __.SerializedExpr = serializedExpr
+    interface ISurrogate with
+        member this.FromSurrogate _ = 
+            let fsp = Nessos.FsPickler.FsPickler.CreateBinarySerializer()
+            let expr: Expr<(exn->Directive)> = fsp.UnPickle (this.SerializedExpr)
+            ExprDecider(expr) :> ISurrogated
+
+and ExprDecider(expr : Expr<exn -> Directive>) = 
     member __.Expr = expr
     member private this.Compiled = lazy this.Expr.Compile () ()
     
     interface IDecider with
         member this.Decide(e : exn) : Directive = this.Compiled.Value(e)
+    
+    interface ISurrogated with
+        member this.ToSurrogate _ = 
+            let fsp = Nessos.FsPickler.FsPickler.CreateBinarySerializer()
+            ExprDeciderSurrogate(fsp.Pickle this.Expr) :> ISurrogate
 
 type Strategy = 
     
