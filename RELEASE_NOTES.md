@@ -1,3 +1,11 @@
+### New in 0.2.1 (Released 2015/12/17)
+* Forward operator `<<!`
+* Parent property in actor contexts
+* Split Persist/PersistAsyn effect into single- and multi-event versions
+* Initialized native F# support for Akka.IO (Akkling.IO namespace)
+* F# support for some of the Akka system messages in form of active patterns.
+* Akkling.Behaviors module with set of common behaviors.
+
 ### New in 0.2.0 (Released 2015/11/20)
 * New effects-based actor expression API
 * New Persistence API based on effects
