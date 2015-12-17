@@ -83,16 +83,20 @@ and [<Interface>]ExtEventsourced<'Message> =
     inherit ExtActor<'Message>
 
 and PersistentEffect<'Message> =
-    | Persist of 'Message seq
-    | PersistAsync of 'Message seq
+    | Persist of 'Message
+    | PersistAll of 'Message seq
+    | PersistAsync of 'Message
+    | PersistAllAsync of 'Message seq
     | Defer of 'Message seq
     interface Effect with
         member this.OnApplied(context, message) = 
             match context with
             | :? ExtEventsourced<'Message> as persistentContext ->
                 match this with
-                | Persist(events) -> persistentContext.PersistEvent events
-                | PersistAsync(events) -> persistentContext.AsyncPersistEvent events
+                | Persist(event) -> persistentContext.PersistEvent [event]
+                | PersistAll(events) -> persistentContext.PersistEvent events
+                | PersistAsync(event) -> persistentContext.AsyncPersistEvent [event]
+                | PersistAllAsync(events) -> persistentContext.AsyncPersistEvent events
                 | Defer(events) -> persistentContext.DeferEvent events
             | _ -> raise (Exception("Cannot use persistent effects in context of non-persistent actor"))
             
@@ -116,6 +120,7 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
         member __.Receive() = Input
         member __.Self = typed self
         member __.Sender<'Response>() = typed (context.Sender) :> IActorRef<'Response>
+        member __.Parent<'Other>() = typed (context.Parent) :> IActorRef<'Other>
         member __.System = context.System
         member __.ActorOf(props, name) = context.ActorOf(props, name)
         member __.ActorSelection(path : string) = context.ActorSelection(path)

@@ -19,7 +19,11 @@ let (|Terminated|_|) (msg: obj) : (IActorRef<'T> * bool * bool) option =
     | :? Terminated as t -> Some((typed t.ActorRef, t.ExistenceConfirmed, t.AddressTerminated))
     | _ -> None
     
-
+/// <summary>
+/// Active pattern that matches message agains <see cref="ActorIdentity"/> message.
+/// This is the result of <see cref="Identify"/> request send with matching correlation id.
+/// Response contains actor ref of the requested identity or None if no actor was found.
+/// </summary>
 let (|ActorIdentity|_|) (msg: obj) : ('CorrelationId * IActorRef<'T> option) option =
     match msg with
     | :? ActorIdentity as identity -> 

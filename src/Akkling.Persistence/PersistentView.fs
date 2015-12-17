@@ -57,6 +57,7 @@ and TypedViewContext<'Message, 'Actor when 'Actor :> FunPersistentView<'Message>
         member __.Receive() = Input
         member __.Self = typed self
         member __.Sender<'Response>() = typed (context.Sender) :> IActorRef<'Response>
+        member __.Parent<'Other>() = typed (context.Parent) :> IActorRef<'Other>
         member __.System = context.System
         member __.ActorOf(props, name) = context.ActorOf(props, name)
         member __.ActorSelection(path : string) = context.ActorSelection(path)
