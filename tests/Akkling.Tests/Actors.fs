@@ -16,7 +16,7 @@ open Xunit
 
 [<Fact(Skip ="fix MethodMissing")>]
 let ``Actor defined by recursive function responds on series of primitive messagess`` () : unit = testDefault <| fun tck -> 
-    let echo = spawn tck "actor" (actorOf2 <| fun mailbox msg -> mailbox.Sender() <! msg)
+    let echo = spawn tck "actor" (actorOf2 <| fun mailbox msg -> mailbox.Sender() <! msg |> ignored)
 
     echo <! 1
     echo <! 2
