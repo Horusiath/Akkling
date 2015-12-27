@@ -116,6 +116,6 @@ let ``can serialize and deserialize discriminated unions over remote nodes`` () 
     let aref = 
         spawne [SpawnOption.Deploy (Deploy(RemoteScope (Address.Parse "akka.tcp://server-system@localhost:9911")))] client "a-1" <@ actorOf2 testBehavior @> 
     let msg = Succeed("a-11", Inner(11, "a-12"))
-    let response : OuterUnion = aref <? msg |> Async.RunSynchronously
-    response
+    let response : AskResult<OuterUnion> = aref <? msg |> Async.RunSynchronously
+    response.Value
     |> equals msg
