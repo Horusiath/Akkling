@@ -72,7 +72,7 @@ let ``can serialize discriminated unions``() =
 [<Fact>]
 let ``can serialize typed actor ref``() = 
     use sys = System.create "system" (Configuration.defaultConfig())
-    let echo = spawn sys "echo" <| actorOf2 (fun mailbox msg -> mailbox.Sender() <! msg)
+    let echo = spawn sys "echo" <| actorOf2 (fun mailbox msg -> mailbox.Sender() <! msg |> ignored)
     let serializer = sys.Serialization.FindSerializerFor echo
     let bytes = serializer.ToBinary echo
     let des = serializer.FromBinary(bytes, echo.GetType()) :?> IActorRef<string>
@@ -89,6 +89,7 @@ let testBehavior (mailbox:Actor<_>) msg =
     match msg with
     | Succeed("a-11", Inner(11, "a-12")) -> mailbox.Sender() <! msg
     | _ -> mailbox.Sender() <! Fail  
+    |> ignored
 
 [<Fact(Skip ="fix MethodMissing")>]
 let ``can serialize and deserialize discriminated unions over remote nodes`` () =   

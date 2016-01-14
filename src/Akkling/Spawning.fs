@@ -130,12 +130,11 @@ module Spawn =
     /// Wraps provided function with actor behavior. 
     /// It will be invoked each time, an actor will receive a message. 
     /// </summary>
-    let actorOf (fn : 'Message -> unit) (mailbox : Actor<'Message>) : Behavior<'Message> = 
+    let actorOf (fn : 'Message -> #Effect) (mailbox : Actor<'Message>) : Behavior<'Message> = 
         let rec loop() = 
             actor { 
                 let! msg = mailbox.Receive()
-                fn msg
-                return! loop()
+                return fn msg 
             }
         loop()
     
@@ -143,11 +142,25 @@ module Spawn =
     /// Wraps provided function with actor behavior. 
     /// It will be invoked each time, an actor will receive a message. 
     /// </summary>
-    let actorOf2 (fn : Actor<'Message> -> 'Message -> unit) (mailbox : Actor<'Message>) : Behavior<'Message> = 
+    let actorOf2 (fn : Actor<'Message> -> 'Message -> #Effect) (mailbox : Actor<'Message>) : Behavior<'Message> = 
         let rec loop() = 
-            actor { 
+            actor {
                 let! msg = mailbox.Receive()
-                fn mailbox msg
-                return! loop()
+                return fn mailbox msg
             }
         loop()
+
+    /// <summary>
+    /// Returns an actor effect causing no changes in message handling pipeline.
+    /// </summary>
+    let inline ignored (_: 'Any) : Effect = ActorEffect.Ignore :> Effect
+
+    /// <summary>
+    /// Returns an actor effect causing messages to become unhandled.
+    /// </summary>
+    let inline unhandled (_: 'Any) : Effect = ActorEffect.Unhandled :> Effect
+
+    /// <summary>
+    /// Returns an actor effect causing actor to stop.
+    /// </summary>
+    let inline stop (_: 'Any) : Effect = ActorEffect.Stop :> Effect
