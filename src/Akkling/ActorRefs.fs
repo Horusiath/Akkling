@@ -118,14 +118,14 @@ type TypedActorRef<'Message>(underlyingRef : IActorRef) =
     
     interface ISurrogated with
         member this.ToSurrogate system = 
-            let surrogate : TypedActorRefSurrogate<'Message> = { Wrapped = underlyingRef.ToSurrogate system }
+            let surrogate : TypedActorRefSurrogate<'Message> = { Wrapped = underlyingRef }
             surrogate :> ISurrogate
 
 and TypedActorRefSurrogate<'Message> = 
-    { Wrapped : ISurrogate }
+    { Wrapped : IActorRef }
     interface ISurrogate with
         member this.FromSurrogate system = 
-            let tref = TypedActorRef<'Message>((this.Wrapped.FromSurrogate system) :?> IActorRef)
+            let tref = new TypedActorRef<'Message>(this.Wrapped)
             tref :> ISurrogated
 
 /// <summary>

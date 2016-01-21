@@ -189,7 +189,7 @@ and FunActor<'Message>(actor : Actor<'Message> -> Behavior<'Message>) as this =
             // we don't treat unhandled lifecycle events as casual unhandled messages
             current
         | other -> 
-            base.Unhandled other
+            this.Unhandled other
             current
     
     member __.Handle (msg: obj) = 
@@ -199,7 +199,7 @@ and FunActor<'Message>(actor : Actor<'Message> -> Behavior<'Message>) as this =
         | _ -> behavior <- nextBehavior
     
     member __.Sender() : IActorRef = base.Sender
-    member __.InternalUnhandled(message: obj) : unit = base.Unhandled message
+    member this.InternalUnhandled(message: obj) : unit = this.Unhandled message
     override this.OnReceive msg = this.Handle msg
     
     override this.PostStop() = 

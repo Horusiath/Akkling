@@ -30,13 +30,14 @@ module System =
         let extConfig = config.WithFallback(Configuration.parse """
             akka.actor {
                 serializers {
-                    wire = "Akkling.Serialization.WireSerializer, Akkling"
+                    wire = "Akka.Serialization.WireSerializer, Akka.Serialization.Wire"
                 }
                 serialization-bindings {
                   "System.Object" = wire
                 }
             }
         """)
+        let _ = Akka.Serialization.WireSerializer           // I don't know why, but without this system cannot instantiate serializer
         let system = ActorSystem.Create(name, extConfig)
         let exprSerializer = Akkling.Serialization.ExprSerializer(system :?> ExtendedActorSystem)
         system.Serialization.AddSerializer(exprSerializer)

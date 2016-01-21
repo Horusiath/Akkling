@@ -2,3 +2,4 @@ Akka
 FSPowerPack.Linq.Community
 Wire
 FsPickler
+Akka.Serialization.Wire
