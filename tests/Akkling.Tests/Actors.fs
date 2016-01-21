@@ -14,7 +14,7 @@ open Akka.Actor
 open System
 open Xunit
 
-[<Fact(Skip ="fix MethodMissing")>]
+[<Fact>]
 let ``Actor defined by recursive function responds on series of primitive messagess`` () : unit = testDefault <| fun tck -> 
     let echo = spawn tck "actor" (actorOf2 <| fun mailbox msg -> mailbox.Sender() <! msg |> ignored)
 
@@ -26,7 +26,7 @@ let ``Actor defined by recursive function responds on series of primitive messag
     expectMsg tck 2 |> ignore
     expectMsg tck 3 |> ignore
 
-[<Fact(Skip ="fix MethodMissing")>]
+[<Fact>]
 let ``Actor defined by recursive function stops on return Stop`` () : unit = testDefault <| fun tck -> 
     let aref = 
         spawn tck "actor"
@@ -53,9 +53,24 @@ let ``Actor defined by recursive function stops on return Stop`` () : unit = tes
     expectMsg tck "b" |> ignore
     expectTerminated tck aref |> ignore
     expectNoMsg tck 
+    
+type TestMsg = { Ref: IActorRef<string> }
 
-[<Fact(Skip ="fix MethodMissing")>]
-let ``Actor defined by recursive function unhandles message on return Unhandled`` () : unit = testDefault <| fun tck ->
+[<Fact>]
+let ``Typed actor refs are serializable/deserializable in both directions`` () : unit = testDefault <| fun tck ->
+    let aref = spawn tck "actor" Behaviors.echo
+    let msg = { Ref = aref }
+    let serializer = tck.Sys.Serialization.FindSerializerFor msg
+    let bin = serializer.ToBinary(msg)
+    let deserialized = serializer.FromBinary(bin, null) :?> TestMsg
+    
+    Assert.Equal(msg, deserialized)
+    msg.Ref <! "ok"
+    expectMsg tck "ok" |> ignore
+
+
+[<Fact>]
+let ``Actor defined by recursive function dead letters message on return Unhandled`` () : unit = testDefault <| fun tck ->
     let aref = 
         spawn tck "actor"
         <| fun mailbox ->

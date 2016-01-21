@@ -3,3 +3,4 @@ Akka
 Akka.TestKit.Xunit2
 Akka.Remote
 Newtonsoft.Json
+xunit.assert

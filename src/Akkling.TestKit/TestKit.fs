@@ -28,14 +28,14 @@ let test (config : Akka.Configuration.Config) (fn : Tck -> unit) =
 /// <summary>
 /// Runs a test case function using default configuration.
 /// </summary>
-let testDefault t = test (Configuration.defaultConfig()) t
+let testDefault t = test (Akka.TestKit.Configs.TestConfigs.TestSchedulerConfig) t
 
 let inline probe (tck: Tck) : TestProbe = tck.CreateTestProbe()
 let inline barrier (tck: Tck) (count: int) : TestBarrier = tck.CreateTestBarrier count
 let inline latch (tck: Tck) (count: int) : TestLatch = tck.CreateTestLatch count
 let inline testActor (tck: Tck) (name: string) : IActorRef<'t> = typed <| tck.CreateTestActor name
-let inline monitor (tck : Tck) (ref : IActorRef<'t>) : unit = tck.Watch ref |> ignore
-let inline demonitor (tck: Tck) (ref: IActorRef<'t>) : unit = tck.Unwatch ref |> ignore
+let inline monitor (tck : Tck) (ref : IActorRef<'t>) : unit = tck.Watch (untyped ref) |> ignore
+let inline demonitor (tck: Tck) (ref: IActorRef<'t>) : unit = tck.Unwatch (untyped ref) |> ignore
 
 let expectMsg (tck : Tck) (msg : 't) : 't option = 
     let reply = tck.ExpectMsg<'t>(msg, Nullable(), "")
@@ -67,9 +67,9 @@ let inline expectMsgAllOf (tck : Tck) (messages : 't seq) : unit =
 
 let inline expectMsgAnyOf (tck : Tck) (messages : 't seq) : unit = tck.ExpectMsgAnyOf(Array.ofSeq messages) |> ignore
 let inline expectTerminated (tck : Tck) (ref : IActorRef<'t>) : bool =
-    tck.ExpectTerminated(ref, Nullable(), "").AddressTerminated
+    tck.ExpectTerminated(untyped ref, Nullable(), "").AddressTerminated
 let inline expectTerminatedWithin (timeout : TimeSpan) (tck : Tck) (ref : IActorRef<'t>) : bool = 
-    tck.ExpectTerminated(ref, Nullable(timeout), "").AddressTerminated
+    tck.ExpectTerminated(untyped ref, Nullable(timeout), "").AddressTerminated
 
 let inline ignoreMessages (tck: Tck) (predicate: obj -> bool) : unit = tck.IgnoreMessages(Func<obj, bool>(predicate))
 let inline receiveN (tck: Tck) (n: int) : obj seq = tck.ReceiveN(n) :> System.Collections.Generic.IEnumerable<obj>

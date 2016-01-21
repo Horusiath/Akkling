@@ -13,25 +13,6 @@ open System
 open System.IO
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Linq.QuotationEvaluation
-
-type WireSerializer(system) = 
-    inherit Akka.Serialization.Serializer(system)
-    let surrogate = 
-        Wire.Surrogate.Create<ISurrogated, ISurrogate>
-            (Func<ISurrogated, ISurrogate>(fun from -> from.ToSurrogate(system)), 
-             Func<ISurrogate, ISurrogated>(fun dst -> dst.FromSurrogate(system)))
-    let serializer = Wire.Serializer(Wire.SerializerOptions(true, [ surrogate ], true))
-    override __.Identifier = -14
-    override __.IncludeManifest = false
-    
-    override __.ToBinary(o) = 
-        use stream = new MemoryStream()
-        serializer.Serialize(o, stream)
-        stream.ToArray()
-    
-    override __.FromBinary(bytes, _) = 
-        use stream = new MemoryStream(bytes)
-        serializer.Deserialize(stream)
         
 open Nessos.FsPickler
 

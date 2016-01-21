@@ -91,7 +91,7 @@ let testBehavior (mailbox:Actor<_>) msg =
     | _ -> mailbox.Sender() <! Fail  
     |> ignored
 
-[<Fact(Skip ="fix MethodMissing")>]
+[<Fact>]
 let ``can serialize and deserialize discriminated unions over remote nodes`` () =   
 
     let remoteConfig port = 
