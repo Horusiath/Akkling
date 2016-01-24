@@ -10,7 +10,7 @@
     <RootNamespace>Akkling</RootNamespace>
     <AssemblyName>Akkling</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
+    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <Name>Akkling</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -69,6 +69,7 @@
     <Compile Include="ActorBuilder.fs" />
     <Compile Include="Linq.fs" />
     <Compile Include="FaultHandling.fs" />
+    <Compile Include="Props.fs" />
     <Compile Include="Spawning.fs" />
     <Compile Include="Behaviors.fs" />
     <Compile Include="Schedulers.fs" />

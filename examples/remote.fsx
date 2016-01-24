@@ -34,11 +34,10 @@ let client = System.create "client" <| Configuration.parse """
     }   
 """
 
-let spawnRemote addr sys name actor = 
-    let options = [SpawnOption.Deploy(Deploy(RemoteScope(Address.Parse addr)))]
-    spawne options sys name actor
+let remoteProps addr actor = { propse actor with Deploy = Some (Deploy(RemoteScope(Address.Parse addr))) }
 
-let printer = spawnRemote "akka.tcp://server@localhost:4500" client "remote-actor" <@ actorOf2 (fun ctx msg -> printfn "%A received: %s" ctx.Self msg) @>
+let printer = 
+    spawn client "remote-actor" (remoteProps "akka.tcp://server@localhost:4500" <@ actorOf2 (fun ctx msg -> printfn "%A received: %s" ctx.Self msg |> ignored) @>)
 
 printer <! "hello"
 printer <! "world"

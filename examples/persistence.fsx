@@ -27,7 +27,7 @@ type CounterMessage =
     | Event of CounterChanged
 
 let counter = 
-    spawnPersist system "counter-1" <| fun mailbox -> 
+    spawn system "counter-1" <| propsPersist(fun mailbox -> 
         let rec loop state = 
             actor { 
                 let! msg = mailbox.Receive()
@@ -41,7 +41,7 @@ let counter =
                     | Inc -> return Persist (Event { Delta = 1 })
                     | Dec -> return Persist (Event { Delta = -1 })
             }
-        loop 0
+        loop 0)
         
 counter <! Command Inc
 counter <! Command Inc
