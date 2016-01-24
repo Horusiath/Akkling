@@ -45,8 +45,8 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="TestKit.fs" />
-    <None Include="Script.fsx" />
     <None Include="paket.references" />
+    <None Include="Akkling.TestKit.fsproj.paket.template" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Akkling\Akkling.fsproj">

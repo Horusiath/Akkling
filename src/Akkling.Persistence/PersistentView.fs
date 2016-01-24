@@ -85,12 +85,12 @@ and TypedViewContext<'Message, 'Actor when 'Actor :> FunPersistentView<'Message>
         member __.Pid = actor.PersistenceId
         member __.ViewId = actor.ViewId
             
-and FunPersistentView<'Message>(actor : View<'Message> -> Behavior<'Message>, pid: PID, viewId: PID) as this = 
+and FunPersistentView<'Message>(actor : View<'Message> -> Behavior<'Message>) as this = 
     inherit PersistentView()
     let untypedContext = UntypedActor.Context
     let ctx = TypedViewContext<'Message, FunPersistentView<'Message>>(untypedContext, this)
     let mutable behavior = actor ctx
-    new(actor : Expr<View<'Message> -> Behavior<'Message>>, pid: PID, viewId: PID) = FunPersistentView(actor.Compile () (), pid, viewId)
+    new(actor : Expr<View<'Message> -> Behavior<'Message>>) = FunPersistentView(actor.Compile () ())
     
     member __.Next (current : Behavior<'Message>) (context : Actor<'Message>) (message : obj) : Behavior<'Message> = 
         match message with
@@ -113,8 +113,8 @@ and FunPersistentView<'Message>(actor : View<'Message> -> Behavior<'Message>, pi
     
     member __.Sender() : IActorRef = base.Sender
     member __.InternalUnhandled(message: obj) : unit = base.Unhandled message
-    override this.PersistenceId = pid
-    override this.ViewId = viewId
+    override this.PersistenceId = null
+    override this.ViewId = this.Self.Path.Name
     override this.Receive msg = 
         this.Handle msg
         true
