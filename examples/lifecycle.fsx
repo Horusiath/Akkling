@@ -11,7 +11,7 @@ open Akka.Actor
 
 let system = System.create "basic-sys" <| Configuration.defaultConfig()
 
-let aref = spawn system "hello-actor" <| fun m ->
+let aref = spawn system "hello-actor" <| props(fun m ->
     let rec loop () = actor {
         let! (msg: obj) = m.Receive ()
         match msg with
@@ -23,7 +23,7 @@ let aref = spawn system "hello-actor" <| fun m ->
         | x -> printfn "%A" x
         return! loop ()
     }
-    loop ()
+    loop ())
 
 let sref = retype aref
 sref <! "ok"

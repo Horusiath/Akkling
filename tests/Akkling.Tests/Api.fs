@@ -8,6 +8,7 @@
 module Akkling.Tests.Api
 
 open Akkling
+open Akkling.TestKit
 open Akka.Actor
 open System
 open Xunit
@@ -72,11 +73,42 @@ let ``can serialize discriminated unions``() =
 [<Fact>]
 let ``can serialize typed actor ref``() = 
     use sys = System.create "system" (Configuration.defaultConfig())
-    let echo = spawn sys "echo" <| actorOf2 (fun mailbox msg -> mailbox.Sender() <! msg |> ignored)
+    let echo = spawn sys "echo" <| (props Behaviors.echo)
     let serializer = sys.Serialization.FindSerializerFor echo
     let bytes = serializer.ToBinary echo
     let des = serializer.FromBinary(bytes, echo.GetType()) :?> IActorRef<string>
     des |> equals echo
+    
+type TestMsg = { Ref: IActorRef<string> }
+
+[<Fact>]
+let ``Typed actor refs are serializable/deserializable in both directions`` () : unit = testDefault <| fun tck ->
+    let aref = spawn tck "actor" (props Behaviors.echo)
+    let msg = { Ref = aref }
+    let serializer = tck.Sys.Serialization.FindSerializerFor msg
+    let bin = serializer.ToBinary(msg)
+    let deserialized = serializer.FromBinary(bin, null) :?> TestMsg
+    
+    Assert.Equal(msg, deserialized)
+    msg.Ref <! "ok"
+    expectMsg tck "ok" |> ignore
+    
+[<Fact>]
+let ``Typed props are serializable/deserializable in both directions`` () : unit = testDefault <| fun tck ->
+    let p = { (propse <@ Behaviors.echo @>) with 
+            Deploy = Some Deploy.Local; 
+            Router = Some Akka.Routing.NoRouter.NoRouter; 
+            SupervisionStrategy = Some (SupervisorStrategy.StoppingStrategy  :> SupervisorStrategy);
+            Mailbox = Some "xyz123";
+            Dispatcher = Some "xyz" }
+    let serializer = tck.Sys.Serialization.FindSerializerFor p
+    let bin = serializer.ToBinary(p)
+    let deserialized = serializer.FromBinary(bin, null) :?> Props<obj>
+    
+    Assert.Equal(p.ActorType, deserialized.ActorType)
+    Assert.NotNull(p.Receiver)
+    Assert.Equal(p.Deploy.Value.Scope, deserialized.Deploy.Value.Scope)
+    Assert.Equal(p.Deploy.Value.RouterConfig, deserialized.Deploy.Value.RouterConfig)
     
 type InnerUnion = 
     | Inner of int * string
@@ -114,8 +146,7 @@ let ``can serialize and deserialize discriminated unions over remote nodes`` () 
     use server = System.create "server-system" (remoteConfig 9911)
     use client = System.create "client-system" (remoteConfig 0)
 
-    let aref = 
-        spawne [SpawnOption.Deploy (Deploy(RemoteScope (Address.Parse "akka.tcp://server-system@localhost:9911")))] client "a-1" <@ actorOf2 testBehavior @> 
+    let aref = spawn client "a-1" { (propse <@ actorOf2 testBehavior @> ) with Deploy = Some(Deploy(RemoteScope (Address.Parse "akka.tcp://server-system@localhost:9911"))) }
     let msg = Succeed("a-11", Inner(11, "a-12"))
     let response : AskResult<OuterUnion> = aref <? msg |> Async.RunSynchronously
     response.Value

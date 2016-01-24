@@ -16,7 +16,7 @@ open Xunit
 
 [<Fact>]
 let ``Actor defined by recursive function responds on series of primitive messagess`` () : unit = testDefault <| fun tck -> 
-    let echo = spawn tck "actor" (actorOf2 <| fun mailbox msg -> mailbox.Sender() <! msg |> ignored)
+    let echo = spawn tck "actor" (props Behaviors.echo)
 
     echo <! 1
     echo <! 2
@@ -30,7 +30,7 @@ let ``Actor defined by recursive function responds on series of primitive messag
 let ``Actor defined by recursive function stops on return Stop`` () : unit = testDefault <| fun tck -> 
     let aref = 
         spawn tck "actor"
-        <| fun mailbox ->
+        <| props (fun mailbox ->
             let rec loop () =
                 actor {
                     let! msg = mailbox.Receive ()
@@ -40,7 +40,7 @@ let ``Actor defined by recursive function stops on return Stop`` () : unit = tes
                         mailbox.Sender() <! x
                         return! loop ()
                 }
-            loop ()
+            loop ())
 
     monitor tck aref
 
@@ -53,27 +53,12 @@ let ``Actor defined by recursive function stops on return Stop`` () : unit = tes
     expectMsg tck "b" |> ignore
     expectTerminated tck aref |> ignore
     expectNoMsg tck 
-    
-type TestMsg = { Ref: IActorRef<string> }
-
-[<Fact>]
-let ``Typed actor refs are serializable/deserializable in both directions`` () : unit = testDefault <| fun tck ->
-    let aref = spawn tck "actor" Behaviors.echo
-    let msg = { Ref = aref }
-    let serializer = tck.Sys.Serialization.FindSerializerFor msg
-    let bin = serializer.ToBinary(msg)
-    let deserialized = serializer.FromBinary(bin, null) :?> TestMsg
-    
-    Assert.Equal(msg, deserialized)
-    msg.Ref <! "ok"
-    expectMsg tck "ok" |> ignore
-
 
 [<Fact>]
 let ``Actor defined by recursive function dead letters message on return Unhandled`` () : unit = testDefault <| fun tck ->
     let aref = 
         spawn tck "actor"
-        <| fun mailbox ->
+        <| props (fun mailbox ->
             let rec loop () =
                 actor {
                     let! msg = mailbox.Receive ()
@@ -83,7 +68,7 @@ let ``Actor defined by recursive function dead letters message on return Unhandl
                         mailbox.Sender() <! x
                         return! loop ()
                 }
-            loop ()
+            loop ())
 
     expectEvent 1 
     <| deadLettersEvents tck

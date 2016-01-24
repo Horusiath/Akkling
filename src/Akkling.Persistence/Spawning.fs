@@ -32,63 +32,28 @@ module Linq =
             | _ -> failwith "Doesn't match"
 
 [<AutoOpen>]
-module Spawn =
+module Props =
 
     /// <summary>
-    /// Spawns a persistent actor instance.
+    /// Creates a props describing a way to incarnate persistent actor with behavior described by <paramref name="receive"/> function.
     /// </summary>
-    /// <param name="actorFactory">Object responsible for actor instantiation.</param>
-    /// <param name="pid">Identifies uniquely current actor across different incarnations. It's necessary to identify it's event source.</param>
-    /// <param name="fn">Aggregate containing state of the actor, but also an event- and command-handling behavior.</param>
-    /// <param name="state">Initial state of an actor.</param>
-    /// <param name="options">Additional spawning options.</param>
-    let spawnPersiste (options : SpawnOption list) (actorFactory : IActorRefFactory) (pid : PID) (fn : Expr<Eventsourced<'Command> -> Behavior<'Command>>) : IActorRef<'Command> = 
-        let e = 
-            Linq.PersistentExpression.ToExpression
-                (fun () -> new FunPersistentActor<'Command>(fn, pid))
-        let props = applySpawnOptions (Props.Create e) options
-        typed (actorFactory.ActorOf(props, pid))
-
+    let propsPersist (receive: Eventsourced<'Message> -> Behavior<'Message>) : Props<'Message> =
+        Props<'Message>.Create<FunPersistentActor<'Message>, Eventsourced<'Message>, 'Message>(receive)
+        
     /// <summary>
-    /// Spawns a persistent actor instance.
+    /// Creates a props describing a way to incarnate persistent actor with behavior described by <paramref name="expr"/> expression.
     /// </summary>
-    /// <param name="actorFactory">Object responsible for actor instantiation.</param>
-    /// <param name="pid">Identifies uniquely current actor across different incarnations. It's necessary to identify it's event source.</param>
-    /// <param name="fn">Aggregate containing state of the actor, but also an event- and command-handling behavior.</param>
-    /// <param name="state">Initial state of an actor.</param>
-    /// <param name="options">Additional spawning options.</param>
-    let spawnPersistOpt (options : SpawnOption list) (actorFactory : IActorRefFactory) (pid : PID) (fn : Eventsourced<'Command> -> Behavior<'Command>) : IActorRef<'Command> = 
-        let e = 
-            Linq.PersistentExpression.ToExpression
-                (fun () -> new FunPersistentActor<'Command>(fn, pid))
-        let props = applySpawnOptions (Props.Create e) options
-        typed (actorFactory.ActorOf(props, pid))
-
-    let inline spawnPersist factory pid fn = spawnPersistOpt [] factory pid fn
-    
+    let propsPersiste (expr: Expr<(Eventsourced<'Message> -> Behavior<'Message>)>) : Props<'Message> =
+        Props<'Message>.Create<FunPersistentActor<'Message>, Eventsourced<'Message>, 'Message>(expr)
+        
     /// <summary>
-    /// Spawns a persistent view instance. Unlike actor's views are readonly versions of statefull, recoverable actors.
+    /// Creates a props describing a way to incarnate persistent view with behavior described by <paramref name="receive"/> function.
     /// </summary>
-    /// <param name="actorFactory">Object responsible for actor instantiation.</param>
-    /// <param name="pid">Identifies uniquely current actor across different incarnations. It's necessary to identify it's event source.</param>
-    /// <param name="viewId">Identifies uniquely current view's state. It's different that event source, since many views with different internal states can relate to single event source.</param>
-    /// <param name="options">Additional spawning options.</param>
-    let spawnViewe (options : SpawnOption list)  (actorFactory : IActorRefFactory) (pid : PID) (viewId : PID) (f : Expr<View<'Message> -> Behavior<'Message>>): IActorRef<'Message> = 
-        let e = Linq.PersistentExpression.ToExpression(fun () -> new FunPersistentView<'Message>(f, pid, viewId))
-        let props = applySpawnOptions (Props.Create e) options
-        typed (actorFactory.ActorOf(props, viewId))
-
+    let propsView (receive: View<'Message> -> Behavior<'Message>) : Props<'Message> =
+        Props<'Message>.Create<FunPersistentView<'Message>, View<'Message>, 'Message>(receive)
+        
     /// <summary>
-    /// Spawns a persistent view instance. Unlike actor's views are readonly versions of statefull, recoverable actors.
+    /// Creates a props describing a way to incarnate persistent view with behavior described by <paramref name="expr"/> expression.
     /// </summary>
-    /// <param name="actorFactory">Object responsible for actor instantiation.</param>
-    /// <param name="pid">Identifies uniquely current actor across different incarnations. It's necessary to identify it's event source.</param>
-    /// <param name="viewId">Identifies uniquely current view's state. It's different that event source, since many views with different internal states can relate to single event source.</param>
-    /// <param name="options">Additional spawning options.</param>
-    let spawnViewOpt (options : SpawnOption list)  (actorFactory : IActorRefFactory) (pid : PID) (viewId : PID) (f : View<'Message> -> Behavior<'Message>): IActorRef<'Message> = 
-        let e = Linq.PersistentExpression.ToExpression(fun () -> new FunPersistentView<'Message>(f, pid, viewId))
-        let props = applySpawnOptions (Props.Create e) options
-        typed (actorFactory.ActorOf(props, viewId))
-
-    let spawnView factory pid viewId fn = spawnViewOpt [] factory pid viewId fn
-
+    let propsViewe (expr: Expr<(View<'Message> -> Behavior<'Message>)>) : Props<'Message> =
+        Props<'Message>.Create<FunPersistentView<'Message>, View<'Message>, 'Message>(expr)
