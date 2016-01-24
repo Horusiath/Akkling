@@ -29,3 +29,14 @@ let echo (context: Actor<'Message>) : Behavior<'Message> =
         return! loop ()    
     }
     loop ()
+
+/// <summary>
+/// Actor behavior, which prints message in formatted string to standard output.
+/// </summary>
+let printf (fmt: Printf.TextWriterFormat<'Message->unit>) (context: Actor<'Message>) : Behavior<'Message> =
+    let rec loop () = actor {
+        let! msg = context.Receive()
+        printf fmt msg
+        return! loop ()    
+    }
+    loop ()

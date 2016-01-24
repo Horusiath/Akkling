@@ -158,12 +158,12 @@ and PersistentLifecycleEvent =
     | ReplaySucceed
     | ReplayFailed
     
-and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Behavior<'Message>, pid: PID) as this = 
+and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Behavior<'Message>) as this = 
     inherit UntypedPersistentActor()
     let untypedContext = UntypedActor.Context
     let ctx = TypedPersistentContext<'Message, FunPersistentActor<'Message>>(untypedContext, this)
     let mutable behavior = actor ctx
-    new(actor : Expr<Eventsourced<'Message> -> Behavior<'Message>>, pid: PID) = FunPersistentActor(actor.Compile () (), pid)
+    new(actor : Expr<Eventsourced<'Message> -> Behavior<'Message>>) = FunPersistentActor(actor.Compile () ())
     
     member __.Next (current : Behavior<'Message>) (context : Actor<'Message>) (message : obj) : Behavior<'Message> = 
         match message with
@@ -186,7 +186,7 @@ and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Behavior<'Mes
     
     member __.Sender() : IActorRef = base.Sender
     member __.InternalUnhandled(message: obj) : unit = base.Unhandled message
-    override this.PersistenceId = pid
+    override this.PersistenceId = this.Self.Path.Name
     override this.OnCommand msg = this.Handle msg
     override this.OnRecover msg = this.Handle msg
     

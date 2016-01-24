@@ -1,18 +1,27 @@
 NUGET
   remote: https://www.myget.org/F/akkadotnet/api/v2
   specs:
-    Akka (1.0.7.148-beta)
+    Akka (1.0.7.149)
       Newtonsoft.Json (>= 7.0.1)
-    Akka.Persistence (1.0.7.148-beta)
-      Akka (>= 1.0.7.148-beta)
+    Akka.Cluster (1.0.7.149)
+      Akka.Remote (>= 1.0.7.149-beta)
+      Google.ProtocolBuffers (>= 2.4.1.555)
+      System.Collections.Immutable (>= 1.1.37)
+    Akka.Persistence (1.0.7.149)
+      Akka (>= 1.0.7.149-beta)
       Google.ProtocolBuffers (>= 2.4.1.555)
       Newtonsoft.Json (>= 7.0.1)
-    Akka.Remote (1.0.7.148-beta)
-      Akka (>= 1.0.7.148-beta)
+    Akka.Persistence.Sql.Common (1.0.7.149)
+      Akka.Persistence (>= 1.0.7.149-beta)
+    Akka.Persistence.Sqlite (1.0.7.149)
+      Akka.Persistence.Sql.Common (>= 1.0.7.149-beta)
+      System.Data.SQLite.Core (>= 1.0.98.1)
+    Akka.Remote (1.0.7.149)
+      Akka (>= 1.0.7.149-beta)
       Google.ProtocolBuffers (>= 2.4.1.555)
       Helios (>= 1.4.1)
-    Akka.Serialization.Wire (1.0.7.148-beta)
-      Akka (>= 1.0.7.148-beta)
+    Akka.Serialization.Wire (1.0.7.149)
+      Akka (>= 1.0.7.149-beta)
       Wire (>= 0.0.6)
     Akka.TestKit (1.0.7.148-beta)
       Akka (>= 1.0.7.148-beta)
@@ -25,6 +34,30 @@ NUGET
       xunit.extensibility.core (>= 2.0.0)
   remote: https://www.nuget.org/api/v2
   specs:
+    Akka.Cluster.Sharding (1.0.6)
+      Akka (>= 1.0.6)
+      Google.ProtocolBuffers (>= 2.4.1.555)
+      System.Collections (>= 4.0.0)
+      System.Collections.Immutable (>= 1.1.37)
+      System.Diagnostics.Debug (>= 4.0.0)
+      System.Globalization (>= 4.0.0)
+      System.Linq (>= 4.0.0)
+      System.Resources.ResourceManager (>= 4.0.0)
+      System.Runtime (>= 4.0.0)
+      System.Runtime.Extensions (>= 4.0.0)
+      System.Threading (>= 4.0.0)
+    Akka.Cluster.Tools (1.0.6)
+      Akka (>= 1.0.6)
+      Google.ProtocolBuffers (>= 2.4.1.555)
+      System.Collections (>= 4.0.0)
+      System.Collections.Immutable (>= 1.1.37)
+      System.Diagnostics.Debug (>= 4.0.0)
+      System.Globalization (>= 4.0.0)
+      System.Linq (>= 4.0.0)
+      System.Resources.ResourceManager (>= 4.0.0)
+      System.Runtime (>= 4.0.0)
+      System.Runtime.Extensions (>= 4.0.0)
+      System.Threading (>= 4.0.0)
     FAKE (4.16.1)
     FsCheck (2.2.4)
       FSharp.Core (>= 3.1.2.5)
@@ -54,6 +87,69 @@ NUGET
     Octokit (0.17.0)
       Microsoft.Net.Http
     SourceLink (1.1.0)
+    System.Collections (4.0.10)
+      System.Diagnostics.Debug (>= 4.0.0) - framework: dnxcore50
+      System.Resources.ResourceManager (>= 4.0.0) - framework: dnxcore50
+      System.Runtime (>= 4.0.0) - framework: dnxcore50
+      System.Runtime (>= 4.0.20) - framework: dnxcore50
+      System.Runtime.Extensions (>= 4.0.0) - framework: dnxcore50
+      System.Threading (>= 4.0.0) - framework: dnxcore50
+    System.Collections.Immutable (1.1.37)
+      System.Collections (>= 4.0.0) - framework: dnxcore50
+      System.Diagnostics.Debug (>= 4.0.0) - framework: dnxcore50
+      System.Globalization (>= 4.0.0) - framework: dnxcore50
+      System.Linq (>= 4.0.0) - framework: dnxcore50
+      System.Resources.ResourceManager (>= 4.0.0) - framework: dnxcore50
+      System.Runtime (>= 4.0.0) - framework: dnxcore50
+      System.Runtime.Extensions (>= 4.0.0) - framework: dnxcore50
+      System.Threading (>= 4.0.0) - framework: dnxcore50
+    System.Data.SQLite.Core (1.0.99)
+    System.Diagnostics.Debug (4.0.10)
+      System.Runtime (>= 4.0.0) - framework: dnxcore50
+    System.Globalization (4.0.10)
+      System.Runtime (>= 4.0.0) - framework: dnxcore50
+    System.IO (4.0.10) - framework: dnxcore50
+      System.Globalization (>= 4.0.0) - framework: dnxcore50
+      System.Runtime (>= 4.0.20) - framework: dnxcore50
+      System.Text.Encoding (>= 4.0.0) - framework: dnxcore50
+      System.Text.Encoding (>= 4.0.10) - framework: dnxcore50
+      System.Text.Encoding.Extensions (>= 4.0.0) - framework: dnxcore50
+      System.Threading (>= 4.0.0) - framework: dnxcore50
+      System.Threading.Tasks (>= 4.0.0) - framework: dnxcore50
+    System.Linq (4.0.0)
+      System.Collections (>= 4.0.10) - framework: dnxcore50
+      System.Diagnostics.Debug (>= 4.0.10) - framework: dnxcore50
+      System.Resources.ResourceManager (>= 4.0.0) - framework: dnxcore50
+      System.Runtime (>= 4.0.20) - framework: dnxcore50
+      System.Runtime.Extensions (>= 4.0.10) - framework: dnxcore50
+    System.Private.Uri (4.0.0) - framework: dnxcore50
+    System.Reflection (4.0.10) - framework: dnxcore50
+      System.IO (>= 4.0.0) - framework: dnxcore50
+      System.Reflection.Primitives (>= 4.0.0) - framework: dnxcore50
+      System.Runtime (>= 4.0.20) - framework: dnxcore50
+    System.Reflection.Primitives (4.0.0) - framework: dnxcore50
+      System.Runtime (>= 4.0.0) - framework: dnxcore50
+      System.Threading (>= 4.0.0) - framework: dnxcore50
+    System.Resources.ResourceManager (4.0.0)
+      System.Globalization (>= 4.0.0) - framework: dnxcore50
+      System.Reflection (>= 4.0.0) - framework: dnxcore50
+      System.Reflection (>= 4.0.10) - framework: dnxcore50
+      System.Runtime (>= 4.0.0) - framework: dnxcore50
+      System.Runtime (>= 4.0.20) - framework: dnxcore50
+    System.Runtime (4.0.20)
+      System.Private.Uri (>= 4.0.0) - framework: dnxcore50
+    System.Runtime.Extensions (4.0.10)
+      System.Runtime (>= 4.0.20) - framework: dnxcore50
+    System.Text.Encoding (4.0.10) - framework: dnxcore50
+      System.Runtime (>= 4.0.0) - framework: dnxcore50
+    System.Text.Encoding.Extensions (4.0.10) - framework: dnxcore50
+      System.Runtime (>= 4.0.0) - framework: dnxcore50
+      System.Text.Encoding (>= 4.0.10) - framework: dnxcore50
+    System.Threading (4.0.10)
+      System.Runtime (>= 4.0.0) - framework: dnxcore50
+      System.Threading.Tasks (>= 4.0.0) - framework: dnxcore50
+    System.Threading.Tasks (4.0.10) - framework: dnxcore50
+      System.Runtime (>= 4.0.0) - framework: dnxcore50
     Wire (0.0.6)
     xunit (2.0.0)
       xunit.assert (2.0.0)
@@ -68,5 +164,5 @@ NUGET
 GITHUB
   remote: fsharp/FAKE
   specs:
-    modules/Octokit/Octokit.fsx (d52c9be986bb0939b76102074f4720ebe2ffc6ea)
+    modules/Octokit/Octokit.fsx (684d9692e49d14efa951c238610d3763f97ef741)
       Octokit
