@@ -104,3 +104,29 @@ module Spawn =
     /// Returns an actor effect causing actor to stop.
     /// </summary>
     let inline stop (_: 'Any) : Effect = ActorEffect.Stop :> Effect
+
+    /// <summary>
+    /// Joins two receive functions, passing message to the <paramref name="right"/> one 
+    /// only when result of a <paramref name="left"/> one is other than <see cref="Unhandled"/>
+    /// </summary>
+    let (<&>) (left: Receive<'Message>) (right: Receive<'Message>): Receive<'Message> =
+        fun context message ->
+            match left context message with
+            | :? ActorEffect as a ->
+                match a with
+                | Unhandled -> Unhandled :> Effect
+                | _ -> right context message
+            | e -> e
+        
+    /// <summary>
+    /// Joins two receive functions, passing message to the <paramref name="right"/> one 
+    /// only when result of a <paramref name="left"/> one is <see cref="Unhandled"/>
+    /// </summary>
+    let (<|>) (left: Receive<'Message>) (right: Receive<'Message>): Receive<'Message> =
+        fun context message ->
+            match left context message with
+            | :? ActorEffect as a ->
+                match a with
+                | Unhandled -> right context message
+                | other -> other :> Effect
+            | other -> other

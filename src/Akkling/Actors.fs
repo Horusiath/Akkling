@@ -19,7 +19,7 @@ type IO<'T> =
 /// <summary>
 /// Exposes an Akka.NET actor API accessible from inside of F# continuations
 /// </summary>
-[<Interface>]
+[<Interface>] 
 type Actor<'Message> = 
     inherit IActorRefFactory
     inherit ICanWatch
@@ -103,7 +103,6 @@ type ExtContext =
     /// </summary>
     abstract Unhandled : obj -> unit
 
-
 /// <summary>
 /// Exposes an Akka.NET extended actor API accessible from inside of F# continuations 
 /// </summary>
@@ -112,7 +111,8 @@ type ExtActor<'Message> =
     inherit Actor<'Message>
     inherit ExtContext
 
-type TypedContext<'Message, 'Actor when 'Actor :> ActorBase and 'Actor :> IWithUnboundedStash>(context : IActorContext, actor : 'Actor) as this = 
+type Receive<'Message> = Actor<'Message> -> 'Message -> Effect
+and TypedContext<'Message, 'Actor when 'Actor :> ActorBase and 'Actor :> IWithUnboundedStash>(context : IActorContext, actor : 'Actor) as this = 
     let self = context.Self
     interface ExtActor<'Message> with
         member __.Receive() = Input
@@ -140,8 +140,7 @@ type TypedContext<'Message, 'Actor when 'Actor :> ActorBase and 'Actor :> IWithU
             match box actor with
             | :? FunActor<'Message> as act -> act.InternalUnhandled(msg)
             | _ -> raise (Exception("Couldn't use actor in typed context"))
-
-
+            
 and [<AbstractClass>]Actor() = 
     inherit UntypedActor()
     interface IWithUnboundedStash with
@@ -172,12 +171,12 @@ and Behavior<'Message> =
     | Become of ('Message -> Behavior<'Message>)
     | Return of Effect
 
-and FunActor<'Message>(actor : Actor<'Message> -> Behavior<'Message>) as this = 
+and FunActor<'Message>(actor : Actor<'Message>->Behavior<'Message>) as this = 
     inherit Actor()
     let untypedContext = UntypedActor.Context :> IActorContext
     let ctx = TypedContext<'Message, FunActor<'Message>>(untypedContext, this)
     let mutable behavior = actor ctx
-    new(actor : Expr<Actor<'Message> -> Behavior<'Message>>) = FunActor(actor.Compile () ())
+    new(actor : Expr<Actor<'Message>->Behavior<'Message>>) = FunActor(actor.Compile () ())
     
     member __.Next (current : Behavior<'Message>) (context : Actor<'Message>) (message : obj) : Behavior<'Message> = 
         match message with
