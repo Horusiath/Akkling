@@ -14,9 +14,7 @@
 #r "../src/Akkling.Persistence/bin/Debug/Akkling.Persistence.dll"
 #r "../packages/Akka.Cluster/lib/net45/Akka.Cluster.dll"
 #r "../packages/Akka.Cluster.Tools/lib/net45/Akka.Cluster.Tools.dll"
-#r "../packages/Akka.Persistence.Sql.Common/lib/net45/Akka.Persistence.Sql.Common.dll"
-#r "../packages/System.Data.SQLite.Core/lib/net45/System.Data.SQLite.dll"
-#r "../packages/Akka.Persistence.Sqlite/lib/net45/Akka.Persistence.Sqlite.dll"
+#r "../packages/Akka.Cluster.Sharding/lib/net45/Akka.Cluster.Sharding.dll"
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/Akkling.Cluster.Sharding.dll"
 
 open System
@@ -27,7 +25,7 @@ open Akka.Actor
 open Akka.Cluster
 
 let configWithPort port = 
-    let config = Configuration.parse("""
+    let config = Configuration.parse ("""
         akka {
           actor {
             provider = "Akka.Cluster.ClusterActorRefProvider, Akka.Cluster"
@@ -45,7 +43,7 @@ let configWithPort port =
           }
           persistence {
             journal {
-              plugin = "akka.persistence.journal.sqlite"
+              plugin = "akka.persistence.journal.inmem"
               sqlite {
 			    class = "Akka.Persistence.Sqlite.Journal.SqliteJournal, Akka.Persistence.Sqlite"
 			    plugin-dispatcher = "akka.actor.default-dispatcher"
@@ -57,7 +55,7 @@ let configWithPort port =
               }
             }
             snapshot-store {
-              plugin = "akka.persistence.snapshot-store.sqlite"
+              plugin = "akka.persistence.snapshot-store.local"
               sqlite {
 			    class = "Akka.Persistence.Sqlite.Snapshot.SqliteSnapshotStore, Akka.Persistence.Sqlite"
 			    plugin-dispatcher = "akka.actor.default-dispatcher"
@@ -71,16 +69,14 @@ let configWithPort port =
         }
         """)
     config.WithFallback(Tools.Singleton.ClusterSingletonManager.DefaultConfig())
-    
-// first cluster system with sharding region up and ready
+
+let behavior (ctx : Actor<_>) msg = printfn "%A received %s" (ctx.Self.Path.ToStringWithAddress()) msg |> ignored
+
 let system1 = System.create "cluster-system" (configWithPort 5000)
-let shardRegion1 = spawnSharded id system1 "printer" <| props (Behaviors.printf "Received: %s\n")
-
-// second cluster system with sharding region up and ready
+let shardRegion1 = spawnSharded id system1 "printer" <| props (actorOf2 behavior)
 let system2 = System.create "cluster-system" (configWithPort 5001)
-let shardRegion2 = spawnSharded id system2 "printer" <| props (Behaviors.printf "Received: %s\n")
+let shardRegion2 = spawnSharded id system2 "printer" <| props (actorOf2 behavior)
 
-// shard region will distribute messages to entities in corresponding shards
 shardRegion1 <! ("shard-1", "entity-1", "hello world 1")
 shardRegion1 <! ("shard-2", "entity-1", "hello world 2")
 shardRegion1 <! ("shard-3", "entity-1", "hello world 3")

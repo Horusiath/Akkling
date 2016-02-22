@@ -49,11 +49,11 @@ module Props =
     /// <summary>
     /// Creates a props describing a way to incarnate persistent view with behavior described by <paramref name="receive"/> function.
     /// </summary>
-    let propsView (receive: View<'Message> -> Effect<'Message>) : Props<'Message> =
-        Props<'Message>.Create<FunPersistentView<'Message>, View<'Message>, 'Message>(receive)
+    let propsView (persistentId: string) (receive: View<'Message> -> Effect<'Message>) : Props<'Message> =
+        Props<'Message>.ArgsCreate<FunPersistentView<'Message>, View<'Message>, 'Message>([| receive; persistentId |])
         
     /// <summary>
     /// Creates a props describing a way to incarnate persistent view with behavior described by <paramref name="expr"/> expression.
     /// </summary>
-    let propsViewe (expr: Expr<(View<'Message> -> Effect<'Message>)>) : Props<'Message> =
-        Props<'Message>.Create<FunPersistentView<'Message>, View<'Message>, 'Message>(expr)
+    let propsViewe (persistentId: string) (expr: Expr<(View<'Message> -> Effect<'Message>)>) : Props<'Message> =
+        Props<'Message>.ArgsCreate<FunPersistentView<'Message>, View<'Message>, 'Message>([| expr; persistentId |])

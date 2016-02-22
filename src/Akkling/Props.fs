@@ -29,7 +29,7 @@ type Props<'Message> =
       /// <summary>
       /// INTERNAL API.
       /// </summary>
-      Receiver: obj
+      Args: obj array
 
       /// <summary>
       /// Config key to dispatcher responsible for managing current actor's threading.
@@ -58,7 +58,7 @@ type Props<'Message> =
 
     member this.ToProps () : Akka.Actor.Props = this.ToProps true
     member internal this.ToProps (withReceiver: bool) : Akka.Actor.Props = 
-        let mutable p = if withReceiver then Props.Create(this.ActorType, [| this.Receiver |]) else Props.Create(this.ActorType)
+        let mutable p = if withReceiver then Props.Create(this.ActorType, this.Args) else Props.Create(this.ActorType)
         p <- match this.Dispatcher with
                 | Some dispatcher -> p.WithDispatcher dispatcher
                 | _ -> p
@@ -78,7 +78,7 @@ type Props<'Message> =
 
     static member Create<'Actor, 'Context, 'Message when 'Actor :> ActorBase>(receive: 'Context -> Effect<'Message>) : Props<'Message> = 
         { ActorType = typeof<'Actor>
-          Receiver = receive
+          Args = [| receive |]
           Dispatcher = None
           Mailbox = None
           Deploy = None
@@ -87,7 +87,16 @@ type Props<'Message> =
 
     static member Create<'Actor, 'Context, 'Message when 'Actor :> ActorBase>(expr: Expr<('Context -> Effect<'Message>)>) : Props<'Message> = 
         { ActorType = typeof<'Actor>
-          Receiver = expr
+          Args = [| expr |]
+          Dispatcher = None
+          Mailbox = None
+          Deploy = None
+          Router = None
+          SupervisionStrategy = None }
+
+    static member ArgsCreate<'Actor, 'Context, 'Message when 'Actor :> ActorBase>(args: obj array) : Props<'Message> = 
+        { ActorType = typeof<'Actor>
+          Args = args
           Dispatcher = None
           Mailbox = None
           Deploy = None
@@ -96,7 +105,7 @@ type Props<'Message> =
 
     static member From(props: Props) : Props<'Message> =
         { ActorType = props.Type
-          Receiver = props.Arguments.[0]
+          Args = props.Arguments
           Deploy = Some props.Deploy
           Dispatcher = if props.Dispatcher = Deploy.NoDispatcherGiven then None else Some props.Dispatcher
           Mailbox = if props.Mailbox = Deploy.NoMailboxGiven then None else Some props.Mailbox
@@ -104,9 +113,9 @@ type Props<'Message> =
           SupervisionStrategy = if props.SupervisorStrategy = null then None else Some props.SupervisorStrategy
         }
 
-    static member internal From(props: Props, receiver: obj) : Props<'Message> =
+    static member internal From(props: Props, args: obj array) : Props<'Message> =
         { ActorType = props.Type
-          Receiver = receiver
+          Args = args
           Deploy = Some props.Deploy
           Dispatcher = if props.Dispatcher = Deploy.NoDispatcherGiven then None else Some props.Dispatcher
           Mailbox = if props.Mailbox = Deploy.NoMailboxGiven then None else Some props.Mailbox
@@ -117,13 +126,13 @@ type Props<'Message> =
     interface Akka.Util.ISurrogated with
         member this.ToSurrogate _ =
             let props = this.ToProps false
-            let surrogate: PropsSurrogate<'Message> = { Wrapped = props; ReceiverBytes = exprSerializer.Pickle(this.Receiver) } 
+            let surrogate: PropsSurrogate<'Message> = { Wrapped = props; ArgsBytes = exprSerializer.Pickle(this.Args) } 
             surrogate :> Akka.Util.ISurrogate
 
 and PropsSurrogate<'Message> = 
-    { Wrapped: Props; ReceiverBytes: byte array }
+    { Wrapped: Props; ArgsBytes: byte array }
     interface Akka.Util.ISurrogate with
-        member this.FromSurrogate _ = Props<'Message>.From (this.Wrapped, exprSerializer.UnPickle (this.ReceiverBytes)) :> Akka.Util.ISurrogated
+        member this.FromSurrogate _ = Props<'Message>.From (this.Wrapped, exprSerializer.UnPickle (this.ArgsBytes)) :> Akka.Util.ISurrogated
 
 /// <summary>
 /// Creates a props describing a way to incarnate actor with behavior described by <paramref name="receive"/> function.
