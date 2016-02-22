@@ -70,7 +70,7 @@ module Spawn =
     /// Wraps provided function with actor behavior. 
     /// It will be invoked each time, an actor will receive a message. 
     /// </summary>
-    let actorOf (fn : 'Message -> #Effect) (mailbox : Actor<'Message>) : Behavior<'Message> = 
+    let actorOf (fn : 'Message -> #Effect<'Message>) (mailbox : Actor<'Message>) : Effect<'Message> = 
         let rec loop() = 
             actor { 
                 let! msg = mailbox.Receive()
@@ -82,7 +82,7 @@ module Spawn =
     /// Wraps provided function with actor behavior. 
     /// It will be invoked each time, an actor will receive a message. 
     /// </summary>
-    let actorOf2 (fn : Actor<'Message> -> 'Message -> #Effect) (mailbox : Actor<'Message>) : Behavior<'Message> = 
+    let actorOf2 (fn : Actor<'Message> -> 'Message -> #Effect<'Message>) (mailbox : Actor<'Message>) : Effect<'Message> = 
         let rec loop() = 
             actor {
                 let! msg = mailbox.Receive()
@@ -93,17 +93,17 @@ module Spawn =
     /// <summary>
     /// Returns an actor effect causing no changes in message handling pipeline.
     /// </summary>
-    let inline ignored (_: 'Any) : Effect = ActorEffect.Ignore :> Effect
+    let inline ignored (_: 'Any) : Effect<'Message> = ActorEffect.Ignore :> Effect<'Message>
 
     /// <summary>
     /// Returns an actor effect causing messages to become unhandled.
     /// </summary>
-    let inline unhandled (_: 'Any) : Effect = ActorEffect.Unhandled :> Effect
+    let inline unhandled (_: 'Any) : Effect<'Message> = ActorEffect.Unhandled :> Effect<'Message>
 
     /// <summary>
     /// Returns an actor effect causing actor to stop.
     /// </summary>
-    let inline stop (_: 'Any) : Effect = ActorEffect.Stop :> Effect
+    let inline stop (_: 'Any) : Effect<'Message> = ActorEffect.Stop :> Effect<'Message>
 
     /// <summary>
     /// Joins two receive functions, passing message to the <paramref name="right"/> one 
@@ -112,9 +112,9 @@ module Spawn =
     let (<&>) (left: Receive<'Message, 'Context>) (right: Receive<'Message, 'Context>): Receive<'Message, 'Context> =
         fun context message ->
             match left context message with
-            | :? ActorEffect as a ->
+            | :? ActorEffect<'Message> as a ->
                 match a with
-                | Unhandled -> Unhandled :> Effect
+                | Unhandled -> Unhandled :> Effect<'Message>
                 | _ -> right context message
             | e -> e
         
@@ -125,8 +125,8 @@ module Spawn =
     let (<|>) (left: Receive<'Message, 'Context>) (right: Receive<'Message, 'Context>): Receive<'Message, 'Context> =
         fun context message ->
             match left context message with
-            | :? ActorEffect as a ->
+            | :? ActorEffect<'Message> as a ->
                 match a with
                 | Unhandled -> right context message
-                | other -> other :> Effect
+                | other -> other :> Effect<'Message>
             | other -> other

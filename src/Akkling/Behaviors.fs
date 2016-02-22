@@ -12,7 +12,7 @@ module Akkling.Behaviors
 /// <summary>
 /// An empty actor behavior, which ignores all incoming messages.
 /// </summary>
-let ignore (context:Actor<'Message>) : Behavior<'Message> = 
+let ignore (context:Actor<'Message>) : Effect<'Message> = 
     let rec loop () = actor {
         let! _ = context.Receive()
         return! loop ()
@@ -22,7 +22,7 @@ let ignore (context:Actor<'Message>) : Behavior<'Message> =
 /// <summary>
 /// Actor behavior, which resends message back to it's sender.
 /// </summary>
-let echo (context: Actor<'Message>) : Behavior<'Message> =
+let echo (context: Actor<'Message>) : Effect<'Message> =
     let rec loop () = actor {
         let! msg = context.Receive()
         context.Sender () <! msg
@@ -33,7 +33,7 @@ let echo (context: Actor<'Message>) : Behavior<'Message> =
 /// <summary>
 /// Actor behavior, which prints message in formatted string to standard output.
 /// </summary>
-let printf (fmt: Printf.TextWriterFormat<'Message->unit>) (context: Actor<'Message>) : Behavior<'Message> =
+let printf (fmt: Printf.TextWriterFormat<'Message->unit>) (context: Actor<'Message>) : Effect<'Message> =
     let rec loop () = actor {
         let! msg = context.Receive()
         printf fmt msg
