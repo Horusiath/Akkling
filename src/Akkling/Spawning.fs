@@ -109,7 +109,7 @@ module Spawn =
     /// Joins two receive functions, passing message to the <paramref name="right"/> one 
     /// only when result of a <paramref name="left"/> one is other than <see cref="Unhandled"/>
     /// </summary>
-    let (<&>) (left: Receive<'Message>) (right: Receive<'Message>): Receive<'Message> =
+    let (<&>) (left: Receive<'Message, 'Context>) (right: Receive<'Message, 'Context>): Receive<'Message, 'Context> =
         fun context message ->
             match left context message with
             | :? ActorEffect as a ->
@@ -122,7 +122,7 @@ module Spawn =
     /// Joins two receive functions, passing message to the <paramref name="right"/> one 
     /// only when result of a <paramref name="left"/> one is <see cref="Unhandled"/>
     /// </summary>
-    let (<|>) (left: Receive<'Message>) (right: Receive<'Message>): Receive<'Message> =
+    let (<|>) (left: Receive<'Message, 'Context>) (right: Receive<'Message, 'Context>): Receive<'Message, 'Context> =
         fun context message ->
             match left context message with
             | :? ActorEffect as a ->

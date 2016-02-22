@@ -111,7 +111,7 @@ type ExtActor<'Message> =
     inherit Actor<'Message>
     inherit ExtContext
 
-type Receive<'Message> = Actor<'Message> -> 'Message -> Effect
+type Receive<'Message, 'Context when 'Context :> Actor<'Message>> = 'Context -> 'Message -> Effect
 and TypedContext<'Message, 'Actor when 'Actor :> ActorBase and 'Actor :> IWithUnboundedStash>(context : IActorContext, actor : 'Actor) as this = 
     let self = context.Self
     interface ExtActor<'Message> with

@@ -47,6 +47,11 @@ let configWithPort port =
             journal {
               plugin = "akka.persistence.journal.sqlite"
               sqlite {
+			    class = "Akka.Persistence.Sqlite.Journal.SqliteJournal, Akka.Persistence.Sqlite"
+			    plugin-dispatcher = "akka.actor.default-dispatcher"
+			    connection-timeout = 30s
+			    table-name = event_journal
+			    timestamp-provider = "Akka.Persistence.Sql.Common.Journal.DefaultTimestampProvider, Akka.Persistence.Sql.Common"
                 connection-string = "Data Source=.\\store.db;Version=3;"
                 auto-initialize = true
               }
@@ -54,6 +59,10 @@ let configWithPort port =
             snapshot-store {
               plugin = "akka.persistence.snapshot-store.sqlite"
               sqlite {
+			    class = "Akka.Persistence.Sqlite.Snapshot.SqliteSnapshotStore, Akka.Persistence.Sqlite"
+			    plugin-dispatcher = "akka.actor.default-dispatcher"
+			    connection-timeout = 30s
+			    table-name = snapshot_store
                 connection-string = "Data Source=.\\store.db;Version=3;"
                 auto-initialize = true
               }
