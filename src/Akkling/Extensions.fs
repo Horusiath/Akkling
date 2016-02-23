@@ -19,6 +19,7 @@ let (|LifecycleEvent|_|) (message: obj) : LifecycleEvent option =
 [<Struct>]
 type CombinedEffect<'Message> (x: Effect<'Message>, y: Effect<'Message>) =
     interface Effect<'Message> with
+        member this.WasHandled() = x.WasHandled() && y.WasHandled()
         member this.OnApplied(context : ExtActor<'Message>, message : 'Message) = 
             x.OnApplied(context, message)
             y.OnApplied(context, message)

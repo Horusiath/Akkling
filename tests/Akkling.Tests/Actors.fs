@@ -82,3 +82,41 @@ let ``Actor defined by recursive function dead letters message on return Unhandl
         expectMsg tck "b" |> ignore
         expectMsg tck "c" |> ignore
         expectNoMsg tck
+
+[<Fact>]
+let ``<|> combinator executes right side when left side was unhandled`` () = testDefault <| fun tck ->
+    let left (ctx: Actor<_>) = function
+        | "unhandled" -> unhandled ()
+        | n -> ctx.Sender() <! n |> ignored
+    let right (ctx: Actor<_>) = function
+        | "unhandled" -> ctx.Sender() <! "handled" |> ignored
+        | n -> ctx.Sender() <! n |> ignored
+    let combined = left <|> right
+    
+    let aref = spawnAnonymous tck <| props (actorOf2 combined)
+
+    aref <! "ok"
+    aref <! "unhandled"
+
+    expectMsg tck "ok" |> ignore
+    expectMsg tck "handled" |> ignore
+    expectNoMsg tck
+    
+[<Fact>]
+let ``<&> combinator executes right side when left side was handled`` () = testDefault <| fun tck ->
+    let left (ctx: Actor<_>) = function
+        | "unhandled" -> unhandled ()
+        | n -> ctx.Sender() <! n |> ignored
+    let right (ctx: Actor<_>) = function
+        | "unhandled" -> ctx.Sender() <! "handled" |> ignored
+        | n -> ctx.Sender() <! n + " again" |> ignored
+    let combined = left <&> right
+    
+    let aref = spawnAnonymous tck <| props (actorOf2 combined)
+
+    aref <! "hello"
+    aref <! "unhandled"
+
+    expectMsg tck "hello" |> ignore
+    expectMsg tck "hello again" |> ignore
+    expectNoMsg tck

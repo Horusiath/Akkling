@@ -154,18 +154,24 @@ and LifecycleEvent =
 
 
 and [<Interface>]Effect<'Message> = 
+    abstract WasHandled : unit -> bool
     abstract OnApplied : ExtActor<'Message> * 'Message -> unit
 
 and [<Struct>]Become<'Message>(next: 'Message -> Effect<'Message>) =
     member this.Next = next
     interface Effect<'Message> with
-        member this.OnApplied(_ : ExtActor<'Message>, _: 'Message) = ()    
+        member __.WasHandled () = true
+        member __.OnApplied(_ : ExtActor<'Message>, _: 'Message) = ()    
 
 and ActorEffect<'Message> = 
     | Unhandled
     | Stop
     | Ignore
     interface Effect<'Message> with
+        member this.WasHandled () =
+            match this with 
+            | Unhandled -> false
+            | _ -> true
         member this.OnApplied(context : ExtActor<'Message>, message : 'Message) = 
             match this with
             | Unhandled -> context.Unhandled message

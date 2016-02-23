@@ -15,6 +15,4 @@ open Akkling
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Linq.QuotationEvaluation
 
-[<Struct>]
-type AtLeastOnceDelivery<'Context when 'Context :> Actor<obj>>(context: 'Context) = struct end
         

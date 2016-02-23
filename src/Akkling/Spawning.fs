@@ -111,12 +111,10 @@ module Spawn =
     /// </summary>
     let (<&>) (left: Receive<'Message, 'Context>) (right: Receive<'Message, 'Context>): Receive<'Message, 'Context> =
         fun context message ->
-            match left context message with
-            | :? ActorEffect<'Message> as a ->
-                match a with
-                | Unhandled -> Unhandled :> Effect<'Message>
-                | _ -> right context message
-            | e -> e
+            let result = left context message
+            if result.WasHandled() 
+            then right context message
+            else result
         
     /// <summary>
     /// Joins two receive functions, passing message to the <paramref name="right"/> one 
@@ -124,9 +122,7 @@ module Spawn =
     /// </summary>
     let (<|>) (left: Receive<'Message, 'Context>) (right: Receive<'Message, 'Context>): Receive<'Message, 'Context> =
         fun context message ->
-            match left context message with
-            | :? ActorEffect<'Message> as a ->
-                match a with
-                | Unhandled -> right context message
-                | other -> other :> Effect<'Message>
-            | other -> other
+            let result = left context message
+            if result.WasHandled() 
+            then result
+            else right context message

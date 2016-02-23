@@ -104,6 +104,7 @@ let spawnShardedProxyAsync (extractor: 'Envelope -> string*string*'Message) (sys
 type ClusterShardingEffect<'Message> =
     | Passivate of obj
     interface Effect<'Message> with
+        member __.WasHandled() = true
         member this.OnApplied(context : ExtActor<'Message>, message : 'Message) = 
             match this with
             | Passivate stopMessage -> context.Parent() <! Akka.Cluster.Sharding.Passivate(stopMessage)

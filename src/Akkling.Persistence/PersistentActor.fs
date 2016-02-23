@@ -89,6 +89,7 @@ and PersistentEffect<'Message> =
     | PersistAllAsync of 'Message seq
     | Defer of 'Message seq
     interface Effect<'Message> with
+        member __.WasHandled() = true
         member this.OnApplied(context, message) = 
             match context with
             | :? ExtEventsourced<'Message> as persistentContext ->
