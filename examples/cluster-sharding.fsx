@@ -42,29 +42,8 @@ let configWithPort port =
             seed-nodes = [ "akka.tcp://cluster-system@localhost:5000/" ]
           }
           persistence {
-            journal {
-              plugin = "akka.persistence.journal.inmem"
-              sqlite {
-			    class = "Akka.Persistence.Sqlite.Journal.SqliteJournal, Akka.Persistence.Sqlite"
-			    plugin-dispatcher = "akka.actor.default-dispatcher"
-			    connection-timeout = 30s
-			    table-name = event_journal
-			    timestamp-provider = "Akka.Persistence.Sql.Common.Journal.DefaultTimestampProvider, Akka.Persistence.Sql.Common"
-                connection-string = "Data Source=.\\store.db;Version=3;"
-                auto-initialize = true
-              }
-            }
-            snapshot-store {
-              plugin = "akka.persistence.snapshot-store.local"
-              sqlite {
-			    class = "Akka.Persistence.Sqlite.Snapshot.SqliteSnapshotStore, Akka.Persistence.Sqlite"
-			    plugin-dispatcher = "akka.actor.default-dispatcher"
-			    connection-timeout = 30s
-			    table-name = snapshot_store
-                connection-string = "Data Source=.\\store.db;Version=3;"
-                auto-initialize = true
-              }
-            }
+            journal.plugin = "akka.persistence.journal.inmem"
+            snapshot-store.plugin = "akka.persistence.snapshot-store.local"
           }
         }
         """)
@@ -74,6 +53,7 @@ let behavior (ctx : Actor<_>) msg = printfn "%A received %s" (ctx.Self.Path.ToSt
 
 let system1 = System.create "cluster-system" (configWithPort 5000)
 let shardRegion1 = spawnSharded id system1 "printer" <| props (actorOf2 behavior)
+
 let system2 = System.create "cluster-system" (configWithPort 5001)
 let shardRegion2 = spawnSharded id system2 "printer" <| props (actorOf2 behavior)
 
