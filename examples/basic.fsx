@@ -50,3 +50,30 @@ orRef <! "unhandle"     // "always handled: unhandle"
 andRef <! "ok"          // "ok"
                         // "combined behavior: ok"
 andRef <! "unhandle"
+
+// 4. Stateful actors
+
+// 4.1. using explicit loop
+let stateRef = spawnAnonymous system <| props(fun ctx ->
+    let rec loop state = actor {
+       let! n = ctx.Receive()
+       match n with
+       | "print" -> printfn "Current state: %A" state
+       | other -> return! loop (other::state)
+    }
+    loop [])
+
+stateRef <! "a"
+stateRef <! "b"
+stateRef <! "print"
+
+// 4.2. more implicit
+let rec looper state = function
+    | "print" -> printfn "Current state: %A" state |> ignored
+    | other -> become (looper (other::state))
+
+let stateRef2 = spawnAnonymous system <| props(actorOf (looper []))
+
+stateRef2 <! "a"
+stateRef2 <! "b"
+stateRef2 <! "print"

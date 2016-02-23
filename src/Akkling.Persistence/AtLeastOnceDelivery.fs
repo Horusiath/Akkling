@@ -6,7 +6,8 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-namespace Akkling.Persistence
+[<AutoOpen>]
+module Akkling.Persistence.AtLeastOnceDelivery
 
 open System
 open Akka.Actor
@@ -14,5 +15,4 @@ open Akka.Persistence
 open Akkling
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Linq.QuotationEvaluation
-
-        
+ 

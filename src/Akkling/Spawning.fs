@@ -106,6 +106,12 @@ module Spawn =
     let inline stop (_: 'Any) : Effect<'Message> = ActorEffect.Stop :> Effect<'Message>
 
     /// <summary>
+    /// Returns an actor effect causing actor to switch its behavior.
+    /// </summary>
+    /// <param name="next">New receive function.</param>
+    let inline become (next) : Effect<'Message> = Become(next) :> Effect<'Message>
+
+    /// <summary>
     /// Joins two receive functions, passing message to the <paramref name="right"/> one 
     /// only when result of a <paramref name="left"/> one is other than <see cref="Unhandled"/>
     /// </summary>
