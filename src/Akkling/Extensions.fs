@@ -17,12 +17,13 @@ let (|LifecycleEvent|_|) (message: obj) : LifecycleEvent option =
     | _ -> None
 
 [<Struct>]
-type CombinedEffect (x: Effect, y: Effect) =
-    interface Effect with
+type CombinedEffect<'Message> (x: Effect<'Message>, y: Effect<'Message>) =
+    interface Effect<'Message> with
+        member this.WasHandled() = x.WasHandled() && y.WasHandled()
         member this.OnApplied(context : ExtActor<'Message>, message : 'Message) = 
             x.OnApplied(context, message)
             y.OnApplied(context, message)
 
-let inline (@) (x: Effect) (y: Effect) : Effect = CombinedEffect(x, y) :> Effect
+let inline (@) (x: Effect<'Message>) (y: Effect<'Message>) : Effect<'Message> = CombinedEffect(x, y) :> Effect<'Message>
 
 let implicit (/) (x:ActorPath) (y:string) = ActorPath.op_Division(x, y)

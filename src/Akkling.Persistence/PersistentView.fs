@@ -85,14 +85,14 @@ and TypedViewContext<'Message, 'Actor when 'Actor :> FunPersistentView<'Message>
         member __.Pid = actor.PersistenceId
         member __.ViewId = actor.ViewId
             
-and FunPersistentView<'Message>(actor : View<'Message> -> Behavior<'Message>) as this = 
+and FunPersistentView<'Message>(actor : View<'Message> -> Effect<'Message>, persistentId: string) as this = 
     inherit PersistentView()
     let untypedContext = UntypedActor.Context
     let ctx = TypedViewContext<'Message, FunPersistentView<'Message>>(untypedContext, this)
     let mutable behavior = actor ctx
-    new(actor : Expr<View<'Message> -> Behavior<'Message>>) = FunPersistentView(actor.Compile () ())
+    new(actor : Expr<View<'Message> -> Effect<'Message>>, persistentId: string) = FunPersistentView(actor.Compile () (), persistentId)
     
-    member __.Next (current : Behavior<'Message>) (context : Actor<'Message>) (message : obj) : Behavior<'Message> = 
+    member __.Next (current : Effect<'Message>) (context : Actor<'Message>) (message : obj) : Effect<'Message> = 
         match message with
         | :? 'Message as msg -> 
             match current with
@@ -108,12 +108,12 @@ and FunPersistentView<'Message>(actor : View<'Message> -> Behavior<'Message>) as
     member __.Handle (msg: obj) : unit = 
         let nextBehavior = this.Next behavior ctx msg
         match nextBehavior with
-        | Return effect -> effect.OnApplied(ctx, msg :?> 'Message)
-        | _ -> behavior <- nextBehavior
+        | :? Become<'Message> -> behavior <- nextBehavior
+        | effect -> effect.OnApplied(ctx, msg :?> 'Message)
     
     member __.Sender() : IActorRef = base.Sender
     member __.InternalUnhandled(message: obj) : unit = base.Unhandled message
-    override this.PersistenceId = null
+    override this.PersistenceId = persistentId
     override this.ViewId = this.Self.Path.Name
     override this.Receive msg = 
         this.Handle msg

@@ -106,7 +106,9 @@ let ``Typed props are serializable/deserializable in both directions`` () : unit
     let deserialized = serializer.FromBinary(bin, null) :?> Props<obj>
     
     Assert.Equal(p.ActorType, deserialized.ActorType)
-    Assert.NotNull(p.Receiver)
+    Assert.NotNull(p.Args)
+    Assert.Equal(p.Args.Length, 1)
+    Assert.IsType<Microsoft.FSharp.Quotations.Expr<Actor<obj>->Effect<obj>>>(p.Args.[0])
     Assert.Equal(p.Deploy.Value.Scope, deserialized.Deploy.Value.Scope)
     Assert.Equal(p.Deploy.Value.RouterConfig, deserialized.Deploy.Value.RouterConfig)
     

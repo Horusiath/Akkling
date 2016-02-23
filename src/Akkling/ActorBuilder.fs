@@ -18,28 +18,28 @@ open System
 
 /// The builder for actor computation expression.
 type ActorBuilder() =
-    member __.Bind(_ : IO<'In>, continuation : 'In -> Behavior<'In>) = Become(fun message -> continuation message)
-    member this.Bind(behavior : Behavior<'In>, continuation : Effect -> Behavior<'In>) : Behavior<'In> = 
+    member __.Bind(_ : IO<'In>, continuation : 'In -> Effect<'In>) : Effect<'Message> = Become(fun message -> continuation message) :> Effect<'In>
+    member this.Bind(behavior : Effect<'In>, continuation : Effect<'In> -> Effect<'In>) : Effect<'In> = 
         match behavior with
-        | Become next -> Become(fun message -> this.Bind(next message, continuation))
-        | Return returned -> continuation returned    
-    member __.ReturnFrom behavior = behavior
-    member __.Return value = Return value
-    member __.Zero () = Return Ignore    
+        | :? Become<'In> as become -> Become<'In>(fun message -> this.Bind(become.Next message, continuation)) :> Effect<'In>
+        | returned -> continuation returned    
+    member __.ReturnFrom (effect: Effect<'Message>) = effect
+    member __.Return (value: Effect<'Message>) : Effect<'Message> = value
+    member __.Zero () : Effect<'Message> = Ignore :> Effect<'Message>
     member __.Yield value = value
 
-    member this.TryWith(tryExpr : unit -> Behavior<'In>, catchExpr : exn -> Behavior<'In>) : Behavior<'In> = 
+    member this.TryWith(tryExpr : unit -> Effect<'In>, catchExpr : exn -> Effect<'In>) : Effect<'In> = 
         try 
             true, tryExpr ()
         with error -> false, catchExpr error
         |> function 
-        | true, Become next -> Become(fun message -> this.TryWith((fun () -> next message), catchExpr))
+        | true, Become(next) -> Become<'In>(fun message -> this.TryWith((fun () -> next message), catchExpr)) :> Effect<'In>
         | _, value -> value    
 
-    member this.TryFinally(tryExpr : unit -> Behavior<'In>, finallyExpr : unit -> unit) : Behavior<'In> = 
+    member this.TryFinally(tryExpr : unit -> Effect<'In>, finallyExpr : unit -> unit) : Effect<'In> = 
         try 
             match tryExpr() with
-            | Become next -> Become(fun message -> this.TryFinally((fun () -> next message), finallyExpr))
+            | Become next -> Become(fun message -> this.TryFinally((fun () -> next message), finallyExpr)) :> Effect<'In>
             | behavior -> 
                 finallyExpr()
                 behavior
@@ -47,20 +47,20 @@ type ActorBuilder() =
             finallyExpr()
             reraise()
     
-    member this.Using(disposable : #IDisposable, continuation : _ -> Behavior<'In>) : Behavior<'In> = 
+    member this.Using(disposable : #IDisposable, continuation : _ -> Effect<'In>) : Effect<'In> = 
         this.TryFinally((fun () -> continuation disposable), fun () -> if disposable <> null then disposable.Dispose())
     
-    member this.While(condition : unit -> bool, continuation : unit -> Behavior<'In>) : Behavior<'In> = 
+    member this.While(condition : unit -> bool, continuation : unit -> Effect<'In>) : Effect<'In> = 
         if condition() then 
             match continuation() with
             | Become next -> 
                 Become (fun message -> 
                     next message |> ignore
-                    this.While(condition, continuation))
+                    this.While(condition, continuation)) :> Effect<'In>
             | _ -> this.While(condition, continuation)
-        else Return Ignore
+        else Ignore :> Effect<'In>
     
-    member __.For(iterable : 'Iter seq, continuation : 'Iter -> Behavior<'In>) : Behavior<'In> = 
+    member __.For(iterable : 'Iter seq, continuation : 'Iter -> Effect<'In>) : Effect<'In> = 
         use e = iterable.GetEnumerator()
         
         let rec loop() = 
@@ -69,34 +69,34 @@ type ActorBuilder() =
                 | Become fn -> 
                     Become(fun m -> 
                         fn m |> ignore
-                        loop())
+                        loop()) :> Effect<'In>
                 | _ -> loop()
-            else Return Ignore
+            else Ignore :> Effect<'In>
         loop()
     
-    member __.Delay(continuation : unit -> Behavior<'In>) = continuation
-    member __.Run(continuation : unit -> Behavior<'In>) = continuation ()
-    member __.Run(continuation : Behavior<'In>) = continuation
+    member __.Delay(continuation : unit -> Effect<'In>) = continuation
+    member __.Run(continuation : unit -> Effect<'In>) = continuation ()
+    member __.Run(continuation : Effect<'In>) = continuation
     
-    member this.Combine(first : unit -> Behavior<'In>, second : unit -> Behavior<'In>) : Behavior<'In> = 
+    member this.Combine(first : unit -> Effect<'In>, second : unit -> Effect<'In>) : Effect<'In> = 
         match first () with
-        | Become next -> Become(fun message -> this.Combine((fun () -> next message), second))
-        | Return _ -> second ()
+        | Become next -> Become(fun message -> this.Combine((fun () -> next message), second)) :> Effect<'In>
+        | _ -> second ()
     
-    member this.Combine(first : Behavior<'In>, second : unit -> Behavior<'In>) : Behavior<'In> = 
+    member this.Combine(first : Effect<'In>, second : unit -> Effect<'In>) : Effect<'In> = 
         match first with
-        | Become next -> Become(fun message -> this.Combine(next message, second))
-        | Return _ -> second ()
+        | Become next -> Become(fun message -> this.Combine(next message, second)) :> Effect<'In>
+        | _ -> second ()
     
-    member this.Combine(first : unit -> Behavior<'In>, second : Behavior<'In>) : Behavior<'In> = 
+    member this.Combine(first : unit -> Effect<'In>, second : Effect<'In>) : Effect<'In> = 
         match first () with
-        | Become next -> Become(fun message -> this.Combine((fun () -> next message), second))
-        | Return _ -> second
+        | Become next -> Become(fun message -> this.Combine((fun () -> next message), second)) :> Effect<'In>
+        | _ -> second
     
-    member this.Combine(first : Behavior<'In>, second : Behavior<'In>) : Behavior<'In> = 
+    member this.Combine(first : Effect<'In>, second : Effect<'In>) : Effect<'In> = 
         match first with
-        | Become next -> Become(fun message -> this.Combine(next message, second))
-        | Return _ -> second
+        | Become next -> Become(fun message -> this.Combine(next message, second)) :> Effect<'In>
+        | _ -> second
         
 /// Builds an actor message handler using an actor expression syntax.
 let actor = ActorBuilder()

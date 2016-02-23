@@ -39,7 +39,7 @@ type internal TypedMessageExtractor<'Envelope, 'Message>(extractor: 'Envelope ->
 
 open Akkling.Persistence
 // HACK over persistent actors
-type FunPersistentShardingActor<'Message>(actor : Eventsourced<'Message> -> Behavior<'Message>) as this =
+type FunPersistentShardingActor<'Message>(actor : Eventsourced<'Message> -> Effect<'Message>) as this =
     inherit FunPersistentActor<'Message>(actor)
     // sharded actors are produced in path like /user/{name}/{shardId}/{entityId}, therefore "{name}/{shardId}/{entityId}" is peristenceId of an actor
     let pid = this.Self.Path.Parent.Parent.Name + "/" + this.Self.Path.Parent.Name + "/" + this.Self.Path.Name
@@ -101,9 +101,10 @@ let spawnShardedProxyAsync (extractor: 'Envelope -> string*string*'Message) (sys
         return typed shardRegion
     }
 
-type ClusterShardingEffect =
+type ClusterShardingEffect<'Message> =
     | Passivate of obj
-    interface Effect with
+    interface Effect<'Message> with
+        member __.WasHandled() = true
         member this.OnApplied(context : ExtActor<'Message>, message : 'Message) = 
             match this with
             | Passivate stopMessage -> context.Parent() <! Akka.Cluster.Sharding.Passivate(stopMessage)
@@ -112,4 +113,4 @@ type ClusterShardingEffect =
 /// Returns an actor effect causing actor to send passivation request to it's shard. 
 /// Afterwards shard will send <see cref="PoisonPill"/> message back to actor to stop it.
 /// </summary>
-let inline passivate (_: 'Any) : Effect = ClusterShardingEffect.Passivate(PoisonPill.Instance) :> Effect
+let inline passivate (_: 'Any) : Effect<'Message> = ClusterShardingEffect.Passivate(PoisonPill.Instance) :> Effect<'Message>

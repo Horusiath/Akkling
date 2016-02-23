@@ -88,7 +88,8 @@ and PersistentEffect<'Message> =
     | PersistAsync of 'Message
     | PersistAllAsync of 'Message seq
     | Defer of 'Message seq
-    interface Effect with
+    interface Effect<'Message> with
+        member __.WasHandled() = true
         member this.OnApplied(context, message) = 
             match context with
             | :? ExtEventsourced<'Message> as persistentContext ->
@@ -158,14 +159,14 @@ and PersistentLifecycleEvent =
     | ReplaySucceed
     | ReplayFailed
     
-and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Behavior<'Message>) as this = 
+and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Effect<'Message>) as this = 
     inherit UntypedPersistentActor()
     let untypedContext = UntypedActor.Context
     let ctx = TypedPersistentContext<'Message, FunPersistentActor<'Message>>(untypedContext, this)
     let mutable behavior = actor ctx
-    new(actor : Expr<Eventsourced<'Message> -> Behavior<'Message>>) = FunPersistentActor(actor.Compile () ())
+    new(actor : Expr<Eventsourced<'Message> -> Effect<'Message>>) = FunPersistentActor(actor.Compile () ())
     
-    member __.Next (current : Behavior<'Message>) (context : Actor<'Message>) (message : obj) : Behavior<'Message> = 
+    member __.Next (current : Effect<'Message>) (context : Actor<'Message>) (message : obj) : Effect<'Message> = 
         match message with
         | :? 'Message as msg -> 
             match current with
@@ -181,8 +182,8 @@ and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Behavior<'Mes
     member __.Handle (msg: obj) : unit = 
         let nextBehavior = this.Next behavior ctx msg
         match nextBehavior with
-        | Return effect -> effect.OnApplied(ctx, msg :?> 'Message)
-        | _ -> behavior <- nextBehavior
+        | :? Become<'Message> -> behavior <- nextBehavior
+        | effect -> effect.OnApplied(ctx, msg :?> 'Message)
     
     member __.Sender() : IActorRef = base.Sender
     member __.InternalUnhandled(message: obj) : unit = base.Unhandled message

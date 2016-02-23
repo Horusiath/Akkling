@@ -37,23 +37,23 @@ module Props =
     /// <summary>
     /// Creates a props describing a way to incarnate persistent actor with behavior described by <paramref name="receive"/> function.
     /// </summary>
-    let propsPersist (receive: Eventsourced<'Message> -> Behavior<'Message>) : Props<'Message> =
+    let propsPersist (receive: Eventsourced<'Message> -> Effect<'Message>) : Props<'Message> =
         Props<'Message>.Create<FunPersistentActor<'Message>, Eventsourced<'Message>, 'Message>(receive)
         
     /// <summary>
     /// Creates a props describing a way to incarnate persistent actor with behavior described by <paramref name="expr"/> expression.
     /// </summary>
-    let propsPersiste (expr: Expr<(Eventsourced<'Message> -> Behavior<'Message>)>) : Props<'Message> =
+    let propsPersiste (expr: Expr<(Eventsourced<'Message> -> Effect<'Message>)>) : Props<'Message> =
         Props<'Message>.Create<FunPersistentActor<'Message>, Eventsourced<'Message>, 'Message>(expr)
         
     /// <summary>
     /// Creates a props describing a way to incarnate persistent view with behavior described by <paramref name="receive"/> function.
     /// </summary>
-    let propsView (receive: View<'Message> -> Behavior<'Message>) : Props<'Message> =
-        Props<'Message>.Create<FunPersistentView<'Message>, View<'Message>, 'Message>(receive)
+    let propsView (persistentId: string) (receive: View<'Message> -> Effect<'Message>) : Props<'Message> =
+        Props<'Message>.ArgsCreate<FunPersistentView<'Message>, View<'Message>, 'Message>([| receive; persistentId |])
         
     /// <summary>
     /// Creates a props describing a way to incarnate persistent view with behavior described by <paramref name="expr"/> expression.
     /// </summary>
-    let propsViewe (expr: Expr<(View<'Message> -> Behavior<'Message>)>) : Props<'Message> =
-        Props<'Message>.Create<FunPersistentView<'Message>, View<'Message>, 'Message>(expr)
+    let propsViewe (persistentId: string) (expr: Expr<(View<'Message> -> Effect<'Message>)>) : Props<'Message> =
+        Props<'Message>.ArgsCreate<FunPersistentView<'Message>, View<'Message>, 'Message>([| expr; persistentId |])

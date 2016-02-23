@@ -19,7 +19,7 @@ type IO<'T> =
 /// <summary>
 /// Exposes an Akka.NET actor API accessible from inside of F# continuations
 /// </summary>
-[<Interface>]
+[<Interface>] 
 type Actor<'Message> = 
     inherit IActorRefFactory
     inherit ICanWatch
@@ -103,7 +103,6 @@ type ExtContext =
     /// </summary>
     abstract Unhandled : obj -> unit
 
-
 /// <summary>
 /// Exposes an Akka.NET extended actor API accessible from inside of F# continuations 
 /// </summary>
@@ -112,7 +111,8 @@ type ExtActor<'Message> =
     inherit Actor<'Message>
     inherit ExtContext
 
-type TypedContext<'Message, 'Actor when 'Actor :> ActorBase and 'Actor :> IWithUnboundedStash>(context : IActorContext, actor : 'Actor) as this = 
+type Receive<'Message, 'Context when 'Context :> Actor<'Message>> = 'Context -> 'Message -> Effect<'Message>
+and TypedContext<'Message, 'Actor when 'Actor :> ActorBase and 'Actor :> IWithUnboundedStash>(context : IActorContext, actor : 'Actor) as this = 
     let self = context.Self
     interface ExtActor<'Message> with
         member __.Receive() = Input
@@ -140,8 +140,7 @@ type TypedContext<'Message, 'Actor when 'Actor :> ActorBase and 'Actor :> IWithU
             match box actor with
             | :? FunActor<'Message> as act -> act.InternalUnhandled(msg)
             | _ -> raise (Exception("Couldn't use actor in typed context"))
-
-
+            
 and [<AbstractClass>]Actor() = 
     inherit UntypedActor()
     interface IWithUnboundedStash with
@@ -154,36 +153,43 @@ and LifecycleEvent =
     | PostRestart of cause : exn
 
 
-and [<Interface>]Effect = 
+and [<Interface>]Effect<'Message> = 
+    abstract WasHandled : unit -> bool
     abstract OnApplied : ExtActor<'Message> * 'Message -> unit
 
-and ActorEffect = 
+and [<Struct>]Become<'Message>(next: 'Message -> Effect<'Message>) =
+    member this.Next = next
+    interface Effect<'Message> with
+        member __.WasHandled () = true
+        member __.OnApplied(_ : ExtActor<'Message>, _: 'Message) = ()    
+
+and ActorEffect<'Message> = 
     | Unhandled
     | Stop
     | Ignore
-    interface Effect with
+    interface Effect<'Message> with
+        member this.WasHandled () =
+            match this with 
+            | Unhandled -> false
+            | _ -> true
         member this.OnApplied(context : ExtActor<'Message>, message : 'Message) = 
             match this with
             | Unhandled -> context.Unhandled message
             | Stop -> context.Stop (context.Self)
             | Ignore -> ()    
 
-and Behavior<'Message> = 
-    | Become of ('Message -> Behavior<'Message>)
-    | Return of Effect
-
-and FunActor<'Message>(actor : Actor<'Message> -> Behavior<'Message>) as this = 
+and FunActor<'Message>(actor : Actor<'Message>->Effect<'Message>) as this = 
     inherit Actor()
     let untypedContext = UntypedActor.Context :> IActorContext
     let ctx = TypedContext<'Message, FunActor<'Message>>(untypedContext, this)
     let mutable behavior = actor ctx
-    new(actor : Expr<Actor<'Message> -> Behavior<'Message>>) = FunActor(actor.Compile () ())
+    new(actor : Expr<Actor<'Message>->Effect<'Message>>) = FunActor(actor.Compile () ())
     
-    member __.Next (current : Behavior<'Message>) (context : Actor<'Message>) (message : obj) : Behavior<'Message> = 
+    member __.Next (current : Effect<'Message>) (context : Actor<'Message>) (message : obj) : Effect<'Message> = 
         match message with
         | :? 'Message as msg -> 
             match current with
-            | Become(fn) -> fn msg
+            | :? Become<'Message> as become -> become.Next msg
             | _ -> current
         | :? LifecycleEvent -> 
             // we don't treat unhandled lifecycle events as casual unhandled messages
@@ -195,8 +201,8 @@ and FunActor<'Message>(actor : Actor<'Message> -> Behavior<'Message>) as this =
     member __.Handle (msg: obj) = 
         let nextBehavior = this.Next behavior ctx msg
         match nextBehavior with
-        | Return effect -> effect.OnApplied(ctx, msg :?> 'Message)
-        | _ -> behavior <- nextBehavior
+        | :? Become<'Message> -> behavior <- nextBehavior
+        | effect -> effect.OnApplied(ctx, msg :?> 'Message)
     
     member __.Sender() : IActorRef = base.Sender
     member this.InternalUnhandled(message: obj) : unit = this.Unhandled message
@@ -217,3 +223,8 @@ and FunActor<'Message>(actor : Actor<'Message> -> Behavior<'Message>) as this =
     override this.PostRestart(cause) = 
         base.PostRestart cause
         this.Handle(PostRestart cause)
+
+let (|Become|_|) (effect: Effect<'Message>) =
+    if effect :? Become<'Message>
+    then Some ((effect :?> Become<'Message>).Next)
+    else None
