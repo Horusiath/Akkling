@@ -61,6 +61,8 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="ClusterExtensions.fs" />
     <Compile Include="ClusterSingleton.fs" />
+    <Compile Include="DistributedPubSub.fs" />
+    <Compile Include="ClusterClient.fs" />
     <Compile Include="ClusterSharding.fs" />
     <None Include="Akkling.Cluster.Sharding.fsproj.paket.template" />
     <None Include="paket.references" />
