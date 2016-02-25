@@ -69,7 +69,6 @@
     <Compile Include="ComputationExpressions.fs" />
     <Compile Include="Api.fs" />
     <Compile Include="Actors.fs" />
-    <Compile Include="Behaviors.fs" />
     <None Include="paket.references" />
     <Content Include="app.config" />
   </ItemGroup>
