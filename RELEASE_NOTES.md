@@ -1,3 +1,11 @@
+### New in 0.3.0 (Released 2016/02/25)
+* Akkling.Cluster.Sharding and Akkling.TestKit packages
+* new typed Props, all `spawn` functions now operates on them
+* `actorOf` functions now returns effects
+* new `become` effect
+* new effect combinators `<|>` and `<&>`
+* Ask operator `<?` now returns async of `AskResult<'msg>`
+
 ### New in 0.2.1 (Released 2015/12/17)
 * Forward operator `<<!`
 * Parent property in actor contexts
