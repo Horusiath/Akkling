@@ -14,7 +14,7 @@ Obligatory hello world example:
 open Akkling
 
 use system = System.create "my-system" <| Configuration.defaultConfig()
-let aref = spawn system "printer" <| props(actorOf (fun m -> printfn "%s" m |> ignored))
+let aref = spawnAnonymous system <| props(actorOf (fun m -> printfn "%s" m |> ignored))
 
 aref <! "hello world"
 aref <! 1 // ERROR: we have statically typed actors here
@@ -37,7 +37,7 @@ let rec greeter lastKnown = function
         printfn "%s sends greetings"
         become (greeter who)
 
-let aref = spawn system "printer" <| props(actorOf (greeter "Unknown"))
+let aref = spawn system "greeter" <| props(actorOf (greeter "Unknown"))
 
 aref <! Greet "Tom"
 aref <! Greet "Jane"

@@ -51,13 +51,38 @@ let configWithPort port =
 
 let behavior (ctx : Actor<_>) msg = printfn "%A received %s" (ctx.Self.Path.ToStringWithAddress()) msg |> ignored
 
+// spawn two separate systems with shard regions on each of them
+
 let system1 = System.create "cluster-system" (configWithPort 5000)
 let shardRegion1 = spawnSharded id system1 "printer" <| props (actorOf2 behavior)
 
+// wait a while before starting a second system
+
 let system2 = System.create "cluster-system" (configWithPort 5001)
 let shardRegion2 = spawnSharded id system2 "printer" <| props (actorOf2 behavior)
+
+// send hello world to entities on 4 different shards (this means that we will have 4 entities in total)
+// NOTE: even thou we sent all messages through single shard region, 
+//       some of them will be executed on the second one thanks to shard balancing
 
 shardRegion1 <! ("shard-1", "entity-1", "hello world 1")
 shardRegion1 <! ("shard-2", "entity-1", "hello world 2")
 shardRegion1 <! ("shard-3", "entity-1", "hello world 3")
 shardRegion1 <! ("shard-4", "entity-1", "hello world 4")
+
+// check which shards have been build on the second shard region
+
+open Akka.Cluster.Sharding
+
+let printShards shardReg =
+    async {
+        let! reply = (retype shardReg) <? GetShardRegionStats.Instance
+        let (stats: ShardRegionStats) = reply.Value
+        for kv in stats.Stats do
+            printfn "\tShard '%s' has %d entities on it" kv.Key kv.Value
+    } |> Async.RunSynchronously
+
+printfn "Shards active on node 'localhost:5000':" 
+printShards shardRegion1
+printfn "Shards active on node 'localhost:5001':" 
+printShards shardRegion2
