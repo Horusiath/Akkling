@@ -11,10 +11,29 @@ module Akkling.Extensions
 
 open Akka.Actor
 
-let (|LifecycleEvent|_|) (message: obj) : LifecycleEvent option =
+let private asLifecycleEvent (message : obj) =
     match message with
     | :? LifecycleEvent as e -> Some e
     | _ -> None
+
+let (|LifecycleEvent|_|) (message: obj) : LifecycleEvent option =
+    message |> asLifecycleEvent
+
+let (|PreStart|_|) (message : obj) : unit option =
+    message |> asLifecycleEvent 
+    |> Option.bind (function PreStart -> Some () | _ -> None )
+
+let (|PostStop|_|) (message : obj) : unit option =
+    message |> asLifecycleEvent 
+    |> Option.bind (function PostStop -> Some () | _ -> None )
+
+let (|PreRestart|_|) (message : obj) : (exn * obj) option=
+    message |> asLifecycleEvent 
+    |> Option.bind (function PreRestart (c, m) -> Some (c, m) | _ -> None )
+
+let (|PostRestart|_|) (message : obj) : exn option=
+    message |> asLifecycleEvent 
+    |> Option.bind (function PostRestart c -> Some c | _ -> None )
 
 [<Struct>]
 type CombinedEffect<'Message> (x: Effect<'Message>, y: Effect<'Message>) =
