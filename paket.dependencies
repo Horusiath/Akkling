@@ -6,6 +6,7 @@ nuget Akka.Cluster.Tools
 nuget Akka.Persistence.Sqlite
 nuget Akka.Serialization.Wire
 nuget FsPickler
+nuget Reactive.Streams
 nuget Wire
 nuget Helios
 nuget Google.ProtocolBuffers
