@@ -54,7 +54,7 @@ let ``Actor defined by recursive function stops on return Stop`` () : unit = tes
     expectTerminated tck aref |> ignore
     expectNoMsg tck 
 
-[<Fact(Skip="Fix it")>]
+[<Fact(Skip="FIXME")>]
 let ``Actor defined by recursive function dead letters message on return Unhandled`` () : unit = testDefault <| fun tck ->
     let aref = 
         spawn tck "actor"

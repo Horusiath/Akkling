@@ -18,34 +18,34 @@ open Microsoft.FSharp.Linq.QuotationEvaluation
 type PID = string
 
 [<Interface>]
-type Eventsourced<'Message> = 
+type Eventsourced<'Message> =
     inherit Actor<'Message>
-    
+
     /// <summary>
     /// Returns currently attached journal actor reference.
     /// </summary>
     abstract Journal : IActorRef
-    
+
     /// <summary>
     /// Returns currently attached snapshot store actor reference.
     /// </summary>
     abstract SnapshotStore : IActorRef
-    
+
     /// <summary>
     /// Returns value determining if current persistent actor is actually recovering.
     /// </summary>
     abstract IsRecovering : unit -> bool
-    
+
     /// <summary>
     /// Returns last sequence number attached to latest persisted event.
     /// </summary>
     abstract LastSequenceNr : unit -> int64
-    
+
     /// <summary>
     /// Persistent actor's identifier that doesn't change across different actor incarnations.
     /// </summary>
     abstract Pid : PID
-    
+
     /// <summary>
     /// Flag which informs if current actor is acutally during execution of persisting handler.
     /// </summary>
@@ -57,19 +57,19 @@ type Eventsourced<'Message> =
     abstract HasDeffered : unit -> bool
 
 and [<Interface>]PersistentContext<'Event> =
-    
+
     /// <summary>
-    /// Persists sequence of events in the event journal. Use second argument to define 
+    /// Persists sequence of events in the event journal. Use second argument to define
     /// function which will update state depending on events.
     /// </summary>
     abstract PersistEvent : 'Event seq -> unit
-    
+
     /// <summary>
-    /// Asynchronously persists sequence of events in the event journal. Use second argument 
+    /// Asynchronously persists sequence of events in the event journal. Use second argument
     /// to define function which will update state depending on events.
     /// </summary>
     abstract AsyncPersistEvent : 'Event seq -> unit
-    
+
     /// <summary>
     /// Defers a second argument (update state callback) to be called after persisting target
     /// event will be confirmed.
@@ -90,7 +90,7 @@ and PersistentEffect<'Message> =
     | Defer of 'Message seq
     interface Effect<'Message> with
         member __.WasHandled() = true
-        member this.OnApplied(context, message) = 
+        member this.OnApplied(context, message) =
             match context with
             | :? ExtEventsourced<'Message> as persistentContext ->
                 match this with
@@ -100,8 +100,8 @@ and PersistentEffect<'Message> =
                 | PersistAllAsync(events) -> persistentContext.AsyncPersistEvent events
                 | Defer(events) -> persistentContext.DeferEvent events
             | _ -> raise (Exception("Cannot use persistent effects in context of non-persistent actor"))
-            
-and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'Message>>(context : IActorContext, actor : 'Actor) as this = 
+
+and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'Message>>(context : IActorContext, actor : 'Actor) as this =
     let self = context.Self
     let mutable hasPersisted = false
     let mutable hasDeffered = false
@@ -116,6 +116,7 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
             actor.Handle e
             hasDeffered <- false)
     interface ExtEventsourced<'Message> with
+        member __.UntypedContext = context
         member __.HasPersisted () = hasPersisted
         member __.HasDeffered () = hasDeffered
         member __.Receive() = Input
@@ -133,13 +134,13 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
         member __.Unstash() = actor.Stash.Unstash()
         member __.UnstashAll() = actor.Stash.UnstashAll()
         member __.SetReceiveTimeout timeout = context.SetReceiveTimeout(Option.toNullable timeout)
-        member __.Schedule (delay : TimeSpan) target message = 
+        member __.Schedule (delay : TimeSpan) target message =
             context.System.Scheduler.ScheduleTellOnceCancelable(delay, target, message, self)
-        member __.ScheduleRepeatedly (delay : TimeSpan) (interval : TimeSpan) target message = 
+        member __.ScheduleRepeatedly (delay : TimeSpan) (interval : TimeSpan) target message =
             context.System.Scheduler.ScheduleTellOnceCancelable(delay, target, message, self)
         member __.Incarnation() = actor :> ActorBase
         member __.Stop(ref : IActorRef<'T>) = context.Stop(untyped ref)
-        member __.Unhandled(msg) = 
+        member __.Unhandled(msg) =
             match box actor with
             | :? FunActor<'Message> as act -> act.InternalUnhandled(msg)
             | _ -> raise (Exception("Couldn't use actor in typed context"))
@@ -148,61 +149,61 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
         member __.IsRecovering () = actor.IsRecovering
         member __.LastSequenceNr () = actor.LastSequenceNr
         member __.Pid = actor.PersistenceId
-        member this.PersistEvent(events) = 
-            actor.Persist(events, this.Persisting)
-        member __.AsyncPersistEvent(events) = 
-            actor.PersistAsync(events, this.Persisting)
-        member __.DeferEvent(events)  = 
-            actor.Defer(events, this.Deffering)
+        member this.PersistEvent(events) =
+            actor.PersistAll(events, this.Persisting)
+        member __.AsyncPersistEvent(events) =
+            actor.PersistAllAsync(events, this.Persisting)
+        member __.DeferEvent(events) =
+            events |> Seq.iter (fun e -> actor.DeferAsync(e, this.Deffering))
 
 and PersistentLifecycleEvent =
     | ReplaySucceed
     | ReplayFailed
-    
-and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Effect<'Message>) as this = 
+
+and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Effect<'Message>) as this =
     inherit UntypedPersistentActor()
     let untypedContext = UntypedActor.Context
     let ctx = TypedPersistentContext<'Message, FunPersistentActor<'Message>>(untypedContext, this)
     let mutable behavior = actor ctx
     new(actor : Expr<Eventsourced<'Message> -> Effect<'Message>>) = FunPersistentActor(actor.Compile () ())
-    
-    member __.Next (current : Effect<'Message>) (context : Actor<'Message>) (message : obj) : Effect<'Message> = 
+
+    member __.Next (current : Effect<'Message>) (context : Actor<'Message>) (message : obj) : Effect<'Message> =
         match message with
-        | :? 'Message as msg -> 
+        | :? 'Message as msg ->
             match current with
             | Become(fn) -> fn msg
             | _ -> current
-        | :? LifecycleEvent | :? PersistentLifecycleEvent -> 
+        | :? LifecycleEvent | :? PersistentLifecycleEvent ->
             // we don't treat unhandled lifecycle events as casual unhandled messages
             current
-        | other -> 
+        | other ->
             base.Unhandled other
             current
-    
-    member __.Handle (msg: obj) : unit = 
+
+    member __.Handle (msg: obj) : unit =
         let nextBehavior = this.Next behavior ctx msg
         match nextBehavior with
         | :? Become<'Message> -> behavior <- nextBehavior
         | effect -> effect.OnApplied(ctx, msg :?> 'Message)
-    
+
     member __.Sender() : IActorRef = base.Sender
     member __.InternalUnhandled(message: obj) : unit = base.Unhandled message
     override this.PersistenceId = this.Self.Path.Name
     override this.OnCommand msg = this.Handle msg
     override this.OnRecover msg = this.Handle msg
-    
-    override this.PostStop() = 
+
+    override this.PostStop() =
         base.PostStop()
         this.Handle PostStop
-    
-    override this.PreStart() = 
+
+    override this.PreStart() =
         base.PreStart()
         this.Handle PreStart
-    
-    override this.PreRestart(cause, msg) = 
+
+    override this.PreRestart(cause, msg) =
         base.PreRestart(cause, msg)
         this.Handle(PreRestart(cause, msg))
-    
-    override this.PostRestart(cause) = 
+
+    override this.PostRestart(cause) =
         base.PostRestart cause
         this.Handle(PostRestart cause)

@@ -14,14 +14,17 @@ open Akka.Streams.Dsl
 
 module Graph =
 
-        let (->>) (op: GraphDsl.ForwardOps<'out, 'mat>) (flow: Flow<_, 'out2, unit>) =
-            op.Via(flow.MapMaterializedValue(Func<_,_>(fun () -> Akka.NotUsed.Instance)))
-            
-        let (->|) (op: GraphDsl.ForwardOps<'out, 'mat>) (sink: Sink<_, 'mat>) =
-            op.To(sink)
-            
-        let (<<-) (flow: Flow<_, 'out2, unit>) (op: GraphDsl.ForwardOps<'out, 'mat>) =
-            op.Via(flow.MapMaterializedValue(Func<_,_>(fun () -> Akka.NotUsed.Instance)))
-            
-        let (|<-) (sink: Sink<_, 'mat>) (op: GraphDsl.ForwardOps<'out, 'mat>) =
-            op.To(sink)
+    let (->>) (op: GraphDsl.ForwardOps<'out, 'mat>) (flow: Flow<_, 'out2, unit>) =
+        op.Via(flow.MapMaterializedValue(Func<_,_>(fun () -> Akka.NotUsed.Instance)))
+
+    let (->|) (op: GraphDsl.ForwardOps<'out, 'mat>) (sink: Sink<_, 'mat>) =
+        op.To(sink)
+
+    let (<<-) (flow: Flow<_, 'out2, unit>) (op: GraphDsl.ForwardOps<'out, 'mat>) =
+        op.Via(flow.MapMaterializedValue(Func<_,_>(fun () -> Akka.NotUsed.Instance)))
+
+    let (|<-) (sink: Sink<_, 'mat>) (op: GraphDsl.ForwardOps<'out, 'mat>) =
+        op.To(sink)
+
+    let run (mat: #IMaterializer) (graph: IRunnableGraph<'mat>) =
+        graph.Run mat

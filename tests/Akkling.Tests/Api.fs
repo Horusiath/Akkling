@@ -153,3 +153,18 @@ let ``can serialize and deserialize discriminated unions over remote nodes`` () 
     let response : AskResult<OuterUnion> = aref <? msg |> Async.RunSynchronously
     response.Value
     |> equals msg
+
+[<Fact>]
+let ``monitor works on typed refs`` () = testDefault <| fun tck ->
+    let ref = spawn tck "actor" (props Behaviors.echo)
+    monitor tck ref
+    ref <! PoisonPill.Instance
+    expectTerminated tck ref |> ignore
+    
+[<Fact>]
+let ``demonitor works on typed refs`` () = testDefault <| fun tck ->
+    let ref = spawn tck "actor" (props Behaviors.echo)
+    monitor tck ref
+    demonitor tck ref
+    ref <! PoisonPill.Instance
+    expectNoMsg tck

@@ -4,6 +4,7 @@
 #r "../src/Akkling/bin/Debug/FSharp.PowerPack.dll"
 #r "../src/Akkling/bin/Debug/FSharp.PowerPack.Linq.dll"
 #r "../src/Akkling/bin/Debug/Akkling.dll"
+#r "../src/Akkling/bin/Debug/System.Collections.Immutable.dll"
 
 open System
 open Akkling

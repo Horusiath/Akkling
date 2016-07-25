@@ -4,6 +4,7 @@
 #r "../src/Akkling/bin/Debug/FSharp.PowerPack.dll"
 #r "../src/Akkling/bin/Debug/FSharp.PowerPack.Linq.dll"
 #r "../src/Akkling/bin/Debug/Akkling.dll"
+#r "../src/Akkling/bin/Debug/System.Collections.Immutable.dll"
 
 open System
 open Akkling
@@ -18,7 +19,7 @@ let handler connection = fun (ctx: Actor<obj>) ->
     let rec loop () = actor {
         let! msg = ctx.Receive ()
         match msg with
-        | Received(data) -> 
+        | Received(data) ->
             printfn "%s" (data.DecodeString())
             return! loop ()
         | Terminated(_, _,_) | ConnectionClosed(_) -> return Stop
@@ -39,4 +40,3 @@ let listener = spawn system "listener" <| props(fun m ->
         | _ -> return Unhandled
     }
     loop ())
-    

@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{63297B98-5CED-492C-A5B7-A5B4F73CF142}"
 	ProjectSection(SolutionItems) = preProject
@@ -40,9 +40,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{8CC185AC-1D97-41F9-BBF1-09D892CA18B9}"
 	ProjectSection(SolutionItems) = preProject
 		examples\basic.fsx = examples\basic.fsx
+		examples\cluster-nodes-status.fsx = examples\cluster-nodes-status.fsx
 		examples\cluster-sharding.fsx = examples\cluster-sharding.fsx
+		examples\dist-pub-sub.fsx = examples\dist-pub-sub.fsx
 		examples\io.fsx = examples\io.fsx
 		examples\lifecycle.fsx = examples\lifecycle.fsx
+		examples\persistence-streams.fsx = examples\persistence-streams.fsx
 		examples\persistence.fsx = examples\persistence.fsx
 		examples\remote.fsx = examples\remote.fsx
 		examples\streams.fsx = examples\streams.fsx

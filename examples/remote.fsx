@@ -4,6 +4,7 @@
 #r "../src/Akkling/bin/Debug/FSharp.PowerPack.dll"
 #r "../src/Akkling/bin/Debug/FSharp.PowerPack.Linq.dll"
 #r "../src/Akkling/bin/Debug/Akkling.dll"
+#r "../src/Akkling/bin/Debug/System.Collections.Immutable.dll"
 #r "../packages/Helios/lib/net45/Helios.dll"
 #r "../packages/FsPickler/lib/net45/FsPickler.dll"
 #r "../packages/Google.ProtocolBuffers/lib/net40/Google.ProtocolBuffers.dll"
@@ -21,7 +22,7 @@ let server = System.create "server" <| Configuration.parse """
             hostname = localhost
             port = 4500
         }
-    }   
+    }
 """
 
 let client = System.create "client" <| Configuration.parse """
@@ -31,12 +32,12 @@ let client = System.create "client" <| Configuration.parse """
             hostname = localhost
             port = 0
         }
-    }   
+    }
 """
 
 let remoteProps addr actor = { propse actor with Deploy = Some (Deploy(RemoteScope(Address.Parse addr))) }
 
-let printer = 
+let printer =
     spawn client "remote-actor" (remoteProps "akka.tcp://server@localhost:4500" <@ actorOf2 (fun ctx msg -> printfn "%A received: %s" ctx.Self msg |> ignored) @>)
 
 printer <! "hello"
