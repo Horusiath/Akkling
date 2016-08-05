@@ -3,3 +3,4 @@ FSPowerPack.Linq.Community
 Wire
 FsPickler
 Akka.Serialization.Wire
+System.Collections.Immutable
