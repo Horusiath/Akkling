@@ -18,11 +18,16 @@ open System
 
 /// The builder for actor computation expression.
 type ActorBuilder() =
-    member __.Bind(_ : IO<'In>, continuation : 'In -> Effect<'In>) : Effect<'Message> = Become(fun message -> continuation message) :> Effect<'In>
+    member __.Bind(_ : IO<'In>, continuation : 'In -> Effect<'In>) : Effect<'Message> = upcast Become(fun message -> continuation message)
     member this.Bind(behavior : Effect<'In>, continuation : Effect<'In> -> Effect<'In>) : Effect<'In> = 
         match behavior with
         | :? Become<'In> as become -> Become<'In>(fun message -> this.Bind(become.Next message, continuation)) :> Effect<'In>
         | returned -> continuation returned    
+    member __.Bind(asyncInput: Async<'In>, continuation: 'In -> Effect<'Out>) : Effect<'Out> =
+        upcast AsyncEffect (async {
+            let! returned = asyncInput 
+            return continuation returned 
+        })
     member __.ReturnFrom (effect: Effect<'Message>) = effect
     member __.Return (value: Effect<'Message>) : Effect<'Message> = value
     member __.Zero () : Effect<'Message> = Ignore :> Effect<'Message>

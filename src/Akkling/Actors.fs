@@ -162,6 +162,12 @@ and [<Struct>]Become<'Message>(next: 'Message -> Effect<'Message>) =
     interface Effect<'Message> with
         member __.WasHandled () = true
         member __.OnApplied(_ : ExtActor<'Message>, _: 'Message) = ()    
+        
+and [<Struct>]AsyncEffect<'Message>(asyncEffect: Async<Effect<'Message>>) =
+    member __.Effect = asyncEffect
+    interface Effect<'Message> with
+        member __.WasHandled () = true
+        member __.OnApplied(_ : ExtActor<'Message>, _: 'Message) = ()    
 
 and ActorEffect<'Message> = 
     | Unhandled
@@ -197,11 +203,21 @@ and FunActor<'Message>(actor : Actor<'Message>->Effect<'Message>) as this =
         | other -> 
             this.Unhandled other
             current
-    
+
     member __.Handle (msg: obj) = 
         let nextBehavior = this.Next behavior ctx msg
         match nextBehavior with
         | :? Become<'Message> -> behavior <- nextBehavior
+        | :? AsyncEffect<'Message> as a ->
+            Akka.Dispatch.ActorTaskScheduler.RunTask(System.Func<System.Threading.Tasks.Task>(fun () -> 
+                let task = 
+                    async {
+                        let! eff = a.Effect
+                        match eff with
+                        | :? Become<'Message> -> behavior <- eff
+                        | effect -> effect.OnApplied(ctx, msg :?> 'Message)
+                        () } |> Async.StartAsTask
+                upcast task ))
         | effect -> effect.OnApplied(ctx, msg :?> 'Message)
     
     member __.Sender() : IActorRef = base.Sender
