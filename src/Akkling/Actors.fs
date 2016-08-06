@@ -86,6 +86,11 @@ type Actor<'Message> =
     /// </summary>
     abstract ScheduleRepeatedly<'Scheduled> : TimeSpan -> TimeSpan -> IActorRef<'Scheduled> -> 'Scheduled -> ICancelable
 
+    /// <summary>
+    /// A raw Actor context in it's untyped form.
+    /// </summary>
+    abstract UntypedContext : IActorContext 
+
 [<Interface>]
 type ExtContext =
     /// <summary>
@@ -115,6 +120,7 @@ type Receive<'Message, 'Context when 'Context :> Actor<'Message>> = 'Context -> 
 and TypedContext<'Message, 'Actor when 'Actor :> ActorBase and 'Actor :> IWithUnboundedStash>(context : IActorContext, actor : 'Actor) as this = 
     let self = context.Self
     interface ExtActor<'Message> with
+        member __.UntypedContext = context
         member __.Receive() = Input
         member __.Self = typed self
         member __.Sender<'Response>() = typed (context.Sender) :> IActorRef<'Response>
@@ -162,6 +168,12 @@ and [<Struct>]Become<'Message>(next: 'Message -> Effect<'Message>) =
     interface Effect<'Message> with
         member __.WasHandled () = true
         member __.OnApplied(_ : ExtActor<'Message>, _: 'Message) = ()    
+        
+and [<Struct>]AsyncEffect<'Message>(asyncEffect: Async<Effect<'Message>>) =
+    member __.Effect = asyncEffect
+    interface Effect<'Message> with
+        member __.WasHandled () = true
+        member __.OnApplied(_ : ExtActor<'Message>, _: 'Message) = ()    
 
 and ActorEffect<'Message> = 
     | Unhandled
@@ -197,11 +209,21 @@ and FunActor<'Message>(actor : Actor<'Message>->Effect<'Message>) as this =
         | other -> 
             this.Unhandled other
             current
-    
+
     member __.Handle (msg: obj) = 
         let nextBehavior = this.Next behavior ctx msg
         match nextBehavior with
         | :? Become<'Message> -> behavior <- nextBehavior
+        | :? AsyncEffect<'Message> as a ->
+            Akka.Dispatch.ActorTaskScheduler.RunTask(System.Func<System.Threading.Tasks.Task>(fun () -> 
+                let task = 
+                    async {
+                        let! eff = a.Effect
+                        match eff with
+                        | :? Become<'Message> -> behavior <- eff
+                        | effect -> effect.OnApplied(ctx, msg :?> 'Message)
+                        () } |> Async.StartAsTask
+                upcast task ))
         | effect -> effect.OnApplied(ctx, msg :?> 'Message)
     
     member __.Sender() : IActorRef = base.Sender

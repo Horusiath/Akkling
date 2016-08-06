@@ -1,13 +1,14 @@
 source https://nuget.org/api/v2
 
-nuget Akka.Cluster
-nuget Akka.Cluster.Sharding
-nuget Akka.Cluster.Tools
+nuget Akka.Cluster prerelease
+nuget Akka.Cluster.Sharding prerelease
+nuget Akka.Cluster.Tools prerelease
 nuget Akka.Persistence.Sqlite
 nuget Akka.Serialization.Wire
 nuget FsPickler
 nuget Reactive.Streams
-nuget Wire
+nuget System.Collections.Immutable = 1.1.36
+nuget Wire = 0.0.6
 nuget Helios
 nuget Google.ProtocolBuffers
 nuget FAKE
@@ -15,7 +16,7 @@ nuget FSPowerPack.Linq.Community
 nuget FSharp.Formatting
 nuget FsCheck
 nuget FsCheck.Xunit
-nuget Newtonsoft.Json = 7.0.1
+nuget Newtonsoft.Json
 nuget Octokit
 nuget SourceLink
 nuget xunit.assert = 2.0.0

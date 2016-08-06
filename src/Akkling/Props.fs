@@ -14,7 +14,7 @@ open Akka.Actor
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Linq.QuotationEvaluation
 
-let internal exprSerializer = Nessos.FsPickler.FsPickler.CreateBinarySerializer()
+let internal exprSerializer = MBrace.FsPickler.FsPickler.CreateBinarySerializer()
 
 /// <summary>
 /// Typed props are descriptors of how particular actor should be instantiated.

@@ -14,7 +14,7 @@ open System.IO
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Linq.QuotationEvaluation
         
-open Nessos.FsPickler
+open MBrace.FsPickler
 
 // used for top level serialization
 type ExprSerializer(system) = 

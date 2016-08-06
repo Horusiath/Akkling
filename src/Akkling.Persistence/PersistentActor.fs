@@ -116,6 +116,7 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
             actor.Handle e
             hasDeffered <- false)
     interface ExtEventsourced<'Message> with
+        member __.UntypedContext = context
         member __.HasPersisted () = hasPersisted
         member __.HasDeffered () = hasDeffered
         member __.Receive() = Input

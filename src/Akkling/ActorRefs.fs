@@ -174,11 +174,6 @@ type TypedActorSelection<'Message>(selection : ActorSelection) =
     /// </summary>
     member __.Path with get () = selection.Path
 
-    /// <summary>
-    /// Sets collection of elements, actor selection path is build from.
-    /// </summary>
-    member __.Path with set (e) = selection.Path <- e
-
     override __.ToString () = selection.ToString ()
 
     /// <summary>
