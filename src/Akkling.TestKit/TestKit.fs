@@ -21,7 +21,7 @@ type Tck = TestKit
 /// <param name="config">Configuration used for actor system initialization.</param>
 /// <param name="fn">Test case function</param>
 let test (config : Akka.Configuration.Config) (fn : Tck -> unit) = 
-    use system = System.create "test-system" config
+    use system = System.create "test-system" (config.WithFallback Akka.TestKit.Configs.TestConfigs.TestSchedulerConfig)
     use tck = new TestKit(system)
     fn tck
 

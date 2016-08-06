@@ -54,6 +54,7 @@ and [<Interface>]ExtView<'Message> =
 and TypedViewContext<'Message, 'Actor when 'Actor :> FunPersistentView<'Message>>(context : IActorContext, actor : 'Actor) as this = 
     let self = context.Self
     interface ExtView<'Message> with
+        member __.UntypedContext = context
         member __.Receive() = Input
         member __.Self = typed self
         member __.Sender<'Response>() = typed (context.Sender) :> IActorRef<'Response>

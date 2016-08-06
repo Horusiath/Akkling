@@ -86,6 +86,11 @@ type Actor<'Message> =
     /// </summary>
     abstract ScheduleRepeatedly<'Scheduled> : TimeSpan -> TimeSpan -> IActorRef<'Scheduled> -> 'Scheduled -> ICancelable
 
+    /// <summary>
+    /// A raw Actor context in it's untyped form.
+    /// </summary>
+    abstract UntypedContext : IActorContext 
+
 [<Interface>]
 type ExtContext =
     /// <summary>
@@ -115,6 +120,7 @@ type Receive<'Message, 'Context when 'Context :> Actor<'Message>> = 'Context -> 
 and TypedContext<'Message, 'Actor when 'Actor :> ActorBase and 'Actor :> IWithUnboundedStash>(context : IActorContext, actor : 'Actor) as this = 
     let self = context.Self
     interface ExtActor<'Message> with
+        member __.UntypedContext = context
         member __.Receive() = Input
         member __.Self = typed self
         member __.Sender<'Response>() = typed (context.Sender) :> IActorRef<'Response>

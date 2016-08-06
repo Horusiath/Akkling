@@ -338,4 +338,4 @@ GITHUB
   remote: fsharp/FAKE
   specs:
     modules/Octokit/Octokit.fsx (8fd20ae42c996060bc8bedb821edfb50517cdd8b)
-      Octokit (>= 0.20)
+      Octokit
