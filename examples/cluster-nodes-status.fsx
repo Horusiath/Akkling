@@ -70,40 +70,71 @@ let configWithPort port =
         """)
     config.WithFallback(ClusterSingletonManager.DefaultConfig())
 
-let behavior (ctx : Actor<_>) msg = printfn "%A received %s" (ctx.Self.Path.ToStringWithAddress()) msg |> ignored
+type ClusterStatus = Get
+let clusterStatus = fun (ctx : Actor<_>) ->
+    let log = ctx.Log.Value
+    let cluster = Cluster.Get(ctx.System)
+    let rec loop nodes = actor {
+        let! (msg: obj) = ctx.Receive ()
+        match msg with
+        | LifecycleEvent e ->
+            match e with
+            | PreStart ->
+                cluster.Subscribe(ctx.Self, ClusterEvent.InitialStateAsEvents,
+                    [| typedefof<ClusterEvent.IMemberEvent> |])
+                log.Info (sprintf "Actor subscribed to Cluster status updates: %A" ctx.Self)
+            | PostStop ->
+                cluster.Unsubscribe(ctx.Self)
+                log.Info (sprintf "Actor unsubscribed from Cluster status updates: %A" ctx.Self)
 
-// spawn two separate systems with shard regions on each of them
+            | _ -> return Unhandled
+            return! loop nodes
+        | IMemberEvent e ->
+            match e with
+            | MemberJoined m ->
+                log.Info (sprintf "Node joined: %A" m)
+                return! loop (nodes |> Map.add (m.Address.ToString(), m.UniqueAddress.ToString()) m.Status)
+            | MemberUp m ->
+                log.Info (sprintf "Node up: %A" m)
+                return! loop (nodes |> Map.add (m.Address.ToString(), m.UniqueAddress.ToString()) m.Status)
+            | MemberLeft m ->
+                log.Info (sprintf "Node left: %A" m)
+                return! loop (nodes |> Map.add (m.Address.ToString(), m.UniqueAddress.ToString()) m.Status)
+            | MemberExited m ->
+                log.Info (sprintf "Node exited: %A" m)
+                return! loop (nodes |> Map.add (m.Address.ToString(), m.UniqueAddress.ToString()) m.Status)
+            | MemberRemoved m ->
+                log.Info (sprintf "Node removed: %A" m)
+                return! loop (nodes |> Map.remove (m.Address.ToString(), m.UniqueAddress.ToString()))
+            return! loop nodes
+        | :? ClusterStatus as cs ->
+            match cs with ClusterStatus.Get -> ctx.Sender() <! nodes
+            return! loop nodes
+        | _ -> return Unhandled
+    }
+    loop (Map.empty)
 
 let system1 = System.create "cluster-system" (configWithPort 5000)
-let shardRegion1 = spawnSharded id system1 "printer" <| props (actorOf2 behavior)
+let node1 = spawn system1 "clusterStatus" <| props (clusterStatus)
 
 // wait a while before starting a second system
+System.Threading.Thread.Sleep(200)
 
 let system2 = System.create "cluster-system" (configWithPort 5001)
-let shardRegion2 = spawnSharded id system2 "printer" <| props (actorOf2 behavior)
 
-// send hello world to entities on 4 different shards (this means that we will have 4 entities in total)
-// NOTE: even thou we sent all messages through single shard region,
-//       some of them will be executed on the second one thanks to shard balancing
-
-shardRegion1 <! ("shard-1", "entity-1", "hello world 1")
-shardRegion1 <! ("shard-2", "entity-1", "hello world 2")
-shardRegion1 <! ("shard-3", "entity-1", "hello world 3")
-shardRegion1 <! ("shard-4", "entity-1", "hello world 4")
-
-// check which shards have been build on the second shard region
-
-open Akka.Cluster.Sharding
-
-let printShards shardReg =
+let printNodes clusterStatus =
     async {
-        let! reply = (retype shardReg) <? GetShardRegionStats.Instance
-        let (stats: ShardRegionStats) = reply.Value
-        for kv in stats.Stats do
-            printfn "\tShard '%s' has %d entities on it" kv.Key kv.Value
+        let! reply = (retype clusterStatus) <? ClusterStatus.Get
+        let (stats: Map<string * string, MemberStatus>) = reply.Value
+        for kv in stats do
+            let (a, ua) = kv.Key
+            let ms = kv.Value
+            printfn "\tNode '%s':'%s' status: '%A'" a ua ms
     } |> Async.RunSynchronously
 
-printfn "Shards active on node 'localhost:5000':"
-printShards shardRegion1
-printfn "Shards active on node 'localhost:5001':"
-printShards shardRegion2
+printNodes node1
+
+let system3 = System.create "cluster-system" (configWithPort 5002)
+let node3 = spawn system3 "clusterStatus" <| props (clusterStatus)
+
+printNodes node3

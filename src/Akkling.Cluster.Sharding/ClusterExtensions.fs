@@ -24,9 +24,11 @@ let (|IMemberEvent|_|) (msg: obj) : ClusterEvent.IMemberEvent option =
     | :? ClusterEvent.IMemberEvent as e -> Some e
     | _ -> None
 
-let (|MemberUp|MemberExited|MemberRemoved|) (msg: ClusterEvent.IMemberEvent): Choice<Member, Member, Member> =
+let (|MemberJoined|MemberUp|MemberLeft|MemberExited|MemberRemoved|) (msg: ClusterEvent.IMemberEvent): Choice<Member, Member, Member, Member, Member> =
     match msg with
-    | :? ClusterEvent.MemberUp as up -> Choice1Of3 (up.Member)
-    | :? ClusterEvent.MemberExited as exit -> Choice2Of3 (exit.Member)  
-    | :? ClusterEvent.MemberRemoved as removed -> Choice3Of3 (removed.Member)
+    | :? ClusterEvent.MemberUp as up -> Choice1Of5 (up.Member)
+    | :? ClusterEvent.MemberJoined as joined -> Choice2Of5 (joined.Member)
+    | :? ClusterEvent.MemberLeft as left -> Choice3Of5 (left.Member)
+    | :? ClusterEvent.MemberExited as exited -> Choice4Of5 (exited.Member)  
+    | :? ClusterEvent.MemberRemoved as removed -> Choice5Of5 (removed.Member)
     | _ -> failwith ("unknown cluster event type " + msg.GetType().ToString())

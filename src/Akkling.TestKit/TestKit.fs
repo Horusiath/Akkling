@@ -20,7 +20,7 @@ type Tck = TestKit
 /// </summary>
 /// <param name="config">Configuration used for actor system initialization.</param>
 /// <param name="fn">Test case function</param>
-let test (config : Akka.Configuration.Config) (fn : Tck -> unit) = 
+let test (config : Akka.Configuration.Config) (fn : Tck -> unit) =
     use system = System.create "test-system" (config.WithFallback Akka.TestKit.Configs.TestConfigs.TestSchedulerConfig)
     use tck = new TestKit(system)
     fn tck
@@ -37,12 +37,12 @@ let inline testActor (tck: Tck) (name: string) : IActorRef<'t> = typed <| tck.Cr
 let inline monitor (tck : Tck) (ref : IActorRef<'t>) : unit = tck.Watch (untyped ref) |> ignore
 let inline demonitor (tck: Tck) (ref: IActorRef<'t>) : unit = tck.Unwatch (untyped ref) |> ignore
 
-let expectMsg (tck : Tck) (msg : 't) : 't option = 
+let expectMsg (tck : Tck) (msg : 't) : 't option =
     let reply = tck.ExpectMsg<'t>(msg, Nullable(), "")
     if reply <> Unchecked.defaultof<'t> then Some reply
     else None
 
-let expectMsgWithin (tck : Tck) (timeout: TimeSpan) (msg : 't) : 't option = 
+let expectMsgWithin (tck : Tck) (timeout: TimeSpan) (msg : 't) : 't option =
     let reply = tck.ExpectMsg<'t>(msg, Nullable(timeout), "")
     if reply <> Unchecked.defaultof<'t> then Some reply
     else None
@@ -51,7 +51,7 @@ let expectMsgFilter (tck: Tck) (predicate: 't->bool) : 't option =
     let reply = tck.ExpectMsg<'t>(Predicate<'t>(predicate))
     if reply <> Unchecked.defaultof<'t> then Some reply
     else None
-    
+
 let expectMsgFilterWithin (tck: Tck) (timeout: TimeSpan) (predicate: 't->bool) : 't option =
     let reply = tck.ExpectMsg<'t>(Predicate<'t>(predicate), Nullable(timeout))
     if reply <> Unchecked.defaultof<'t> then Some reply
@@ -60,7 +60,7 @@ let expectMsgFilterWithin (tck: Tck) (timeout: TimeSpan) (predicate: 't->bool) :
 let inline expectNoMsg (tck : Tck) : unit = tck.ExpectNoMsg()
 let inline expectNoMsgWithin (tck: Tck) (timeout: TimeSpan) : unit = tck.ExpectNoMsg timeout
 
-let inline expectMsgAllOf (tck : Tck) (messages : 't seq) : unit = 
+let inline expectMsgAllOf (tck : Tck) (messages : 't seq) : unit =
     Array.ofSeq messages
     |> tck.ExpectMsgAllOf
     |> ignore
@@ -68,7 +68,7 @@ let inline expectMsgAllOf (tck : Tck) (messages : 't seq) : unit =
 let inline expectMsgAnyOf (tck : Tck) (messages : 't seq) : unit = tck.ExpectMsgAnyOf(Array.ofSeq messages) |> ignore
 let inline expectTerminated (tck : Tck) (ref : IActorRef<'t>) : bool =
     tck.ExpectTerminated(untyped ref, Nullable(), "").AddressTerminated
-let inline expectTerminatedWithin (timeout : TimeSpan) (tck : Tck) (ref : IActorRef<'t>) : bool = 
+let inline expectTerminatedWithin (timeout : TimeSpan) (tck : Tck) (ref : IActorRef<'t>) : bool =
     tck.ExpectTerminated(untyped ref, Nullable(timeout), "").AddressTerminated
 
 let inline ignoreMessages (tck: Tck) (predicate: obj -> bool) : unit = tck.IgnoreMessages(Func<obj, bool>(predicate))

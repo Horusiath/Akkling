@@ -44,7 +44,7 @@ let private tryCast<'Result>(t: Task<obj>) : AskResult<'Result> =
 /// Typed version of <see cref="ICanTell"/> interface. Allows to tell/ask using only messages of restricted type.
 /// </summary>
 [<Interface>]
-type ICanTell<'Message> = 
+type ICanTell<'Message> =
     inherit ICanTell
     abstract Tell : 'Message * IActorRef -> unit
     abstract Ask : 'Message * TimeSpan option -> Async<AskResult<'Response>>
@@ -53,7 +53,7 @@ type ICanTell<'Message> =
 /// Typed version of <see cref="IActorRef"/> interface. Allows to tell/ask using only messages of restricted type.
 /// </summary>
 [<Interface>]
-type IActorRef<'Message> = 
+type IActorRef<'Message> =
     inherit ICanTell<'Message>
     inherit IActorRef
     /// <summary>
@@ -68,8 +68,8 @@ type IActorRef<'Message> =
 [<Struct>]
 [<CustomEquality>]
 [<CustomComparison>]
-type TypedActorRef<'Message>(underlyingRef : IActorRef) = 
-    
+type TypedActorRef<'Message>(underlyingRef : IActorRef) =
+
     /// <summary>
     /// Gets an underlying actor reference wrapped by current object.
     /// </summary>
@@ -77,61 +77,61 @@ type TypedActorRef<'Message>(underlyingRef : IActorRef) =
 
     override __.ToString () = underlyingRef.ToString ()
     override __.GetHashCode () = underlyingRef.GetHashCode ()
-    override this.Equals o = 
+    override this.Equals o =
         match o with
         | :? IActorRef as ref -> (this :> IActorRef).Equals(ref)
         | _ -> false
-    
+
     interface ICanTell with
         member __.Tell(message : obj, sender : IActorRef) = underlyingRef.Tell(message, sender)
-    
+
     interface IActorRef<'Message> with
-        
+
         /// <summary>
         /// Changes the type of handled messages, returning new typed ActorRef.
         /// </summary>
         member __.Retype<'T>() = TypedActorRef<'T>(underlyingRef) :> IActorRef<'T>
-        
+
         member __.Tell(message : 'Message, sender : IActorRef) = underlyingRef.Tell(message :> obj, sender)
         member __.Forward(message : 'Message) = underlyingRef.Forward(message)
-        member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<AskResult<'Response>> = 
+        member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<AskResult<'Response>> =
             underlyingRef
                 .Ask(message, Option.toNullable timeout)
                 .ContinueWith(tryCast<'Response>, TaskContinuationOptions.ExecuteSynchronously)
             |> Async.AwaitTask
         member __.Path = underlyingRef.Path
-        
-        member __.Equals other = 
+
+        member __.Equals other =
             match other with
             | :? TypedActorRef<'Message> as typed -> underlyingRef.Equals(typed.Underlying)
             | _ -> underlyingRef.Equals other
 
-        member __.CompareTo (other: obj) = 
+        member __.CompareTo (other: obj) =
             match other with
             | :? TypedActorRef<'Message> as typed -> underlyingRef.CompareTo(typed.Underlying)
             | _ -> underlyingRef.CompareTo(other)
-        
+
         member __.CompareTo (other: IActorRef) =
             match other with
             | :? TypedActorRef<'Message> as typed -> underlyingRef.CompareTo(typed.Underlying)
             | _ -> underlyingRef.CompareTo(other)
-    
+
     interface ISurrogated with
-        member this.ToSurrogate system = 
+        member this.ToSurrogate system =
             let surrogate : TypedActorRefSurrogate<'Message> = { Wrapped = underlyingRef }
             surrogate :> ISurrogate
 
-and TypedActorRefSurrogate<'Message> = 
+and TypedActorRefSurrogate<'Message> =
     { Wrapped : IActorRef }
     interface ISurrogate with
-        member this.FromSurrogate system = 
+        member this.FromSurrogate system =
             let tref = new TypedActorRef<'Message>(this.Wrapped)
             tref :> ISurrogated
 
 /// <summary>
 /// Returns typed wrapper over provided actor reference.
 /// </summary>
-let inline typed (actorRef : IActorRef) : IActorRef<'Message> = 
+let inline typed (actorRef : IActorRef) : IActorRef<'Message> =
     if actorRef :? TypedActorRef<'Message> then actorRef :?> TypedActorRef<'Message> :> IActorRef<'Message>
     else (TypedActorRef<'Message> actorRef) :> IActorRef<'Message>
 
@@ -145,14 +145,14 @@ let inline untyped (typedRef: IActorRef<'Message>) : IActorRef =
 /// Changes type of messages handled by provided typedRef, returning new typed actor ref.
 /// </summary>
 let inline retype (typedRef: IActorRef<'T>) : IActorRef<'U> = typedRef.Retype<'U>()
-    
+
 /// <summary>
 /// Typed wrapper for <see cref="ActorSelection"/> objects.
 /// </summary>
 [<Struct>]
 [<CustomEquality>]
 [<CustomComparison>]
-type TypedActorSelection<'Message>(selection : ActorSelection) = 
+type TypedActorSelection<'Message>(selection : ActorSelection) =
 
     /// <summary>
     /// Returns an underlying untyped <see cref="ActorSelection"/> instance.
@@ -179,25 +179,25 @@ type TypedActorSelection<'Message>(selection : ActorSelection) =
     /// <summary>
     /// Tries to resolve an actor reference from current actor selection.
     /// </summary>
-    member __.ResolveOne (timeout: TimeSpan): Async<IActorRef<'Message>> = 
+    member __.ResolveOne (timeout: TimeSpan): Async<IActorRef<'Message>> =
         let convertToTyped (t: System.Threading.Tasks.Task<IActorRef>) = typed t.Result
         selection.ResolveOne(timeout).ContinueWith(convertToTyped)
         |> Async.AwaitTask
 
-    override x.Equals (o:obj) = 
+    override x.Equals (o:obj) =
         if obj.ReferenceEquals(x, o) then true
         else match o with
         | :? TypedActorSelection<'Message> as t -> x.Underlying.Equals t.Underlying
         | _ -> x.Underlying.Equals o
 
-    override __.GetHashCode () = selection.GetHashCode() ^^^ typeof<'Message>.GetHashCode() 
+    override __.GetHashCode () = selection.GetHashCode() ^^^ typeof<'Message>.GetHashCode()
 
     interface ICanTell with
         member __.Tell(message : obj, sender : IActorRef) = selection.Tell(message, sender)
-    
+
     interface ICanTell<'Message> with
         member __.Tell(message : 'Message, sender : IActorRef) : unit = selection.Tell(message, sender)
-        member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<AskResult<'Response>> = 
+        member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<AskResult<'Response>> =
             selection
                 .Ask(message, Option.toNullable timeout)
                 .ContinueWith(tryCast<'Response>, TaskContinuationOptions.ExecuteSynchronously)
@@ -211,42 +211,42 @@ type TypedActorSelection<'Message>(selection : ActorSelection) =
             | _ -> -1
 
 /// <summary>
-/// Unidirectional send operator. 
-/// Sends a message object directly to actor tracked by actorRef. 
+/// Unidirectional send operator.
+/// Sends a message object directly to actor tracked by actorRef.
 /// </summary>
-let inline (<!) (actorRef : #ICanTell<'Message>) (msg : 'Message) : unit = 
+let inline (<!) (actorRef : #ICanTell<'Message>) (msg : 'Message) : unit =
     actorRef.Tell(msg, ActorCell.GetCurrentSelfOrNoSender())
 
-/// <summary> 
-/// Bidirectional send operator. Sends a message object directly to actor 
-/// tracked by actorRef and awaits for response send back from corresponding actor. 
+/// <summary>
+/// Bidirectional send operator. Sends a message object directly to actor
+/// tracked by actorRef and awaits for response send back from corresponding actor.
 /// </summary>
 let inline (<?) (tell : #ICanTell<'Message>) (msg : 'Message) : Async<AskResult<'Response>> = tell.Ask<'Response>(msg, None)
 
 /// <summary>
-/// Unidirectional forward operator. 
-/// Sends a message object directly to actor tracked by actorRef without overriding it's sender. 
+/// Unidirectional forward operator.
+/// Sends a message object directly to actor tracked by actorRef without overriding it's sender.
 /// </summary>
-let inline (<<!) (actorRef : #IActorRef<'Message>) (msg : 'Message) : unit = 
+let inline (<<!) (actorRef : #IActorRef<'Message>) (msg : 'Message) : unit =
     actorRef.Forward(msg)
 
 /// Pipes an output of asynchronous expression directly to the recipients mailbox.
-let pipeTo (sender : IActorRef) (recipient : ICanTell<'Message>) (computation : Async<'Message>): unit = 
+let pipeTo (sender : IActorRef) (recipient : ICanTell<'Message>) (computation : Async<'Message>): unit =
     let success (result : 'Message) : unit = recipient.Tell(result, sender)
     let failure (err : exn) : unit = recipient.Tell(Status.Failure(err), sender)
     Async.StartWithContinuations(computation, success, failure, failure)
 
 /// Pipe operator which sends an output of asynchronous expression directly to the recipients mailbox.
-let inline (|!>) (computation : Async<'Message>) (recipient : ICanTell<'Message>) = 
+let inline (|!>) (computation : Async<'Message>) (recipient : ICanTell<'Message>) =
     pipeTo ActorRefs.NoSender recipient computation
 
 /// Pipe operator which sends an output of asynchronous expression directly to the recipients mailbox
-let inline (<!|) (recipient : ICanTell<'Message>) (computation : Async<'Message>) = 
+let inline (<!|) (recipient : ICanTell<'Message>) (computation : Async<'Message>) =
     pipeTo ActorRefs.NoSender recipient computation
 
 /// <summary>
-/// Returns an instance of <see cref="ActorSelection" /> for specified path. 
-/// If no matching receiver will be found, a <see cref="ActorRefs.NoSender" /> instance will be returned. 
+/// Returns an instance of <see cref="ActorSelection" /> for specified path.
+/// If no matching receiver will be found, a <see cref="ActorRefs.NoSender" /> instance will be returned.
 /// </summary>
-let inline select (selector : IActorRefFactory) (path : string) : TypedActorSelection<'Message> = 
+let inline select (selector : IActorRefFactory) (path : string) : TypedActorSelection<'Message> =
     TypedActorSelection(selector.ActorSelection path)

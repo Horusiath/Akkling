@@ -1,34 +1,41 @@
+framework: net40, net45, net451, net452
+redirects: on
+
 source https://nuget.org/api/v2
 
-nuget Akka.Cluster prerelease
-nuget Akka.Cluster.Sharding prerelease
-nuget Akka.Cluster.Tools prerelease
-nuget Akka.Persistence.Sqlite
-nuget Akka.Serialization.Wire
-nuget FsPickler
-nuget Reactive.Streams
+nuget FsPickler 
+nuget Reactive.Streams 
 nuget System.Collections.Immutable = 1.1.36
 nuget Wire = 0.0.6
-nuget Helios
-nuget Google.ProtocolBuffers
-nuget FAKE
-nuget FSPowerPack.Linq.Community
-nuget FSharp.Formatting
-nuget FsCheck
-nuget FsCheck.Xunit
+nuget Helios 
+nuget Google.ProtocolBuffers 
+nuget FAKE 
+nuget FSPowerPack.Linq.Community 
+nuget FSharp.Formatting 
+nuget FsCheck 
+nuget FsCheck.Xunit 
 nuget Newtonsoft.Json
-nuget Octokit
-nuget SourceLink
-nuget xunit.assert = 2.0.0
-nuget xunit.runner.console
+nuget Octokit 
+nuget SourceLink 
+nuget xunit.assert = 2.0.0 
+nuget xunit.runner.console 
 
 source https://www.myget.org/F/akkadotnet/api/v2
 
-nuget Akka prerelease
-nuget Akka.Persistence prerelease
-nuget Akka.Remote prerelease
-nuget Akka.TestKit prerelease
-nuget Akka.TestKit.Xunit2 prerelease
+nuget Akka prerelease 
+nuget Akka.Streams prerelease 
+nuget Akka.Persistence prerelease 
+nuget Akka.Persistence.Sqlite prerelease 
+nuget Akka.Persistence.Sql.Common prerelease 
+nuget Akka.Persistence.Query prerelease 
+nuget Akka.Persistence.Query.Sql prerelease 
+nuget Akka.Remote prerelease 
+nuget Akka.TestKit prerelease 
+nuget Akka.TestKit.Xunit2 prerelease 
+nuget Akka.Cluster prerelease 
+nuget Akka.Cluster.Sharding prerelease 
+nuget Akka.Cluster.Tools prerelease 
+nuget Akka.Serialization.Wire prerelease 
 
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx

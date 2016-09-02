@@ -1,3 +1,4 @@
 ﻿FsCheck.Xunit
 Akka
 Akka.TestKit.Xunit2
+System.Collections.Immutable

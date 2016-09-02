@@ -5,4 +5,5 @@ Akka.Remote
 Newtonsoft.Json
 xunit.assert
 Akka.Serialization.Wire
+System.Collections.Immutable
 Akka.Persistence

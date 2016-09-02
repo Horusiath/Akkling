@@ -4,6 +4,7 @@
 #r "../src/Akkling/bin/Debug/FSharp.PowerPack.dll"
 #r "../src/Akkling/bin/Debug/FSharp.PowerPack.Linq.dll"
 #r "../src/Akkling/bin/Debug/Akkling.dll"
+#r "../src/Akkling/bin/Debug/System.Collections.Immutable.dll"
 
 open System
 open Akkling
@@ -11,17 +12,17 @@ open Akka.Actor
 
 let system = System.create "basic-sys" <| Configuration.defaultConfig()
 
-let behavior (m:Actor<_>) = 
+let behavior (m:Actor<_>) =
     let rec loop () = actor {
         let! msg = m.Receive ()
         match msg with
         | "stop" -> return Stop
         | "unhandle" -> return Unhandled
-        | x -> 
+        | x ->
             printfn "%s" x
             return! loop ()
     }
-    loop () 
+    loop ()
 
 // 1. First approach - using explicit behavior loop
 let helloRef = spawnAnonymous system (props behavior)
@@ -30,8 +31,8 @@ let helloRef = spawnAnonymous system (props behavior)
 let helloBehavior _ = function
     | "stop" -> stop ()
     | "unhandle" -> unhandled ()
-    | x -> printfn "%s" x |> ignored 
-        
+    | x -> printfn "%s" x |> ignored
+
 helloRef <! "ok"        // "ok"
 helloRef <! "unhandle"
 helloRef <! "ok"        // "ok"
