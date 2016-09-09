@@ -25,12 +25,13 @@ type SenderMsg =
 
 let config = Configuration.parse """
 akka.loglevel = DEBUG
-akka.persistence.at-least-once-delivery.redeliver-interval = 5s
+akka.persistence.at-least-once-delivery.redeliver-interval = 1s
 """
 let unreliable dropMod target (ctx: Actor<_>) =
     let rec loop count = actor {
         let! msg = ctx.Receive()
-        if (count + 1) % dropMod <> 0 then target <<! msg
+        if (count + 1) % dropMod <> 0 
+        then target <<! msg
         return! loop (count + 1) }
     loop 0
 
@@ -38,11 +39,10 @@ let destination target (ctx: Actor<_>) =
     let rec loop received = actor {
         let! msg = ctx.Receive()
         match msg with
-        | Action(id,_) when Set.contains id received ->
-            ctx.Sender() <! ActionAck id
-            return! loop received
         | Action(id,_) -> 
             target <! msg
+            let sender = ctx.Sender()
+            sender <! ActionAck(id)
             return! loop (Set.add id received)
     }
     loop Set.empty
@@ -60,11 +60,14 @@ let sender destinations (ctx: Actor<obj>) =
                 ctx.Sender() <! ReqAck
             | ActionAck id ->
                 alod.Confirm id |> ignore
+        | Patterns.PreStart -> alod.Init()
+        | :? Akka.Persistence.AtLeastOnceDeliverySemantic.RedeliveryTick ->
+            alod.Receive ctx msg |> ignore
         | other -> alod.Receive ctx msg |> ignore
         return! loop () }
     loop ()
 
-[<Fact(Skip = "Make Akka.Persistence.AtLeastOnceDeliverySemantic.RedeliveryTick public")>]
+[<Fact>]
 let ``at-least-once delivery semantics should redeliver messages`` () = test config <| fun tck ->
     Akka.Persistence.Persistence.Instance.Apply(tck.Sys) |> ignore
     let probe = tck.CreateTestProbe()
@@ -73,20 +76,21 @@ let ``at-least-once delivery semantics should redeliver messages`` () = test con
     let snd = retype (spawn tck "sender" <| props(sender destinations))
 
     snd <! Req "a-1"
-    expectMsg tck ReqAck
-    probe.ExpectMsg (Action(1L, "a-1"))
+    expectMsg tck ReqAck |> ignore
+    probe.ExpectMsg (Action(1L, "a-1")) |> ignore
     
     snd <! Req "a-2"
-    expectMsg tck ReqAck
-    probe.ExpectMsg (Action(2L, "a-2"))
+    expectMsg tck ReqAck |> ignore
+    probe.ExpectMsg (Action(2L, "a-2")) |> ignore
         
     snd <! Req "a-3"
     snd <! Req "a-4"
-    expectMsg tck ReqAck
-    expectMsg tck ReqAck
+    expectMsg tck ReqAck |> ignore
+    expectMsg tck ReqAck |> ignore
     
     // a-3 was lost ...
-    probe.ExpectMsg (Action(4L, "a-4"))
+    probe.ExpectMsg (Action(4L, "a-4")) |> ignore
+
     // ... and then redelivered
-    probe.ExpectMsg (Action(3L, "a-3"))
+    probe.ExpectMsg (Action(5L, "a-3")) |> ignore
     expectNoMsgWithin tck (TimeSpan.FromSeconds 1.)

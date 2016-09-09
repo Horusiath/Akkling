@@ -7,7 +7,7 @@
 //-----------------------------------------------------------------------
 
 [<AutoOpen>]
-module Akkling.Extensions
+module Akkling.Patterns
 
 open Akka.Actor
 

@@ -43,6 +43,12 @@ type AtLeastOnceDeliverySemantic (semantic: Akka.Persistence.AtLeastOnceDelivery
     member __.WarnAfterNumberOfUnconfirmedAttempts = semantic.WarnAfterNumberOfUnconfirmedAttempts
     /// Call this method when a message has been confirmed by the destination, or to abort re-sending.
     member __.Confirm(deliveryId: int64) = semantic.ConfirmDelivery(deliveryId)
+
+    /// Initializes an at-least-once-delivery semantic
+    member __.Init() =
+        semantic.Cancel()
+        semantic.OnReplaySuccess()
+
     member __.Deliver<'Message>(destination: ActorPath, deliveryMapper: int64 -> 'Message, ?isRecovering:bool) : bool =
         try
             let recovering = defaultArg isRecovering false
@@ -50,6 +56,7 @@ type AtLeastOnceDeliverySemantic (semantic: Akka.Persistence.AtLeastOnceDelivery
             true
         with
         | :? MaxUnconfirmedMessagesExceededException -> false
+
     /// Partial behavior responsible for handling the at-least-once-delivery semantics messages.
     member __.Receive : Receive<obj, 'Context> =
         fun (ctx: 'Context) (msg: obj) ->

@@ -24,10 +24,10 @@ let behavior (m:Actor<_>) =
     }
     loop ()
 
-// 1. First approach - using explicit behavior loop
+(** 1. First approach - using explicit behavior loop *)
 let helloRef = spawnAnonymous system (props behavior)
 
-// 2. Second approach - using implicits
+(** 2. Second approach - using implicits *)
 let helloBehavior _ = function
     | "stop" -> stop ()
     | "unhandle" -> unhandled ()
@@ -37,9 +37,9 @@ helloRef <! "ok"        // "ok"
 helloRef <! "unhandle"
 helloRef <! "ok"        // "ok"
 
-// 3. Using receiver combinators
-//    - <|> executes right side always when left side was unhandled
-//    - <&> executes right side only when left side was handled
+(** 3. Using receiver combinators
+    - <|> executes right side always when left side was unhandled
+    - <&> executes right side only when left side was handled *)
 let allwaysHandled _ n = printfn "always handled: %s" n |> ignored
 let onlyWhenHanled _ n = printfn "combined behavior: %s" n |> ignored
 let orRef = spawn system "or-actor" <| props (actorOf2 (helloBehavior <|> allwaysHandled))
@@ -52,9 +52,9 @@ andRef <! "ok"          // "ok"
                         // "combined behavior: ok"
 andRef <! "unhandle"
 
-// 4. Stateful actors
+(** 4. Stateful actors *)
 
-// 4.1. using explicit loop
+(** 4.1. using explicit loop *)
 let stateRef = spawnAnonymous system <| props(fun ctx ->
     let rec loop state = actor {
        let! n = ctx.Receive()
@@ -68,7 +68,7 @@ stateRef <! "a"
 stateRef <! "b"
 stateRef <! "print"
 
-// 4.2. more implicit
+(** 4.2. more implicit *)
 let rec looper state = function
     | "print" -> printfn "Current state: %A" state |> ignored
     | other -> become (looper (other::state))

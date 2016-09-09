@@ -1,3 +1,5 @@
+### New in 0.4.0 
+
 ### New in 0.3.0 (Released 2016/02/25)
 * Akkling.Cluster.Sharding and Akkling.TestKit packages
 * new typed Props, all `spawn` functions now operates on them

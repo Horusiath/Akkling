@@ -15,6 +15,8 @@ open Akka.Streams.Dsl
 open Akkling
 open Akkling.Streams
 
+(** First example - using streams to operate on text *)
+
 let text = """
        Lorem Ipsum is simply dummy text of the printing and typesetting industry.
        Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
@@ -29,6 +31,8 @@ Source.ofArray (text.Split())
 |> Source.filter (String.IsNullOrWhiteSpace >> not)
 |> Source.runForEach mat (printfn "%s")
 |> Async.RunSynchronously
+
+(** Second example - using streams in combination with actors *)
 
 let behavior targetRef (m:Actor<_>) =
     let rec loop () = actor {

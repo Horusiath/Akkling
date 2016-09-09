@@ -12,19 +12,19 @@ open System
 open Akka.Streams
 open Akka.Streams.Dsl
 
+type Builder<'Mat> = GraphDsl.Builder<'Mat>
+type Builder = Builder<unit>
+
 module Graph =
 
-    let (->>) (op: GraphDsl.ForwardOps<'out, 'mat>) (flow: Flow<_, 'out2, unit>) =
-        op.Via(flow.MapMaterializedValue(Func<_,_>(fun () -> Akka.NotUsed.Instance)))
+    /// Uses provided builder function to create a runnable graph.
+    let runnable (fn: GraphDsl.Builder<'mat> -> unit) = 
+        RunnableGraph.FromGraph(GraphDsl.CreateMaterialized(System.Func<_,_>(fun b -> fn(b); ClosedShape.Instance)))
 
-    let (->|) (op: GraphDsl.ForwardOps<'out, 'mat>) (sink: Sink<_, 'mat>) =
-        op.To(sink)
+    /// Creates a partial (open) graph using provided builder function.
+    let partial (fn: GraphDsl.Builder<'mat> -> #Shape) =
+        GraphDsl.CreateMaterialized(System.Func<_,_>(fn))
 
-    let (<<-) (flow: Flow<_, 'out2, unit>) (op: GraphDsl.ForwardOps<'out, 'mat>) =
-        op.Via(flow.MapMaterializedValue(Func<_,_>(fun () -> Akka.NotUsed.Instance)))
-
-    let (|<-) (sink: Sink<_, 'mat>) (op: GraphDsl.ForwardOps<'out, 'mat>) =
-        op.To(sink)
-
+    /// Run provided runnable graph using given materializer
     let run (mat: #IMaterializer) (graph: IRunnableGraph<'mat>) =
         graph.Run mat

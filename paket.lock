@@ -60,7 +60,7 @@ NUGET
       xunit.core (>= 2.0)
       xunit.extensibility.core (>= 2.0)
   remote: https://www.nuget.org/api/v2
-    FAKE (4.39)
+    FAKE (4.39.1)
     FsCheck (2.6)
       FSharp.Core (>= 3.1.2.5)
     FsCheck.Xunit (2.0.7)
@@ -105,5 +105,5 @@ NUGET
     xunit.runner.console (2.1)
 GITHUB
   remote: fsharp/FAKE
-    modules/Octokit/Octokit.fsx (e5870cb85f9b500246e02c6daa94e5131dad7a6e)
+    modules/Octokit/Octokit.fsx (73589a85a5e30a2c78d61efccdd3446a99483142)
       Octokit (>= 0.20)
