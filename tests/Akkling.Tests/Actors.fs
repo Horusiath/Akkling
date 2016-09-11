@@ -120,3 +120,19 @@ let ``<&> combinator executes right side when left side was handled`` () = testD
     expectMsg tck "hello" |> ignore
     expectMsg tck "hello again" |> ignore
     expectNoMsg tck
+    
+[<Fact>]
+let ``pipeTo operator doesn't block`` () = testDefault <| fun tck ->
+    let behavior (ctx: Actor<_>) = function
+        | "start" -> 
+            async {
+                return 1
+            } |!> (ctx.Sender())
+            Ignore
+        | _ -> Unhandled
+    
+    let aref = spawnAnonymous tck <| props (actorOf2 behavior)
+
+    aref <! "start"
+
+    expectMsg tck 1 |> ignore
