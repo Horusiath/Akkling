@@ -1,0 +1,13 @@
+type project
+id Akkling.Streams
+authors Bartosz Sypytkowski
+projectUrl http://github.com/Horusiath/Akkling
+licenseUrl http://github.com/Horusiath/Akkling/blob/master/LICENSE
+requireLicenseAcceptance false
+copyright Copyright 2015
+tags
+    akka.net fsharp reactive-streams
+summary
+    F# wrapper library for Akka.NET with reactive streams support
+description
+    Library used for working with Akka.NET using F# in type safe manner with functional principles in mind

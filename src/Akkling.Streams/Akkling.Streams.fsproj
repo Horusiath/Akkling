@@ -64,6 +64,7 @@
     <Compile Include="Graph.fs" />
     <None Include="paket.references" />
     <Compile Include="Source.fs" />
+    <None Include="Akkling.Streams.fsproj.paket.template" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

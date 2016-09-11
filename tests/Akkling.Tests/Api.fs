@@ -125,7 +125,7 @@ let testBehavior (mailbox:Actor<_>) msg =
     | _ -> mailbox.Sender() <! Fail  
     |> ignored
 
-[<Fact>]
+[<Fact(Skip="FIXME: hanging out in multi-test runs")>]
 let ``can serialize and deserialize discriminated unions over remote nodes`` () =   
 
     let remoteConfig port = 
