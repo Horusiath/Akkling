@@ -5,7 +5,7 @@ source https://nuget.org/api/v2
 
 nuget FsPickler 
 nuget Reactive.Streams 
-nuget System.Collections.Immutable = 1.1.36
+nuget System.Collections.Immutable >= 1.1.36
 nuget Wire = 0.0.6
 nuget Helios 
 nuget Google.ProtocolBuffers 
