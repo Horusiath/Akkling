@@ -142,7 +142,7 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
         member __.Stop(ref : IActorRef<'T>) = context.Stop(untyped ref)
         member __.Unhandled(msg) =
             match box actor with
-            | :? FunActor<'Message> as act -> act.InternalUnhandled(msg)
+            | :? FunPersistentActor<'Message> as act -> act.InternalUnhandled(msg)
             | _ -> raise (Exception("Couldn't use actor in typed context"))
         member __.Journal = actor.Journal
         member __.SnapshotStore = actor.SnapshotStore
