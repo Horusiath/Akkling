@@ -1,3 +1,7 @@
+## New in 0.4.1 (Released 2016/12/22)
+* Relaxed dependency on System.Collections.Immutable
+* Minor fix for persistent actors for unhandled messages
+
 ### New in 0.4.0 (Released 2016/09/11)
 * Non-blocking interop with async computation expression
 * Initial Akkling.Streams plugin
