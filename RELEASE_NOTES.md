@@ -1,3 +1,6 @@
+## New in 0.4.2 (Released 2017/01/03)
+* Fixed Akka.NET dependency
+
 ## New in 0.4.1 (Released 2017/01/03)
 * Relaxed dependency on System.Collections.Immutable
 * Minor fix for persistent actors for unhandled messages

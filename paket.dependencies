@@ -20,8 +20,6 @@ nuget SourceLink
 nuget xunit.assert = 2.0.0 
 nuget xunit.runner.console 
 
-source https://www.myget.org/F/akkadotnet/api/v2
-
 nuget Akka prerelease 
 nuget Akka.Streams prerelease 
 nuget Akka.Persistence prerelease 

@@ -139,20 +139,20 @@ module Source =
     /// Creates a source that is materialized as an source queue.
     /// You can push elements to the queue and they will be emitted to the stream if there is demand from downstream,
     /// otherwise they will be buffered until request for demand is received.
-    let inline queue (overflowStrategy: OverflowStrategy) (count: int) : Source<'t, ISourceQueue<'t>> =
+    let inline queue (overflowStrategy: OverflowStrategy) (count: int) : Source<'t, ISourceQueueWithComplete<'t>> =
         Source.Queue(count, overflowStrategy)
 
     /// Recover allows to send last element on failure and gracefully complete the stream
     /// Since the underlying failure signal onError arrives out-of-band, it might jump over existing elements.
     /// This stage can recover the failure signal, but not the skipped elements, which will be dropped.
-    let recover (fn: exn -> 'out option) (source) : Source<'out option, 'mat> =
-        SourceOperations.Recover(source, Func<exn, _>(fn >> toCsOption)).Select(Func<_,_>(ofCsOption))
+    let recover (fn: exn -> 'out option) (source) : Source<'out, 'mat> =
+        SourceOperations.Recover(source, Func<exn, _>(fn >> toCsOption))
 
     /// RecoverWith allows to switch to alternative Source on flow failure. It will stay in effect after
     /// a failure has been recovered so that each time there is a failure it is fed into the <paramref name="partialFunc"/> and a new
     /// Source may be materialized.
-    let inline recoverWith (fn: exn -> #IGraph<SourceShape<'out>, 'mat>) (source) : Source<'out, 'mat> =
-        SourceOperations.RecoverWith(source, Func<exn, Akka.Streams.IGraph<SourceShape<_>, _>>(fun ex -> upcast fn ex))
+    let inline recoverWithRetries (attempts: int) (fn: exn -> #IGraph<SourceShape<'out>, 'mat>) (source) : Source<'out, 'mat> =
+        SourceOperations.RecoverWithRetries(source, Func<exn, Akka.Streams.IGraph<SourceShape<_>, _>>(fun ex -> upcast fn ex), attempts)
 
     /// Transform this stream by applying the given function to each of the elements
     /// as they pass through this processing step.

@@ -258,7 +258,7 @@ Target "AddLangDocs" (fun _ ->
         ensureDirectory langTemplateDir
         Copy langTemplateDir [ templateDir @@ templateFileName ]
 
-        createIndexFsx lang)
+        createIndexFsx lang) 
 )
 
 // --------------------------------------------------------------------------------------
