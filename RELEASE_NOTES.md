@@ -1,4 +1,4 @@
-## New in 0.4.1 (Released 2016/12/22)
+## New in 0.4.1 (Released 2017/01/03)
 * Relaxed dependency on System.Collections.Immutable
 * Minor fix for persistent actors for unhandled messages
 
