@@ -19,6 +19,7 @@ nuget Octokit
 nuget SourceLink 
 nuget xunit.assert = 2.0.0 
 nuget xunit.runner.console 
+nuget xunit.runner.visualstudio
 
 nuget Akka prerelease 
 nuget Akka.Streams prerelease 
