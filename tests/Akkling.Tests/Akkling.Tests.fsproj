@@ -156,17 +156,6 @@
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2')">
       <ItemGroup>
-        <Reference Include="Akka.Serialization.Wire">
-          <HintPath>..\..\packages\Akka.Serialization.Wire\lib\net45\Akka.Serialization.Wire.dll</HintPath>
-          <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
-  <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2')">
-      <ItemGroup>
         <Reference Include="Akka.TestKit">
           <HintPath>..\..\packages\Akka.TestKit\lib\net45\Akka.TestKit.dll</HintPath>
           <Private>True</Private>
@@ -229,17 +218,6 @@
       <ItemGroup>
         <Reference Include="Helios">
           <HintPath>..\..\packages\Helios\lib\net45\Helios.dll</HintPath>
-          <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
-  <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2')">
-      <ItemGroup>
-        <Reference Include="Hyperion">
-          <HintPath>..\..\packages\Hyperion\lib\net45\Hyperion.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>

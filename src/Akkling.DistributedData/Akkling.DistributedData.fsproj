@@ -55,6 +55,7 @@
     <Compile Include="Consistency.fs" />
     <Compile Include="DData.fs" />
     <None Include="paket.references" />
+    <None Include="Akkling.DistributedData.fsproj.paket.template" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

@@ -4,4 +4,3 @@ Akka.Cluster
 Akka.Cluster.Tools
 Akka.Persistence
 Newtonsoft.Json
-Wire

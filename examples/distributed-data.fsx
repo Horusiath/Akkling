@@ -17,7 +17,7 @@ System.IO.Directory.SetCurrentDirectory(cd)
 #r "../src/Akkling.DistributedData/bin/Debug/Google.ProtocolBuffers.dll"
 #r "../src/Akkling.DistributedData/bin/Debug/Akka.Cluster.dll"
 #r "../src/Akkling.DistributedData/bin/Debug/Akka.DistributedData.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/Akka.Serialization.Wire.dll"
+#r "../src/Akkling.DistributedData/bin/Debug/Akka.Serialization.Hyperion.dll"
 #r "../src/Akkling.DistributedData/bin/Debug/Akkling.dll"
 #r "../src/Akkling.DistributedData/bin/Debug/Akkling.DistributedData.dll"
 

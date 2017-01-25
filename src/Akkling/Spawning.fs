@@ -18,10 +18,10 @@ module Configuration =
     let internal extendedConfig = (Akka.Configuration.ConfigurationFactory.ParseString """
             akka.actor {
                 serializers {
-                    wire = "Akka.Serialization.WireSerializer, Akka.Serialization.Wire"
+                    hyperion = "Akka.Serialization.HyperionSerializer, Akka.Serialization.Hyperion"
                 }
                 serialization-bindings {
-                  "System.Object" = wire
+                  "System.Object" = hyperion
                 }
             }
         """)
@@ -38,7 +38,7 @@ module Configuration =
 module System = 
     /// Creates an actor system with remote deployment serialization enabled.
     let create (name : string) (config : Akka.Configuration.Config) : ActorSystem = 
-        let _ = Akka.Serialization.WireSerializer           // I don't know why, but without this system cannot instantiate serializer
+        let _ = Akka.Serialization.HyperionSerializer           // I don't know why, but without this system cannot instantiate serializer
         let system = ActorSystem.Create(name, config.WithFallback Configuration.extendedConfig)
         let exprSerializer = Akkling.Serialization.ExprSerializer(system :?> ExtendedActorSystem)
         system.Serialization.AddSerializer(exprSerializer)

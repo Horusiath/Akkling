@@ -3,10 +3,10 @@ redirects: on
 
 source https://nuget.org/api/v2
 
+nuget Akka.Serialization.Hyperion
 nuget FsPickler 
 nuget Reactive.Streams 
 nuget System.Collections.Immutable >= 1.1.36
-nuget Wire = 0.0.6
 nuget Helios 
 nuget Google.ProtocolBuffers 
 nuget FAKE 
@@ -34,7 +34,6 @@ nuget Akka.TestKit.Xunit2 prerelease
 nuget Akka.Cluster prerelease 
 nuget Akka.Cluster.Sharding prerelease 
 nuget Akka.Cluster.Tools prerelease 
-nuget Akka.Serialization.Wire prerelease 
 nuget Akka.DistributedData prerelease 
 
 
