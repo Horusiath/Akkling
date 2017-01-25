@@ -1,5 +1,5 @@
 ﻿#r "../src/Akkling/bin/Debug/Akka.dll"
-#r "../src/Akkling/bin/Debug/Wire.dll"
+#r "../src/Akkling/bin/Debug/Hyperion.dll"
 #r "../src/Akkling/bin/Debug/Newtonsoft.Json.dll"
 #r "../src/Akkling/bin/Debug/FSharp.PowerPack.dll"
 #r "../src/Akkling/bin/Debug/FSharp.PowerPack.Linq.dll"

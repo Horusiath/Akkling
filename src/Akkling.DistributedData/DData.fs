@@ -1,0 +1,78 @@
+﻿//-----------------------------------------------------------------------
+// <copyright file="DData.fs" company="Akka.NET Project">
+//     Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
+//     Copyright (C) 2013-2015 Akka.NET project <https://github.com/akkadotnet/akka.net>
+//     Copyright (C) 2016 Bartosz Sypytkowski <gttps://github.com/Horusiath>
+// </copyright>
+//-----------------------------------------------------------------------
+
+[<AutoOpen>]
+module Akkling.DistributedData.DData
+
+open System
+open System.Collections.Generic
+open Akka.Cluster
+open Akka.DistributedData
+open Akkling
+
+let update modify consistency init key = Dsl.Update(key, init, consistency, System.Func<_,_>(modify))
+let get consistency key = Dsl.Get(key, consistency)
+let delete consistency key = Dsl.Delete(key, consistency)
+
+let getReplicator (system: Akka.Actor.ActorSystem) : IActorRef<IReplicatorMessage> = 
+    DistributedData.Get(system).Replicator |> typed
+    
+let (|DataDeleted|_|) (msg: obj) =
+    match msg with
+    | :? Replicator.DataDeleted as d -> Some d.Key
+    | _ -> None
+    
+let (|GetSuccess|_|) (msg: obj) : (IKey * #IReplicatedData * obj) option =
+    match msg with
+    | :? Replicator.GetSuccess as s when (s.Data :? 't) -> Some (s.Key, s.Data :?> 't, s.Request)
+    | _ -> None
+    
+let (|GetFailure|_|) (msg: obj) =
+    match msg with
+    | :? Replicator.GetFailure as d -> Some (d.Key, d.Request)
+    | _ -> None
+    
+let (|NotFound|_|) (msg: obj) =
+    match msg with
+    | :? Replicator.NotFound as d -> Some (d.Key, d.Request)
+    | _ -> None
+    
+let (|UpdateSuccess|_|) (msg: obj) =
+    match msg with
+    | :? Replicator.UpdateSuccess as d -> Some (d.Key, d.Request)
+    | _ -> None
+    
+let (|ModifyFailure|_|) (msg: obj) =
+    match msg with
+    | :? Replicator.ModifyFailure as d -> Some (d.Key, d.Cause, d.Request)
+    | _ -> None
+    
+let (|UpdateTimeout|_|) (msg: obj) =
+    match msg with
+    | :? Replicator.UpdateTimeout as d -> Some (d.Key, d.Cause, d.Request)
+    | _ -> None
+    
+let (|DeleteSuccess|_|) (msg: obj) =
+    match msg with
+    | :? Replicator.DeleteSuccess as d -> Some (d.Key, d.AlreadyDeleted)
+    | _ -> None
+    
+let (|DeleteFailure|_|) (msg: obj) =
+    match msg with
+    | :? Replicator.ReplicationDeletedFailure as d -> Some (d.Key, d.AlreadyDeleted)
+    | _ -> None
+
+let (|Changed|_|) (msg: obj) : (IKey * #IReplicatedData) option=
+    match msg with
+    | :? Replicator.Changed as d when (d.Data :? 't) -> Some (d.Key, d.Data :?> 't)
+    | _ -> None
+    
+let (|GetKeysIdsResult|_|) (msg: obj) =
+    match msg with
+    | :? Replicator.GetKeysIdsResult as d -> Some (d.Keys |> Set.ofSeq)
+    | _ -> None

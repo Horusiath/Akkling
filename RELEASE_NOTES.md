@@ -1,3 +1,7 @@
+## New in 0.5 (Released 2017/01/25)
+* Switched to Hyperion as default serializer
+* Adapter library for Akka.DistributedData
+
 ## New in 0.4.2 (Released 2017/01/03)
 * Fixed Akka.NET dependency
 

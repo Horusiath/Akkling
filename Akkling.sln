@@ -44,6 +44,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{8C
 		examples\cluster-nodes-status.fsx = examples\cluster-nodes-status.fsx
 		examples\cluster-sharding.fsx = examples\cluster-sharding.fsx
 		examples\dist-pub-sub.fsx = examples\dist-pub-sub.fsx
+		examples\distributed-data.fsx = examples\distributed-data.fsx
 		examples\io.fsx = examples\io.fsx
 		examples\lifecycle.fsx = examples\lifecycle.fsx
 		examples\persistence-streams.fsx = examples\persistence-streams.fsx
@@ -57,6 +58,8 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Akkling.Cluster.Sharding", "src\Akkling.Cluster.Sharding\Akkling.Cluster.Sharding.fsproj", "{88387857-C31E-47F8-B377-11AA78D7CE71}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Akkling.Streams", "src\Akkling.Streams\Akkling.Streams.fsproj", "{C82EE095-9C29-484F-8049-E8AE18CF807C}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Akkling.DistributedData", "src\Akkling.DistributedData\Akkling.DistributedData.fsproj", "{1D8FB9B3-E709-462E-BD3E-CB0BD774A5B7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -88,6 +91,10 @@ Global
 		{C82EE095-9C29-484F-8049-E8AE18CF807C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C82EE095-9C29-484F-8049-E8AE18CF807C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C82EE095-9C29-484F-8049-E8AE18CF807C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D8FB9B3-E709-462E-BD3E-CB0BD774A5B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D8FB9B3-E709-462E-BD3E-CB0BD774A5B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D8FB9B3-E709-462E-BD3E-CB0BD774A5B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D8FB9B3-E709-462E-BD3E-CB0BD774A5B7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

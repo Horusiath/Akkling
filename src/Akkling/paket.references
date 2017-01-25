@@ -1,7 +1,6 @@
 Akka
 FSPowerPack.Linq.Community
-Wire
 Newtonsoft.Json
 FsPickler
-Akka.Serialization.Wire
 System.Collections.Immutable
+Akka.Serialization.Hyperion

@@ -7,7 +7,7 @@ System.IO.Directory.SetCurrentDirectory(cd)
 
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/System.Collections.Immutable.dll"
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Wire.dll"
+#r "../src/Akkling.Cluster.Sharding/bin/Debug/Hyperion.dll"
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/Newtonsoft.Json.dll"
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/FSharp.PowerPack.Linq.dll"
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/Helios.dll"
@@ -20,7 +20,7 @@ System.IO.Directory.SetCurrentDirectory(cd)
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Cluster.dll"
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Cluster.Tools.dll"
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Cluster.Sharding.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Serialization.Wire.dll"
+#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Serialization.Hyperion.dll"
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/Akkling.dll"
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/Akkling.Persistence.dll"
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/Akkling.Cluster.Sharding.dll"
@@ -37,7 +37,7 @@ open Akkling
 open Akkling.Persistence
 open Akkling.Cluster
 open Akkling.Cluster.Sharding
-open Wire
+open Hyperion
 
 let configWithPort port =
     let config = Configuration.parse ("""
@@ -45,10 +45,10 @@ let configWithPort port =
             actor {
               provider = "Akka.Cluster.ClusterActorRefProvider, Akka.Cluster"
               serializers {
-                wire = "Akka.Serialization.WireSerializer, Akka.Serialization.Wire"
+                hyperion = "Akka.Serialization.HyperionSerializer, Akka.Serialization.Hyperion"
               }
               serialization-bindings {
-                "System.Object" = wire
+                "System.Object" = hyperion
               }
             }
           remote {
