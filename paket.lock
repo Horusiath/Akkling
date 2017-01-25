@@ -111,5 +111,5 @@ NUGET
     xunit.runner.visualstudio (2.1)
 GITHUB
   remote: fsharp/FAKE
-    modules/Octokit/Octokit.fsx (805ca9420e0234fe2ac8fe2033f28faeec2ebb40)
+    modules/Octokit/Octokit.fsx (e842705560e95dd75dd2c6a78fb1ae62db545297)
       Octokit (>= 0.20)

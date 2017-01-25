@@ -6,3 +6,4 @@ Newtonsoft.Json
 xunit.assert
 System.Collections.Immutable
 Akka.Persistence
+Akka.Serialization.Hyperion
