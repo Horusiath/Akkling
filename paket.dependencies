@@ -35,6 +35,7 @@ nuget Akka.Cluster prerelease
 nuget Akka.Cluster.Sharding prerelease 
 nuget Akka.Cluster.Tools prerelease 
 nuget Akka.Serialization.Wire prerelease 
+nuget Akka.DistributedData prerelease 
 
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx
