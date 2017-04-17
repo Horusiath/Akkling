@@ -1,40 +1,39 @@
-framework: net40, net45, net451, net452, net161, net162
+framework: net40, net45, net451, net452
 redirects: on
 
 source https://nuget.org/api/v2
 
-nuget Akka.Serialization.Hyperion
-nuget FsPickler 
-nuget Reactive.Streams 
+nuget Akka.Serialization.Hyperion prerelease
+nuget FsPickler >= 3.2
+nuget FSPowerPack.Linq.Community >= 3.0
+nuget Reactive.Streams >= 1.0.2
 nuget System.Collections.Immutable >= 1.3
-nuget Helios 
 nuget Google.ProtocolBuffers 
 nuget FAKE 
-nuget FSPowerPack.Linq.Community 
 nuget FSharp.Formatting 
 nuget FsCheck 
 nuget FsCheck.Xunit 
-nuget Newtonsoft.Json
+nuget Newtonsoft.Json >= 9.0
 nuget Octokit 
 nuget SourceLink 
 nuget xunit.assert = 2.0.0 
 nuget xunit.runner.console 
 nuget xunit.runner.visualstudio
 
-nuget Akka 
-nuget Akka.Streams
+nuget Akka >= 1.2
+nuget Akka.Streams >= 1.2
 nuget Akka.Persistence prerelease 
 nuget Akka.Persistence.Sqlite prerelease 
 nuget Akka.Persistence.Sql.Common prerelease 
 nuget Akka.Persistence.Query prerelease 
 nuget Akka.Persistence.Query.Sql prerelease 
-nuget Akka.Remote 
-nuget Akka.TestKit 
+nuget Akka.Remote >= 1.2
+nuget Akka.TestKit >= 1.2
 nuget Akka.TestKit.Xunit2 
-nuget Akka.Cluster 
-nuget Akka.Cluster.Sharding prerelease 
-nuget Akka.Cluster.Tools prerelease 
-nuget Akka.DistributedData prerelease 
+nuget Akka.Cluster >= 1.2
+nuget Akka.Cluster.Sharding >= 1.2 prerelease
+nuget Akka.Cluster.Tools >= 1.2 
+nuget Akka.DistributedData >= 1.2 prerelease
 
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx

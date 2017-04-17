@@ -1,3 +1,10 @@
+## New in 0.6.1 (Released 2017/04/17)
+* Fixed external package dependencies.
+
+## New in 0.6 (Released 2017/04/17)
+* Updated dependencies to match Akka.NET v1.2
+* Updated features for Akka.Streams
+
 ## New in 0.5 (Released 2017/01/25)
 * Switched to Hyperion as default serializer
 * Adapter library for Akka.DistributedData

@@ -24,55 +24,55 @@ let getReplicator (system: Akka.Actor.ActorSystem) : IActorRef<IReplicatorMessag
     
 let (|DataDeleted|_|) (msg: obj) =
     match msg with
-    | :? Replicator.DataDeleted as d -> Some d.Key
+    | :? DataDeleted as d -> Some d.Key
     | _ -> None
     
 let (|GetSuccess|_|) (msg: obj) : (IKey * #IReplicatedData * obj) option =
     match msg with
-    | :? Replicator.GetSuccess as s when (s.Data :? 't) -> Some (s.Key, s.Data :?> 't, s.Request)
+    | :? GetSuccess as s when (s.Data :? 't) -> Some (s.Key, s.Data :?> 't, s.Request)
     | _ -> None
     
 let (|GetFailure|_|) (msg: obj) =
     match msg with
-    | :? Replicator.GetFailure as d -> Some (d.Key, d.Request)
+    | :? GetFailure as d -> Some (d.Key, d.Request)
     | _ -> None
     
 let (|NotFound|_|) (msg: obj) =
     match msg with
-    | :? Replicator.NotFound as d -> Some (d.Key, d.Request)
+    | :? NotFound as d -> Some (d.Key, d.Request)
     | _ -> None
     
 let (|UpdateSuccess|_|) (msg: obj) =
     match msg with
-    | :? Replicator.UpdateSuccess as d -> Some (d.Key, d.Request)
+    | :? UpdateSuccess as d -> Some (d.Key, d.Request)
     | _ -> None
     
 let (|ModifyFailure|_|) (msg: obj) =
     match msg with
-    | :? Replicator.ModifyFailure as d -> Some (d.Key, d.Cause, d.Request)
+    | :? ModifyFailure as d -> Some (d.Key, d.Cause, d.Request)
     | _ -> None
     
 let (|UpdateTimeout|_|) (msg: obj) =
     match msg with
-    | :? Replicator.UpdateTimeout as d -> Some (d.Key, d.Cause, d.Request)
+    | :? UpdateTimeout as d -> Some (d.Key, d.Cause, d.Request)
     | _ -> None
     
 let (|DeleteSuccess|_|) (msg: obj) =
     match msg with
-    | :? Replicator.DeleteSuccess as d -> Some (d.Key, d.AlreadyDeleted)
+    | :? DeleteSuccess as d -> Some (d.Key, d.AlreadyDeleted)
     | _ -> None
     
 let (|DeleteFailure|_|) (msg: obj) =
     match msg with
-    | :? Replicator.ReplicationDeletedFailure as d -> Some (d.Key, d.AlreadyDeleted)
+    | :? ReplicationDeletedFailure as d -> Some (d.Key, d.AlreadyDeleted)
     | _ -> None
 
 let (|Changed|_|) (msg: obj) : (IKey * #IReplicatedData) option=
     match msg with
-    | :? Replicator.Changed as d when (d.Data :? 't) -> Some (d.Key, d.Data :?> 't)
+    | :? Changed as d when (d.Data :? 't) -> Some (d.Key, d.Data :?> 't)
     | _ -> None
     
 let (|GetKeysIdsResult|_|) (msg: obj) =
     match msg with
-    | :? Replicator.GetKeysIdsResult as d -> Some (d.Keys |> Set.ofSeq)
+    | :? GetKeysIdsResult as d -> Some (d.Keys |> Set.ofSeq)
     | _ -> None

@@ -152,7 +152,8 @@ Target "NuGet" (fun _ ->
 Target "PublishNuget" (fun _ ->
     Paket.Push(fun p -> 
         { p with
-            WorkingDir = "bin" })
+            WorkingDir = "bin"
+            DegreeOfParallelism = 1 })
 )
 
 
