@@ -134,6 +134,16 @@ module Flow =
     /// If the function throws an exception and the supervision decision is
     /// restart current value starts at state again the stream will continue.
     let inline fold (folder: 'w -> 'u -> 'w) (state: 'w) (flow) : Flow<'t, 'w, 'mat> = FlowOperations.Aggregate(flow, state, Func<_,_,_>(folder))
+    
+    /// Similar to fold but with an asynchronous function.
+    /// Applies the given function towards its current and next value,
+    /// yielding the next current value.
+    /// 
+    /// If the function 'folder' returns a failure and the supervision decision is
+    /// Directive.Restart current value starts at 'state' again
+    /// the stream will continue.
+    let inline asyncFold (folder: 'w -> 'u -> Async<'w>) (state: 'w) (flow) : Flow<'t, 'w, 'mat> = 
+        FlowOperations.AggregateAsync(flow, state, Func<_,_,_>(fun acc x -> folder acc x |> Async.StartAsTask))
 
     /// Similar to fold but uses first element as zero element.
     /// Applies the given function towards its current and next value,
@@ -248,7 +258,7 @@ module Flow =
     /// operator that performs the transformation.
     let inline transform (stageFac: unit -> #Akka.Streams.Stage.IStage<'u, 'w>) (flow) : Flow<'t, 'w, 'mat> =
         FlowOperations.Transform(flow, Func<_>(fun () -> upcast stageFac()))
-
+        
     /// Takes up to <paramref name="n"/> elements from the stream and returns a pair containing a strict sequence of the taken element
     /// and a stream representing the remaining elements. If <paramref name="n"/> is zero or negative, then this will return a pair
     /// of an empty collection and a stream containing the whole upstream unchanged.
@@ -317,6 +327,12 @@ module Flow =
     let inline idleTimeout (timeout: TimeSpan) (flow) : Flow<'t, 'u, 'mat> =
         FlowOperations.IdleTimeout(flow, timeout)
 
+    /// If the time between the emission of an element and the following downstream demand exceeds the provided timeout,
+    /// the stream is failed with a TimeoutException. The timeout is checked periodically,
+    /// so the resolution of the check is one period (equals to timeout value).
+    let inline backpressureTimeout (timeout: TimeSpan) (flow) : Flow<'t, 'u, 'mat> =
+        FlowOperations.BackpressureTimeout(flow, timeout)
+
     /// Injects additional elements if the upstream does not emit for a configured amount of time. In other words, this
     /// stage attempts to maintains a base rate of emitted elements towards the downstream.
     let inline keepAlive (timeout: TimeSpan) (injectFn: unit -> 'u) (flow) : Flow<'t, 'u, 'mat> =
@@ -359,6 +375,13 @@ module Flow =
     /// downstream.
     let inline watchTermination (matFn: 'mat -> Async<unit> -> 'mat2) (flow) : Flow<_, _, 'mat2> =
         FlowOperations.WatchTermination(flow, Func<_,_,_>(fun m t -> matFn m (t |> Async.AwaitTask)))
+
+    /// Materializes to IFlowMonitor that allows monitoring of the the current flow. All events are propagated
+    /// by the monitor unchanged. Note that the monitor inserts a memory barrier every time it processes an
+    /// event, and may therefor affect performance.
+    /// The 'combine' function is used to combine the IFlowMonitor with this flow's materialized value.
+    let inline monitor (combine: 'mat -> IFlowMonitor -> 'mat2) (flow) : Flow<'t, 'u, 'mat2> =
+        FlowOperations.Monitor(flow, Func<_,_,_>(combine))
 
     /// Detaches upstream demand from downstream demand without detaching the
     /// stream rates; in other words acts like a buffer of size 1.
@@ -436,6 +459,22 @@ module Flow =
     let inline prepend (source: #IGraph<SourceShape<_>, 'mat>) (flow) : Flow<'t, _, 'mat> =
         FlowOperations.Prepend(flow, source)
 
+    /// Provides a secondary source that will be consumed if this stream completes without any
+    /// elements passing by. As soon as the first element comes through this stream, the alternative
+    /// will be cancelled.
+    ///
+    /// Note that this Flow will be materialized together with the Source and just kept
+    /// from producing elements by asserting back-pressure until its time comes or it gets
+    /// cancelled.
+    let inline orElse (other: #IGraph<SourceShape<'t>, 'mat>) (flow) : Flow<'t, 't, 'mat> =
+        FlowOperations.OrElse(flow, other)
+        
+    /// Provides a secondary source that will be consumed if this source completes without any
+    /// elements passing by. As soon as the first element comes through this stream, the alternative
+    /// will be cancelled.
+    let inline orElseMat (combine: 'mat -> 'mat2 -> 'mat3) (other: #IGraph<SourceShape<'t>, 'mat2>) (flow) : Flow<'t, 't, 'mat3> =
+        FlowOperations.OrElseMaterialized(flow, other, Func<_,_,_>(combine))
+
     /// Put an asynchronous boundary around this Flow.
     let inline async (flow: Flow<'t, 'u, 'mat>) : Flow<'t, 'u, 'mat> = flow.Async()
 
@@ -460,3 +499,22 @@ module Flow =
     /// Connect this source to a sink concatenating the processing steps of both.
     let inline toMat (sink: #IGraph<SinkShape<'u>, 'mat2>) (combineFn: 'mat -> 'mat2 -> 'mat3) (flow: Flow<'t, 'u, 'mat>) : Sink<'t, 'mat3> =
         flow.ToMaterialized(sink, Func<_,_,_>(combineFn))
+
+    /// An identity flow, mapping incoming values to themselves.
+    let inline id<'t,'mat> = Flow.Identity<'t,'mat>()
+
+    /// Creates flow from the Reactive Streams Processor.
+    let inline ofProc (fac: unit -> #Reactive.Streams.IProcessor<_,_>) =
+        Flow.FromProcessor(Func<_>(fun () -> upcast fac()))
+        
+    /// Creates flow from the Reactive Streams Processor and returns a materialized value.
+    let inline ofProcMat (fac: unit -> #Reactive.Streams.IProcessor<'i,'o> * 'mat) =
+        Flow.FromProcessorMaterialized(Func<_>(fun () -> let proc, mat = fac() in Tuple.Create<_,_>(upcast proc, mat)))
+
+    /// Builds a flow from provided sink and source graphs.
+    let inline ofSinkAndSource (sink: #IGraph<SinkShape<'i>,'mat>) (source: #IGraph<SourceShape<'o>,'mat>) =
+        Flow.FromSinkAndSource(sink, source)
+        
+    /// Builds a flow from provided sink and source graphs returning a materialized value being result of combineFn.
+    let inline ofSinkAndSourceMat (sink: #IGraph<SinkShape<'i>,'mat>) (combineFn: 'mat -> 'mat2 -> 'mat3) (source: #IGraph<SourceShape<'o>,'mat2>) =
+        Flow.FromSinkAndSource(sink, source, Func<_,_,_>(combineFn))

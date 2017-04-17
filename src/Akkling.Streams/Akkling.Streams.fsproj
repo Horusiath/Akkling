@@ -61,7 +61,10 @@
     <Compile Include="Prolog.fs" />
     <Compile Include="Flow.fs" />
     <Compile Include="Sink.fs" />
+    <Compile Include="SubFlow.fs" />
+    <Compile Include="BidiFlow.fs" />
     <Compile Include="Graph.fs" />
+    <Compile Include="KillSwitch.fs" />
     <None Include="paket.references" />
     <Compile Include="Source.fs" />
     <None Include="Akkling.Streams.fsproj.paket.template" />
@@ -123,10 +126,10 @@
     </When>
   </Choose>
   <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.0' Or $(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2')">
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2')">
       <ItemGroup>
         <Reference Include="Reactive.Streams">
-          <HintPath>..\..\packages\Reactive.Streams\lib\net40\Reactive.Streams.dll</HintPath>
+          <HintPath>..\..\packages\Reactive.Streams\lib\net45\Reactive.Streams.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>

@@ -1,4 +1,4 @@
-framework: net40, net45, net451, net452
+framework: net40, net45, net451, net452, net161, net162
 redirects: on
 
 source https://nuget.org/api/v2
@@ -6,7 +6,7 @@ source https://nuget.org/api/v2
 nuget Akka.Serialization.Hyperion
 nuget FsPickler 
 nuget Reactive.Streams 
-nuget System.Collections.Immutable >= 1.1.36
+nuget System.Collections.Immutable >= 1.3
 nuget Helios 
 nuget Google.ProtocolBuffers 
 nuget FAKE 
@@ -21,17 +21,17 @@ nuget xunit.assert = 2.0.0
 nuget xunit.runner.console 
 nuget xunit.runner.visualstudio
 
-nuget Akka prerelease 
-nuget Akka.Streams prerelease 
+nuget Akka 
+nuget Akka.Streams
 nuget Akka.Persistence prerelease 
 nuget Akka.Persistence.Sqlite prerelease 
 nuget Akka.Persistence.Sql.Common prerelease 
 nuget Akka.Persistence.Query prerelease 
 nuget Akka.Persistence.Query.Sql prerelease 
-nuget Akka.Remote prerelease 
-nuget Akka.TestKit prerelease 
-nuget Akka.TestKit.Xunit2 prerelease 
-nuget Akka.Cluster prerelease 
+nuget Akka.Remote 
+nuget Akka.TestKit 
+nuget Akka.TestKit.Xunit2 
+nuget Akka.Cluster 
 nuget Akka.Cluster.Sharding prerelease 
 nuget Akka.Cluster.Tools prerelease 
 nuget Akka.DistributedData prerelease 

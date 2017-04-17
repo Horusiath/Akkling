@@ -143,3 +143,7 @@ module Sink =
     /// to read the values produced by the stream this Sink is attached to.
     /// This Sink is intended for inter-operation with legacy APIs since it is inherently blocking.
     let inline asStreamWithTimeout (timeout: TimeSpan): Sink<ByteString, Stream> = StreamConverters.AsInputStream(Nullable timeout)
+
+    /// A BroadcastHub is a special streaming hub that is able to broadcast streamed elements 
+    /// to a dynamic set of consumers.
+    let inline broadcastHub (bufferSize) = BroadcastHub.Sink(bufferSize)

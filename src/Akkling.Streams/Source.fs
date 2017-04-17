@@ -67,7 +67,7 @@ module Source =
     let inline ofList (elements: 't list) : Source<'t, unit> = Source.From(elements).MapMaterializedValue(Func<_,_>(ignore))
 
     /// Create a source with one element.
-    let inline single (elem: 't) : Source<'t, unit> = Source.Single(elem).MapMaterializedValue(Func<_,_>(ignore))
+    let inline singleton (elem: 't) : Source<'t, unit> = Source.Single(elem).MapMaterializedValue(Func<_,_>(ignore))
 
     /// Transforms only the materialized value of the Source.
     let inline mapMaterializedValue (fn: 'mat -> 'mat2) (source: Source<'t, 'mat>) : Source<'t, 'mat2> =
@@ -268,6 +268,16 @@ module Source =
     /// restart current value starts at state again the stream will continue.
     let inline fold (folder: 'state -> 't -> 'state) (zero: 'state) (source) : Source<'state, 'mat> =
         SourceOperations.Aggregate(source, zero, Func<_,_,_>(folder))
+    
+    /// Similar to fold but with an asynchronous function.
+    /// Applies the given function towards its current and next value,
+    /// yielding the next current value.
+    /// 
+    /// If the function 'folder' returns a failure and the supervision decision is
+    /// Directive.Restart current value starts at 'state' again
+    /// the stream will continue. 
+    let inline asyncFold (folder: 'state -> 't -> Async<'state>) (zero: 'state) (source) : Source<'state, 'mat> =
+        SourceOperations.AggregateAsync(source, zero, Func<_,_,_>(fun acc x -> folder acc x |> Async.StartAsTask))
 
     /// Similar to fold but uses first element as zero element.
     /// Applies the given function towards its current and next value,
@@ -464,6 +474,12 @@ module Source =
     let inline idleTimeout (timeout: TimeSpan) (source) : Source<'t, 'mat> =
         SourceOperations.IdleTimeout(source, timeout)
 
+    /// If the time between the emission of an element and the following downstream demand exceeds the provided timeout,
+    /// the stream is failed with a TimeoutException. The timeout is checked periodically,
+    /// so the resolution of the check is one period (equals to timeout value).
+    let inline backpressureTimeout (timeout: TimeSpan) (source) : Source<'t, 'mat> =
+        SourceOperations.BackpressureTimeout(source, timeout)
+
     /// Injects additional elements if the upstream does not emit for a configured amount of time. In other words, this
     /// stage attempts to maintains a base rate of emitted elements towards the downstream.
     let inline keepAlive (timeout: TimeSpan) (injectFn: unit -> 't) (source) : Source<'t, 'mat> =
@@ -507,6 +523,12 @@ module Source =
     /// downstream.
     let inline watchTermination (matFn: 'mat -> Async<unit> -> 'mat2) (source) : Source<'t, 'mat2> =
         SourceOperations.WatchTermination(source, Func<_,_,_>(fun m t -> matFn m (t |> Async.AwaitTask)))
+      
+    /// Materializes to IFlowMonitor that allows monitoring of the the current flow. All events are propagated
+    /// by the monitor unchanged. Note that the monitor inserts a memory barrier every time it processes an
+    /// event, and may therefor affect performance.  
+    let inline monitor (combine: 'mat -> IFlowMonitor -> 'mat2) (source) : Source<'t, 'mat2> =
+        SourceOperations.Monitor(source, Func<_,_,_>(combine))
 
     /// Detaches upstream demand from downstream demand without detaching the
     /// stream rates; in other words acts like a buffer of size 1.
@@ -584,6 +606,18 @@ module Source =
     let inline prepend (other: #IGraph<SourceShape<'t>, 'mat>) (source) : Source<'t, 'mat> =
         SourceOperations.Prepend(source, other)
 
+    /// Provides a secondary source that will be consumed if this stream completes without any
+    /// elements passing by. As soon as the first element comes through this stream, the alternative
+    /// will be cancelled.
+    let inline orElse (other: #IGraph<SourceShape<'t>, 'mat>) (source): Source<'t, 'mat> =
+        SourceOperations.OrElse(source, other)
+        
+    /// Provides a secondary source that will be consumed if this source completes without any
+    /// elements passing by. As soon as the first element comes through this stream, the alternative
+    /// will be cancelled.
+    let inline orElseMat (combine: 'mat -> 'mat2 -> 'mat3) (other: #IGraph<SourceShape<'t>, 'mat2>) (source): Source<'t, 'mat3> =
+        SourceOperations.OrElseMaterialized(source, other, Func<_,_,_>(combine))
+
     /// Put an asynchronous boundary around this Source.
     let inline async (source: Source<'t, 'mat>) : Source<'t, 'mat> = source.Async()
 
@@ -638,3 +672,7 @@ module Source =
     /// the stream.
     let inline runForEach (mat: #IMaterializer) (fn: 't -> unit) (source: Source<'t, 'mat>) : Async<unit> =
         source.RunForeach(Action<_>(fn), mat) |> Async.AwaitTask
+
+    /// A MergeHub is a special streaming hub that is able to collect streamed elements from a 
+    /// dynamic set of producers
+    let inline mergeHub (perProducerBufferSize) = MergeHub.Source(perProducerBufferSize)
