@@ -47,6 +47,21 @@ module IO =
                 else None
             | _ -> None
 
+        let (|WritingResumed|_|) (msg:obj) =
+            match msg with
+            | :? Tcp.WritingResumed -> Some ()
+            | _ -> None
+
+        let (|Bound|_|) (msg:obj) =
+            match msg with
+            | :? Tcp.Bound as bound -> Some bound.LocalAddress
+            | _ -> None
+
+        let (|Unbound|_|) (msg:obj) =
+            match msg with
+            | :? Tcp.Unbound -> Some()
+            | _ -> None
+
         let (|ConnectionClosed|_|) (msg:obj) =
             match msg with
             | :? Tcp.ConnectionClosed as closed -> Some closed
