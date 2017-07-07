@@ -19,6 +19,7 @@ nuget SourceLink
 nuget xunit.assert = 2.0.0 
 nuget xunit.runner.console 
 nuget xunit.runner.visualstudio
+nuget FSharp.Core
 
 nuget Akka >= 1.2
 nuget Akka.Streams >= 1.2
