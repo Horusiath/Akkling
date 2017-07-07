@@ -1,5 +1,5 @@
 REDIRECTS: ON
-FRAMEWORK: NET40, NET45, NET451, NET452
+RESTRICTION: || (== net40) (== net45) (== net451) (== net452)
 NUGET
   remote: https://www.nuget.org/api/v2
     Akka (1.2)
@@ -70,21 +70,21 @@ NUGET
       xunit.core (>= 2.0)
       xunit.extensibility.core (>= 2.0)
     DotNetty.Buffers (0.4.4)
-      DotNetty.Common (>= 0.4.4) - framework: net45, net451, net452
+      DotNetty.Common (>= 0.4.4) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
     DotNetty.Codecs (0.4.4)
-      DotNetty.Buffers (>= 0.4.4) - framework: net45, net451, net452
-      DotNetty.Common (>= 0.4.4) - framework: net45, net451, net452
-      DotNetty.Transport (>= 0.4.4) - framework: net45, net451, net452
+      DotNetty.Buffers (>= 0.4.4) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
+      DotNetty.Common (>= 0.4.4) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
+      DotNetty.Transport (>= 0.4.4) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
     DotNetty.Common (0.4.4)
-      Microsoft.Extensions.Logging (>= 1.1.1) - framework: net45, net451, net452
+      Microsoft.Extensions.Logging (>= 1.1.1) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
     DotNetty.Handlers (0.4.4)
-      DotNetty.Buffers (>= 0.4.4) - framework: net45, net451, net452
-      DotNetty.Codecs (>= 0.4.4) - framework: net45, net451, net452
-      DotNetty.Common (>= 0.4.4) - framework: net45, net451, net452
-      DotNetty.Transport (>= 0.4.4) - framework: net45, net451, net452
+      DotNetty.Buffers (>= 0.4.4) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
+      DotNetty.Codecs (>= 0.4.4) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
+      DotNetty.Common (>= 0.4.4) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
+      DotNetty.Transport (>= 0.4.4) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
     DotNetty.Transport (0.4.4)
-      DotNetty.Buffers (>= 0.4.4) - framework: net45, net451, net452
-      DotNetty.Common (>= 0.4.4) - framework: net45, net451, net452
+      DotNetty.Buffers (>= 0.4.4) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
+      DotNetty.Common (>= 0.4.4) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
     FAKE (4.50)
     FsCheck (2.7)
       FSharp.Core (>= 3.1.2.5)
@@ -107,40 +107,40 @@ NUGET
     Microsoft.Bcl (1.1.10)
       Microsoft.Bcl.Build (>= 1.0.14)
     Microsoft.Bcl.Build (1.0.21) - import_targets: false
-    Microsoft.Extensions.DependencyInjection.Abstractions (1.1) - framework: net45, net451, net452
-    Microsoft.Extensions.Logging (1.1.1) - framework: net45, net451, net452
-      Microsoft.Extensions.DependencyInjection.Abstractions (>= 1.1) - framework: net45, net451, net452
-      Microsoft.Extensions.Logging.Abstractions (>= 1.1.1) - framework: net45, net451, net452
-      NETStandard.Library (>= 1.6.1) - framework: net45, net451, net452
-    Microsoft.Extensions.Logging.Abstractions (1.1.1) - framework: net45, net451, net452
-      NETStandard.Library (>= 1.6.1) - framework: net45, net451, net452
+    Microsoft.Extensions.DependencyInjection.Abstractions (1.1) - restriction: || (== net45) (== net451) (== net452)
+    Microsoft.Extensions.Logging (1.1.1) - restriction: || (== net45) (== net451) (== net452)
+      Microsoft.Extensions.DependencyInjection.Abstractions (>= 1.1) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
+      Microsoft.Extensions.Logging.Abstractions (>= 1.1.1) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
+      NETStandard.Library (>= 1.6.1) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
+    Microsoft.Extensions.Logging.Abstractions (1.1.1) - restriction: || (== net45) (== net451) (== net452)
+      NETStandard.Library (>= 1.6.1) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
     Microsoft.Net.Http (2.2.29)
       Microsoft.Bcl (>= 1.1.10)
       Microsoft.Bcl.Build (>= 1.0.14)
-    NETStandard.Library (1.6.1) - framework: net45, net451, net452
-      System.Collections.Concurrent (>= 4.3) - framework: net45, net451, net452
-      System.Diagnostics.Tracing (>= 4.3) - framework: net45, net451, net452
-      System.IO.Compression (>= 4.3) - framework: net45, net451, net452
-      System.Net.Http (>= 4.3) - framework: net45, net451, net452
-      System.Runtime.InteropServices (>= 4.3) - framework: net45, net451, net452
-      System.Runtime.InteropServices.RuntimeInformation (>= 4.3) - framework: net45, net451, net452
-      System.Runtime.Numerics (>= 4.3) - framework: net45, net451, net452
-      System.Threading.Timer (>= 4.3) - framework: net451, net452
+    NETStandard.Library (1.6.1) - restriction: || (== net45) (== net451) (== net452)
+      System.Collections.Concurrent (>= 4.3) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
+      System.Diagnostics.Tracing (>= 4.3) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
+      System.IO.Compression (>= 4.3) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
+      System.Net.Http (>= 4.3) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
+      System.Runtime.InteropServices (>= 4.3) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
+      System.Runtime.InteropServices.RuntimeInformation (>= 4.3) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
+      System.Runtime.Numerics (>= 4.3) - restriction: || (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452)) (== net45) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
+      System.Threading.Timer (>= 4.3) - restriction: || (&& (== net40) (== net451)) (&& (== net40) (== net452)) (&& (== net45) (== net451)) (&& (== net45) (== net452)) (== net451) (&& (== net451) (== net452)) (== net452)
     Newtonsoft.Json (10.0.2)
     Octokit (0.24)
-      Microsoft.Net.Http  - framework: net40
+      Microsoft.Net.Http  - restriction: || (== net40) (&& (== net40) (== net45)) (&& (== net40) (== net451)) (&& (== net40) (== net452))
     Reactive.Streams (1.0.2)
     SourceLink (1.1)
-    System.Collections.Concurrent (4.3) - framework: net45, net451, net452
+    System.Collections.Concurrent (4.3) - restriction: || (== net45) (== net451) (== net452)
     System.Collections.Immutable (1.3.1)
     System.Data.SQLite.Core (1.0.104)
-    System.Diagnostics.Tracing (4.3) - framework: net45, net451, net452
-    System.IO.Compression (4.3) - framework: net45, net451, net452
-    System.Net.Http (4.3.1) - framework: net45, net451, net452
-    System.Runtime.InteropServices (4.3) - framework: net45, net451, net452
-    System.Runtime.InteropServices.RuntimeInformation (4.3) - framework: net45, net451, net452
-    System.Runtime.Numerics (4.3) - framework: net45, net451, net452
-    System.Threading.Timer (4.3) - framework: net451, net452
+    System.Diagnostics.Tracing (4.3) - restriction: || (== net45) (== net451) (== net452)
+    System.IO.Compression (4.3) - restriction: || (== net45) (== net451) (== net452)
+    System.Net.Http (4.3.1) - restriction: || (== net45) (== net451) (== net452)
+    System.Runtime.InteropServices (4.3) - restriction: || (== net45) (== net451) (== net452)
+    System.Runtime.InteropServices.RuntimeInformation (4.3) - restriction: || (== net45) (== net451) (== net452)
+    System.Runtime.Numerics (4.3) - restriction: || (== net45) (== net451) (== net452)
+    System.Threading.Timer (4.3) - restriction: || (== net451) (== net452)
     xunit (2.0)
       xunit.assert (2.0)
       xunit.core (2.0)
