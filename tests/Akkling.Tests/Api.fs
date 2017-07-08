@@ -96,11 +96,11 @@ let ``Typed actor refs are serializable/deserializable in both directions`` () :
 [<Fact>]
 let ``Typed props are serializable/deserializable in both directions`` () : unit = testDefault <| fun tck ->
     let p = { (propse <@ Behaviors.echo @>) with 
-            Deploy = Some Deploy.Local; 
-            Router = Some Akka.Routing.NoRouter.NoRouter; 
-            SupervisionStrategy = Some (SupervisorStrategy.StoppingStrategy  :> SupervisorStrategy);
-            Mailbox = Some "xyz123";
-            Dispatcher = Some "xyz" }
+                 Deploy = Some Deploy.Local; 
+                 Router = Some Akka.Routing.NoRouter.NoRouter; 
+                 SupervisionStrategy = Some (SupervisorStrategy.StoppingStrategy  :> SupervisorStrategy);
+                 Mailbox = Some "xyz123";
+                 Dispatcher = Some "xyz" }
     let serializer = tck.Sys.Serialization.FindSerializerFor p
     let bin = serializer.ToBinary(p)
     let deserialized = serializer.FromBinary(bin, null) :?> Props<obj>
@@ -108,7 +108,7 @@ let ``Typed props are serializable/deserializable in both directions`` () : unit
     Assert.Equal(p.ActorType, deserialized.ActorType)
     Assert.NotNull(p.Args)
     Assert.Equal(p.Args.Length, 1)
-    Assert.IsType<Microsoft.FSharp.Quotations.Expr<Actor<obj>->Effect<obj>>>(p.Args.[0])
+    Assert.IsType<Microsoft.FSharp.Quotations.Expr<Actor<obj> -> Effect<obj>>>(p.Args.[0]) |> ignore
     Assert.Equal(p.Deploy.Value.Scope, deserialized.Deploy.Value.Scope)
     Assert.Equal(p.Deploy.Value.RouterConfig, deserialized.Deploy.Value.RouterConfig)
     

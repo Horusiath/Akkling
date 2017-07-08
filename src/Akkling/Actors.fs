@@ -117,7 +117,7 @@ type ExtActor<'Message> =
     inherit ExtContext
 
 type Receive<'Message, 'Context when 'Context :> Actor<'Message>> = 'Context -> 'Message -> Effect<'Message>
-and TypedContext<'Message, 'Actor when 'Actor :> ActorBase and 'Actor :> IWithUnboundedStash>(context : IActorContext, actor : 'Actor) as this = 
+and TypedContext<'Message, 'Actor when 'Actor :> ActorBase and 'Actor :> IWithUnboundedStash>(context : IActorContext, actor : 'Actor) = 
     let self = context.Self
     interface ExtActor<'Message> with
         member __.UntypedContext = context
@@ -197,7 +197,7 @@ and FunActor<'Message>(actor : Actor<'Message>->Effect<'Message>) as this =
     let mutable behavior = actor ctx
     new(actor : Expr<Actor<'Message>->Effect<'Message>>) = FunActor(actor.Compile () ())
     
-    member __.Next (current : Effect<'Message>) (context : Actor<'Message>) (message : obj) : Effect<'Message> = 
+    member __.Next (current : Effect<'Message>) (_context : Actor<'Message>) (message : obj) : Effect<'Message> = 
         match message with
         | :? 'Message as msg -> 
             match current with
@@ -247,6 +247,6 @@ and FunActor<'Message>(actor : Actor<'Message>->Effect<'Message>) as this =
         this.Handle(PostRestart cause)
 
 let (|Become|_|) (effect: Effect<'Message>) =
-    if effect :? Become<'Message>
-    then Some ((effect :?> Become<'Message>).Next)
-    else None
+    match effect with 
+    | :? Become<'Message> as become -> Some become.Next
+    | _ -> None

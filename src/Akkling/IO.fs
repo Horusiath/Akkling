@@ -41,10 +41,7 @@ module IO =
 
         let (|CommandFailed|_|) (msg:obj) : #Tcp.Command option =
             match msg with
-            | :? Tcp.CommandFailed as c -> 
-                if c.Cmd :? #Tcp.Command
-                then Some (c.Cmd :?> #Tcp.Command)
-                else None
+            | :? Tcp.CommandFailed as c -> Some (c.Cmd :?> #Tcp.Command)
             | _ -> None
 
         let (|WritingResumed|_|) (msg:obj) =

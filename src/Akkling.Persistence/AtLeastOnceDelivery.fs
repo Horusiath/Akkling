@@ -51,8 +51,8 @@ type AtLeastOnceDeliverySemantic (semantic: Akka.Persistence.AtLeastOnceDelivery
         with
         | :? MaxUnconfirmedMessagesExceededException -> false
     /// Partial behavior responsible for handling the at-least-once-delivery semantics messages.
-    member __.Receive : Receive<obj, 'Context> =
-        fun (ctx: 'Context) (msg: obj) ->
+    member __.Receive : Receive<obj, Actor<obj>> =
+        fun ctx (msg: obj) ->
             match msg with
             | LifecycleEvent e ->
                 match e with

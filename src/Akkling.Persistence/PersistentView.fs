@@ -51,7 +51,7 @@ and [<Interface>]ExtView<'Message> =
     inherit ExtActor<'Message>
     inherit ViewContext<'Message>
             
-and TypedViewContext<'Message, 'Actor when 'Actor :> FunPersistentView<'Message>>(context : IActorContext, actor : 'Actor) as this = 
+and TypedViewContext<'Message, 'Actor when 'Actor :> FunPersistentView<'Message>>(context : IActorContext, actor : 'Actor) = 
     let self = context.Self
     interface ExtView<'Message> with
         member __.UntypedContext = context

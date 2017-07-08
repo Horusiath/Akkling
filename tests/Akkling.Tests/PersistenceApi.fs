@@ -73,20 +73,20 @@ let ``at-least-once delivery semantics should redeliver messages`` () = test con
     let snd = retype (spawn tck "sender" <| props(sender destinations))
 
     snd <! Req "a-1"
-    expectMsg tck ReqAck
-    probe.ExpectMsg (Action(1L, "a-1"))
+    expectMsg tck ReqAck |> ignore
+    probe.ExpectMsg (Action(1L, "a-1")) |> ignore
     
     snd <! Req "a-2"
-    expectMsg tck ReqAck
-    probe.ExpectMsg (Action(2L, "a-2"))
+    expectMsg tck ReqAck |> ignore
+    probe.ExpectMsg (Action(2L, "a-2")) |> ignore
         
     snd <! Req "a-3"
     snd <! Req "a-4"
-    expectMsg tck ReqAck
-    expectMsg tck ReqAck
+    expectMsg tck ReqAck |> ignore
+    expectMsg tck ReqAck |> ignore
     
     // a-3 was lost ...
-    probe.ExpectMsg (Action(4L, "a-4"))
+    probe.ExpectMsg (Action(4L, "a-4")) |> ignore
     // ... and then redelivered
-    probe.ExpectMsg (Action(3L, "a-3"))
+    probe.ExpectMsg (Action(3L, "a-3")) |> ignore
     expectNoMsgWithin tck (TimeSpan.FromSeconds 1.)
