@@ -30,13 +30,13 @@ module EventStreaming =
     /// Subscribes an actor reference to target channel of the provided event stream.
     /// </summary>
     let subscribe (ref : IActorRef<'Message>) (eventStream : Akka.Event.EventStream) : bool = 
-        eventStream.Subscribe(ref, typeof<'Message>)
+        eventStream.Subscribe(untyped ref, typeof<'Message>)
     
     /// <summary>
     /// Unubscribes an actor reference from target channel of the provided event stream.
     /// </summary>
     let unsubscribe (ref : IActorRef<'Message>) (eventStream : Akka.Event.EventStream) : bool = 
-        eventStream.Unsubscribe(ref, typeof<'Message>)
+        eventStream.Unsubscribe(untyped ref, typeof<'Message>)
     
     /// <summary>
     /// Publishes an event on the provided event stream. Event channel is resolved from event's type.
