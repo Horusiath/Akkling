@@ -29,13 +29,13 @@ let handler connection = fun (ctx: Actor<obj>) ->
 
 let endpoint = IPEndPoint(IPAddress.Loopback, 5000)
 let listener = spawn system "listener" <| props(fun m ->
-    IO.Tcp(m) <! TcpMessage.Bind(m.Self, endpoint, 100)
+    IO.Tcp(m) <! TcpMessage.Bind(untyped m.Self, endpoint, 100)
     let rec loop () = actor {
         let! (msg: obj) = m.Receive ()
         match msg with
         | Connected(remote, local) ->
             let conn = m.Sender ()
-            conn <! TcpMessage.Register(spawn m null (props(handler conn)))
+            conn <! TcpMessage.Register(untyped (spawn m null (props(handler conn))))
             return! loop ()
         | _ -> return Unhandled
     }
