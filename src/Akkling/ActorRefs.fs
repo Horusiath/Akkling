@@ -45,12 +45,12 @@ let private tryCast<'Result>(t: Task<obj>) : AskResult<'Result> =
 /// </summary>
 [<Interface>]
 type ICanTell<'Message> =
-    //inherit ICanTell
     abstract Tell : 'Message * IActorRef -> unit
     abstract Ask : 'Message * TimeSpan option -> Async<AskResult<'Response>>
 
     abstract member Underlying : ICanTell
 
+/// INTERNAL API.
 [<Interface>]
 type IInternalTypedActorRef =
     abstract member Underlying : IActorRef
@@ -63,7 +63,6 @@ type IInternalTypedActorRef =
 type IActorRef<'Message> =
     inherit IInternalTypedActorRef
     inherit ICanTell<'Message>
-    //inherit IActorRef
 
     inherit IEquatable<IActorRef<'Message>>
     inherit IComparable<IActorRef<'Message>>
