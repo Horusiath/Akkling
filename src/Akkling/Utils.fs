@@ -17,12 +17,12 @@ module Watchers =
     /// Orders a <paramref name="watcher"/> to monitor an actor targeted by provided <paramref name="subject"/>.
     /// When an actor refered by subject dies, a watcher should receive a <see cref="Terminated"/> message.
     /// </summary>
-    let monitor (watcher : #ICanWatch) (subject : IActorRef) : IActorRef = watcher.Watch subject
+    let monitor (watcher : #ICanWatch) (subject : IActorRef<'Message>) : IActorRef = watcher.Watch (untyped subject)
     
     /// <summary>
     /// Orders a <paramref name="watcher"/> to stop monitoring an actor refered by provided <paramref name="subject"/>.
     /// </summary>
-    let demonitor (watcher : #ICanWatch) (subject : IActorRef) : IActorRef = watcher.Unwatch subject
+    let demonitor (watcher : #ICanWatch) (subject : IActorRef<'Message>) : IActorRef = watcher.Unwatch (untyped subject)
 
 [<AutoOpen>]
 module EventStreaming = 
