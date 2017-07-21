@@ -49,7 +49,7 @@ type ITellScheduler with
     /// <param name="message">Message to be sent to the receiver by the scheduler.</param>
     /// <param name="receiver">Message receiver.</param>
     member this.ScheduleTellRepeatedly(after : TimeSpan, every : TimeSpan, receiver : ICanTell<'Message>, message : 'Message) : unit = 
-        this.ScheduleTellRepeatedly(after, every, receiver, message, ActorRefs.NoSender)
+        this.ScheduleTellRepeatedly(after, every, receiver.Underlying, message, ActorRefs.NoSender)
     
     /// <summary>
     /// Schedules a single <paramref name="message"/> send to the provided <paramref name="receiver"/>.
@@ -58,4 +58,4 @@ type ITellScheduler with
     /// <param name="message">Message to be sent to the receiver by the scheduler.</param>
     /// <param name="receiver">Message receiver.</param>
     member this.ScheduleTellOnce(after : TimeSpan, receiver : ICanTell<'Message>, message : 'Message) : unit = 
-        this.ScheduleTellOnce(after, receiver, message, ActorRefs.NoSender)
+        this.ScheduleTellOnce(after, receiver.Underlying, message, ActorRefs.NoSender)

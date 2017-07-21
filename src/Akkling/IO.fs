@@ -78,7 +78,7 @@ module IO =
     module Udp =
 
         let inline Bind(ref: IActorRef<'t>, localAddress: EndPoint) = 
-            Akka.IO.Udp.Bind(ref, localAddress) :> Udp.Command
+            Akka.IO.Udp.Bind(untyped ref, localAddress) :> Udp.Command
             
         let (|Received|_|) (msg:obj) : ByteString option =
             match msg with

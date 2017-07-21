@@ -80,11 +80,11 @@ let clusterStatus = fun (ctx : Actor<_>) ->
         | LifecycleEvent e ->
             match e with
             | PreStart ->
-                cluster.Subscribe(ctx.Self, ClusterEvent.InitialStateAsEvents,
+                cluster.Subscribe(untyped ctx.Self, ClusterEvent.InitialStateAsEvents,
                     [| typedefof<ClusterEvent.IMemberEvent> |])
                 log.Info (sprintf "Actor subscribed to Cluster status updates: %A" ctx.Self)
             | PostStop ->
-                cluster.Unsubscribe(ctx.Self)
+                cluster.Unsubscribe(untyped ctx.Self)
                 log.Info (sprintf "Actor unsubscribed from Cluster status updates: %A" ctx.Self)
 
             | _ -> return Unhandled

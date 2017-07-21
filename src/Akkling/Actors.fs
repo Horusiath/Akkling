@@ -137,11 +137,11 @@ and TypedContext<'Message, 'Actor when 'Actor :> ActorBase and 'Actor :> IWithUn
         member __.UnstashAll() = actor.Stash.UnstashAll()
         member __.SetReceiveTimeout timeout = context.SetReceiveTimeout(Option.toNullable timeout)
         member __.Schedule (delay : TimeSpan) target message = 
-            context.System.Scheduler.ScheduleTellOnceCancelable(delay, target, message, self)
+            context.System.Scheduler.ScheduleTellOnceCancelable(delay, untyped target, message, self)
         member __.ScheduleRepeatedly (delay : TimeSpan) (interval : TimeSpan) target message = 
-            context.System.Scheduler.ScheduleTellRepeatedlyCancelable(delay, interval, target, message, self)
+            context.System.Scheduler.ScheduleTellRepeatedlyCancelable(delay, interval, untyped target, message, self)
         member __.Incarnation() = actor :> ActorBase
-        member __.Stop(ref : IActorRef<'T>) = context.Stop(untyped ref)
+        member __.Stop(ref : IActorRef<'T>) = context.Stop(untyped(ref))
         member __.Unhandled(msg) = 
             match box actor with
             | :? FunActor<'Message> as act -> act.InternalUnhandled(msg)

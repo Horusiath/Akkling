@@ -82,7 +82,7 @@ module Sink =
     /// will be sent to the destination actor.
     /// When the stream is completed with failure a Status.Failure
     /// message will be sent to the destination actor.
-    let inline toActorRef (completeMsg: 't) (ref: IActorRef<'t>) : Sink<'t, unit> = Sink.ActorRef(ref, completeMsg).MapMaterializedValue(Func<_,_>(Microsoft.FSharp.Core.Operators.ignore))
+    let inline toActorRef (completeMsg: 't) (ref: IActorRef<'t>) : Sink<'t, unit> = Sink.ActorRef(untyped ref, completeMsg).MapMaterializedValue(Func<_,_>(Microsoft.FSharp.Core.Operators.ignore))
 
     /// Sends the elements of the stream to the given actor ref that sends back back-pressure signal.
     /// First element is always initMsg, then stream is waiting for acknowledgement message
@@ -90,7 +90,7 @@ module Sink =
     /// elements. It also requires ackMsg message after each stream element
     /// to make backpressure work.
     let inline toActorRefAck (initMsg: 't) (ackMsg: 't) (completeMsg: 't) (failMsgFn: exn -> 't) (ref: IActorRef<'t>) : Sink<'t, unit> = 
-        Sink.ActorRefWithAck(ref, initMsg, ackMsg, completeMsg, Func<_,_>(failMsgFn >> box)).MapMaterializedValue(Func<_,_>(Microsoft.FSharp.Core.Operators.ignore))
+        Sink.ActorRefWithAck(untyped ref, initMsg, ackMsg, completeMsg, Func<_,_>(failMsgFn >> box)).MapMaterializedValue(Func<_,_>(Microsoft.FSharp.Core.Operators.ignore))
 
     /// Creates a sink that is materialized to an actor ref which points to an Actor
     /// created according to the passed in props. Actor created by the props should

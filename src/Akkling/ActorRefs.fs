@@ -45,22 +45,37 @@ let private tryCast<'Result>(t: Task<obj>) : AskResult<'Result> =
 /// </summary>
 [<Interface>]
 type ICanTell<'Message> =
-    inherit ICanTell
     abstract Tell : 'Message * IActorRef -> unit
     abstract Ask : 'Message * TimeSpan option -> Async<AskResult<'Response>>
+
+    abstract member Underlying : ICanTell
+
+/// INTERNAL API.
+[<Interface>]
+type IInternalTypedActorRef =
+    abstract member Underlying : IActorRef
+    abstract member MessageType : Type
 
 /// <summary>
 /// Typed version of <see cref="IActorRef"/> interface. Allows to tell/ask using only messages of restricted type.
 /// </summary>
 [<Interface>]
 type IActorRef<'Message> =
+    inherit IInternalTypedActorRef
     inherit ICanTell<'Message>
-    inherit IActorRef
+
+    inherit IEquatable<IActorRef<'Message>>
+    inherit IComparable<IActorRef<'Message>>
+    inherit ISurrogated
+    inherit IComparable
+    
     /// <summary>
     /// Changes the type of handled messages, returning new typed ActorRef.
     /// </summary>
     abstract Retype<'T> : unit -> IActorRef<'T>
     abstract Forward : 'Message -> unit
+
+    abstract member Path : ActorPath
 
 /// <summary>
 /// Wrapper around untyped instance of IActorRef interface.
@@ -79,11 +94,13 @@ type TypedActorRef<'Message>(underlyingRef : IActorRef) =
     override __.GetHashCode () = underlyingRef.GetHashCode ()
     override this.Equals o =
         match o with
-        | :? IActorRef as ref -> (this :> IActorRef).Equals(ref)
+        | :? IInternalTypedActorRef as ref -> underlyingRef.Equals(ref.Underlying)
         | _ -> false
 
-    interface ICanTell with
-        member __.Tell(message : obj, sender : IActorRef) = underlyingRef.Tell(message, sender)
+    interface IInternalTypedActorRef with
+        
+        member __.Underlying = underlyingRef
+        member __.MessageType = typeof<'Message>
 
     interface IActorRef<'Message> with
 
@@ -99,22 +116,19 @@ type TypedActorRef<'Message>(underlyingRef : IActorRef) =
                 .Ask(message, Option.toNullable timeout)
                 .ContinueWith(tryCast<'Response>, TaskContinuationOptions.ExecuteSynchronously)
             |> Async.AwaitTask
+        member __.Underlying = underlyingRef :> ICanTell
         member __.Path = underlyingRef.Path
 
         member __.Equals other =
-            match other with
-            | :? TypedActorRef<'Message> as typed -> underlyingRef.Equals(typed.Underlying)
-            | _ -> underlyingRef.Equals other
+            underlyingRef.Equals(other.Underlying)
 
         member __.CompareTo (other: obj) =
             match other with
-            | :? TypedActorRef<'Message> as typed -> underlyingRef.CompareTo(typed.Underlying)
+            | :? IInternalTypedActorRef as typed -> underlyingRef.CompareTo(typed.Underlying)
             | _ -> underlyingRef.CompareTo(other)
 
-        member __.CompareTo (other: IActorRef) =
-            match other with
-            | :? TypedActorRef<'Message> as typed -> underlyingRef.CompareTo(typed.Underlying)
-            | _ -> underlyingRef.CompareTo(other)
+        member __.CompareTo (other: IActorRef<'Message>) =
+            underlyingRef.CompareTo(other.Underlying)
 
     interface ISurrogated with
         member this.ToSurrogate system =
@@ -132,8 +146,7 @@ and TypedActorRefSurrogate<'Message> =
 /// Returns typed wrapper over provided actor reference.
 /// </summary>
 let inline typed (actorRef : IActorRef) : IActorRef<'Message> =
-    if actorRef :? TypedActorRef<'Message> then actorRef :?> TypedActorRef<'Message> :> IActorRef<'Message>
-    else (TypedActorRef<'Message> actorRef) :> IActorRef<'Message>
+    (TypedActorRef<'Message> actorRef) :> IActorRef<'Message>
 
 /// <summary>
 /// Returns untyped <see cref="IActorRef" /> form of current typed actor.
@@ -203,6 +216,8 @@ type TypedActorSelection<'Message>(selection : ActorSelection) =
                 .ContinueWith(tryCast<'Response>, TaskContinuationOptions.ExecuteSynchronously)
             |> Async.AwaitTask
 
+        member __.Underlying = selection :> ICanTell
+
     interface IComparable with
         member this.CompareTo other =
             match other with
@@ -233,7 +248,7 @@ let inline (<<!) (actorRef : #IActorRef<'Message>) (msg : 'Message) : unit =
 /// Pipes an output of asynchronous expression directly to the recipients mailbox.
 let pipeTo (sender : IActorRef) (recipient : ICanTell<'Message>) (computation : Async<'Message>): unit =
     let success (result : 'Message) : unit = recipient.Tell(result, sender)
-    let failure (err : exn) : unit = recipient.Tell(Status.Failure(err), sender)
+    let failure (err : exn) : unit = recipient.Underlying.Tell(Status.Failure(err), sender)
     Async.StartWithContinuations(computation, success, failure, failure)
 
 /// Pipe operator which sends an output of asynchronous expression directly to the recipients mailbox.
