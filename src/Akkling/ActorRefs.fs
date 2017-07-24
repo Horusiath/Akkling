@@ -13,32 +13,7 @@ open Akka.Actor
 open Akka.Util
 open System
 open System.Threading.Tasks
-
-/// <summary>
-/// Result of <see cref="ICanTell{Message}.Ask"/> operation, can be either <see cref="Ok" /> or <see cref="Error" />.
-/// </summary>
-type AskResult<'TResult> =
-    | Ok of result: 'TResult
-    | Error of exn
-    with member x.Value =
-            match x with
-            | Ok result -> result
-            | Error err -> raise <| InvalidOperationException("Accessed the Value of an AskResult in an error state.", err)
-
-let private tryCast<'Result>(t: Task<obj>) : AskResult<'Result> =
-    if t.IsFaulted then Error t.Exception
-    else
-        try
-            match t.Result with
-            | :? 'TResult as res -> Ok res
-            | :? AskResult<'TResult> as res -> res
-            | :? Status.Failure as fail -> Error fail.Cause
-            | :? exn as ex -> Error ex
-            | other ->
-                let msg = sprintf "Ask expected type %s but received type %s: %A" (typeof<'TResult>.FullName) (other.GetType().FullName) other
-                Error(InvalidCastException msg)
-        with ex ->
-            Error ex
+open System.Runtime.ExceptionServices
 
 /// <summary>
 /// Typed version of <see cref="ICanTell"/> interface. Allows to tell/ask using only messages of restricted type.
@@ -46,7 +21,7 @@ let private tryCast<'Result>(t: Task<obj>) : AskResult<'Result> =
 [<Interface>]
 type ICanTell<'Message> =
     abstract Tell : 'Message * IActorRef -> unit
-    abstract Ask : 'Message * TimeSpan option -> Async<AskResult<'Response>>
+    abstract Ask : 'Message * TimeSpan option -> Async<'Response>
 
     abstract member Underlying : ICanTell
 
@@ -76,6 +51,24 @@ type IActorRef<'Message> =
     abstract Forward : 'Message -> unit
 
     abstract member Path : ActorPath
+
+let private throwWithStacktrace e = ExceptionDispatchInfo.Capture(e).Throw()
+
+let processResp<'Resp>(task: Task<obj>) =
+    if task.IsCanceled || task.IsFaulted 
+    then 
+        throwWithStacktrace task.Exception
+        Unchecked.defaultof<'Resp>
+    else
+        match task.Result with
+        | :? 'Resp as r -> r
+        | :? Status.Failure as fail -> 
+            ExceptionDispatchInfo.Capture(fail.Cause).Throw()
+            Unchecked.defaultof<'Resp>
+        | :? exn as e -> 
+            ExceptionDispatchInfo.Capture(e).Throw()  
+            Unchecked.defaultof<'Resp>
+        | other -> raise (InvalidCastException(sprintf "Tried to cast object of type %O to %O" (other.GetType()) (typeof<'Resp>)))
 
 /// <summary>
 /// Wrapper around untyped instance of IActorRef interface.
@@ -111,10 +104,10 @@ type TypedActorRef<'Message>(underlyingRef : IActorRef) =
 
         member __.Tell(message : 'Message, sender : IActorRef) = underlyingRef.Tell(message :> obj, sender)
         member __.Forward(message : 'Message) = underlyingRef.Forward(message)
-        member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<AskResult<'Response>> =
+        member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<'Response> =
             underlyingRef
                 .Ask(message, Option.toNullable timeout)
-                .ContinueWith(tryCast<'Response>, TaskContinuationOptions.ExecuteSynchronously)
+                .ContinueWith(processResp<'Response>, TaskContinuationOptions.ExecuteSynchronously)
             |> Async.AwaitTask
         member __.Underlying = underlyingRef :> ICanTell
         member __.Path = underlyingRef.Path
@@ -198,10 +191,12 @@ type TypedActorSelection<'Message>(selection : ActorSelection) =
         |> Async.AwaitTask
 
     override x.Equals (o:obj) =
-        if obj.ReferenceEquals(x, o) then true
-        else match o with
-        | :? TypedActorSelection<'Message> as t -> x.Underlying.Equals t.Underlying
-        | _ -> x.Underlying.Equals o
+        if obj.ReferenceEquals(x, o) 
+        then true
+        else 
+            match o with
+            | :? TypedActorSelection<'Message> as t -> x.Underlying.Equals t.Underlying
+            | _ -> x.Underlying.Equals o
 
     override __.GetHashCode () = selection.GetHashCode() ^^^ typeof<'Message>.GetHashCode()
 
@@ -210,10 +205,10 @@ type TypedActorSelection<'Message>(selection : ActorSelection) =
 
     interface ICanTell<'Message> with
         member __.Tell(message : 'Message, sender : IActorRef) : unit = selection.Tell(message, sender)
-        member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<AskResult<'Response>> =
+        member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<'Response> =
             selection
                 .Ask(message, Option.toNullable timeout)
-                .ContinueWith(tryCast<'Response>, TaskContinuationOptions.ExecuteSynchronously)
+                .ContinueWith(processResp<'Response>, TaskContinuationOptions.ExecuteSynchronously)
             |> Async.AwaitTask
 
         member __.Underlying = selection :> ICanTell
@@ -236,7 +231,7 @@ let inline (<!) (actorRef : #ICanTell<'Message>) (msg : 'Message) : unit =
 /// Bidirectional send operator. Sends a message object directly to actor
 /// tracked by actorRef and awaits for response send back from corresponding actor.
 /// </summary>
-let inline (<?) (tell : #ICanTell<'Message>) (msg : 'Message) : Async<AskResult<'Response>> = tell.Ask<'Response>(msg, None)
+let inline (<?) (tell : #ICanTell<'Message>) (msg : 'Message) : Async<'Response> = tell.Ask<'Response>(msg, None)
 
 /// <summary>
 /// Unidirectional forward operator.

@@ -150,10 +150,10 @@ let ``can serialize and deserialize discriminated unions over remote nodes`` () 
 
     let aref = spawn client "a-1" { (propse <@ actorOf2 testBehavior @> ) with Deploy = Some(Deploy(RemoteScope (Address.Parse "akka.tcp://server-system@localhost:9911"))) }
     let msg = Succeed("a-11", Inner(11, "a-12"))
-    let response : AskResult<OuterUnion> = aref <? msg |> Async.RunSynchronously
-    response.Value
+    let response = aref <? msg |> Async.RunSynchronously
+    response
     |> equals msg
-
+    
 [<Fact>]
 let ``monitor works on typed refs`` () = testDefault <| fun tck ->
     let ref = spawn tck "actor" (props Behaviors.echo)

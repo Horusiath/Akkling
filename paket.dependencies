@@ -16,7 +16,7 @@ nuget FsCheck.Xunit
 nuget Newtonsoft.Json >= 9.0
 nuget Octokit 
 nuget SourceLink 
-nuget xunit.assert = 2.0.0 
+nuget xunit.assert = 2.1
 nuget xunit.runner.console 
 nuget xunit.runner.visualstudio
 nuget FSharp.Core
