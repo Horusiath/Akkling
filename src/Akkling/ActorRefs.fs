@@ -30,12 +30,12 @@ let private tryCast<'Result>(t: Task<obj>) : AskResult<'Result> =
     else
         try
             match t.Result with
-            | :? 'TResult as res -> Ok res
-            | :? AskResult<'TResult> as res -> res
+            | :? 'Result as res -> Ok res
+            | :? AskResult<'Result> as res -> res
             | :? Status.Failure as fail -> Error fail.Cause
             | :? exn as ex -> Error ex
             | other ->
-                let msg = sprintf "Ask expected type %s but received type %s: %A" (typeof<'TResult>.FullName) (other.GetType().FullName) other
+                let msg = sprintf "Ask expected type %s but received type %s: %A" (typeof<'Result>.FullName) (other.GetType().FullName) other
                 Error(InvalidCastException msg)
         with ex ->
             Error ex
@@ -131,14 +131,14 @@ type TypedActorRef<'Message>(underlyingRef : IActorRef) =
             underlyingRef.CompareTo(other.Underlying)
 
     interface ISurrogated with
-        member this.ToSurrogate system =
+        member this.ToSurrogate _system =
             let surrogate : TypedActorRefSurrogate<'Message> = { Wrapped = underlyingRef }
             surrogate :> ISurrogate
 
 and TypedActorRefSurrogate<'Message> =
     { Wrapped : IActorRef }
     interface ISurrogate with
-        member this.FromSurrogate system =
+        member this.FromSurrogate _system =
             let tref = new TypedActorRef<'Message>(this.Wrapped)
             tref :> ISurrogated
 
@@ -198,10 +198,12 @@ type TypedActorSelection<'Message>(selection : ActorSelection) =
         |> Async.AwaitTask
 
     override x.Equals (o:obj) =
-        if obj.ReferenceEquals(x, o) then true
-        else match o with
-        | :? TypedActorSelection<'Message> as t -> x.Underlying.Equals t.Underlying
-        | _ -> x.Underlying.Equals o
+        if obj.ReferenceEquals(x, o) then 
+            true
+        else 
+            match o with
+            | :? TypedActorSelection<'Message> as t -> x.Underlying.Equals t.Underlying
+            | _ -> x.Underlying.Equals o
 
     override __.GetHashCode () = selection.GetHashCode() ^^^ typeof<'Message>.GetHashCode()
 
@@ -221,7 +223,7 @@ type TypedActorSelection<'Message>(selection : ActorSelection) =
     interface IComparable with
         member this.CompareTo other =
             match other with
-            | :? TypedActorSelection<_> as typed -> typed.Underlying.PathString.CompareTo (this.Underlying.PathString)
+            | :? TypedActorSelection<obj> as typed -> typed.Underlying.PathString.CompareTo (this.Underlying.PathString)
             | :? ActorSelection as untyped -> untyped.PathString.CompareTo (this.Underlying.PathString)
             | _ -> -1
 

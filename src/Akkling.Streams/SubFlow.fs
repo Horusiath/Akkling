@@ -76,7 +76,7 @@ module SubFlow =
     /// on which the function is defined (read: returns Some) as they pass through this processing step.
     /// Non-matching elements are filtered out.
     let inline choose (fn: 'u -> 'w option) (subFlow) : SubFlow<'w, 'mat, 'closed> = 
-        SubFlowOperations.Collect(subFlow, Func<_, _>(fn)).Select(Func<_,_>(fun (Some x) -> x))
+        SubFlowOperations.Collect(subFlow, Func<_, _>(fn)).Where(Predicate<_>(Option.isSome)).Select(Func<_,_>(fun (Some x) -> x))
 
     /// Chunk up this stream into groups of the given size, with the last group
     /// possibly smaller than requested due to end-of-stream.
