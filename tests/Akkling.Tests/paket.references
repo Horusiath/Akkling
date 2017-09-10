@@ -5,5 +5,4 @@ Akka.Remote
 xunit.assert
 Akka.Persistence
 Akka.Serialization.Hyperion
-System.Collections.Immutable
 Microsoft.NET.Test.Sdk

@@ -7,6 +7,7 @@ nuget Akka.Serialization.Hyperion prerelease
 nuget FsPickler >= 3.2
 nuget FSPowerPack.Linq.Community >= 3.0
 nuget Microsoft.NET.Test.Sdk
+nuget Octokit
 nuget Reactive.Streams >= 1.0.2
 nuget FAKE 
 nuget FsCheck 

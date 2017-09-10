@@ -135,7 +135,7 @@ Target "RunTests" (fun _ ->
         { p with
             TimeOut = TimeSpan.FromMinutes 20.
             XmlOutputPath = Some "TestResults.xml"
-            ToolPath = "packages/xunit.runner.console/tools/xunit.console.exe" })
+            ToolPath = "packages/xunit.runner.console/tools/net452/xunit.console.exe" })
 )
 
 // --------------------------------------------------------------------------------------
