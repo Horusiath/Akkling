@@ -64,6 +64,7 @@ and TypedViewContext<'Message, 'Actor when 'Actor :> FunPersistentView<'Message>
         member __.ActorSelection(path : string) = context.ActorSelection(path)
         member __.ActorSelection(path : ActorPath) = context.ActorSelection(path)
         member __.Watch(aref : IActorRef) = context.Watch aref
+        member __.WatchWith(aref: IActorRef, message: obj) = context.WatchWith(aref, message)
         member __.Unwatch(aref : IActorRef) = context.Unwatch aref
         member __.Log = lazy (Akka.Event.Logging.GetLogger(context))
         member __.Stash() = actor.Stash.Stash()

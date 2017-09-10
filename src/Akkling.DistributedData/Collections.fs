@@ -76,12 +76,12 @@ module ORSet =
     let toList<'t> (x: GSet<'t>) = x.Elements |> List.ofSeq
     let toArray<'t> (x: GSet<'t>) = x.Elements |> Array.ofSeq
     
-type ORMap<'t,'v when 'v :> IReplicatedData> = ORDictionary<'t,'v>
+type ORMap<'t,'v when 'v :> IReplicatedData<'v>> = ORDictionary<'t,'v>
 
 [<RequireQualifiedAccess>]
 module ORMap = 
     let inline key id = ORDictionaryKey id
-    let empty<'k, 'v when 'v :> IReplicatedData> : ORMap<'k, 'v> = ORMap<'k, 'v>.Empty
+    let empty<'k, 'v when 'v :> IReplicatedData<'v>> : ORMap<'k, 'v> = ORMap<'k, 'v>.Empty
     let inline merge (x: ORMap<_,_>) (y: ORMap<_,_>) = x.Merge(y)
     let inline value (x: ORMap<_,_>) = x.Entries
     let inline add (node: Cluster) k v (x: ORMap<_,_>) = x.SetItem(node, k, v)
@@ -105,11 +105,11 @@ module ORMap =
     let toSeq (x: ORMap<_,_>) = x.Entries |> Seq.map (fun entry -> (entry.Key, entry.Value))
     let toMap (x: ORMap<_,_>) = x.Entries |> Seq.map (fun entry -> (entry.Key, entry.Value)) |> Map.ofSeq
 
-type ORMultiMap<'t, 'v> = ORMultiDictionary<'t, 'v>
+type ORMultiMap<'t, 'v> = ORMultiValueDictionary<'t, 'v>
 
 [<RequireQualifiedAccess>]
 module ORMultiMap = 
-    let inline key id = ORMultiDictionaryKey id
+    let inline key id = ORMultiValueDictionaryKey id
     let empty<'k, 'v when 'v :> IReplicatedData> : ORMultiMap<'k, 'v> = ORMultiMap<'k, 'v>.Empty
     let inline merge (x: ORMultiMap<_,_>) (y: ORMultiMap<_,_>) = x.Merge(y)
     let inline value (x: ORMultiMap<_,_>) = x.Entries

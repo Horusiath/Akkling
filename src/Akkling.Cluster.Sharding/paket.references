@@ -3,5 +3,4 @@ Akka.Cluster.Sharding
 Akka.Cluster
 Akka.Cluster.Tools
 Akka.Persistence
-Newtonsoft.Json
 FSharp.Core

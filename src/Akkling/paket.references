@@ -1,7 +1,5 @@
 Akka
-Newtonsoft.Json
 FsPickler
-System.Collections.Immutable
 Akka.Serialization.Hyperion
 FSPowerPack.Linq.Community
 FSharp.Core

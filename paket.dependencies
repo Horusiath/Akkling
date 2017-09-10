@@ -6,35 +6,30 @@ source https://nuget.org/api/v2
 nuget Akka.Serialization.Hyperion prerelease
 nuget FsPickler >= 3.2
 nuget FSPowerPack.Linq.Community >= 3.0
+nuget Microsoft.NET.Test.Sdk
 nuget Reactive.Streams >= 1.0.2
-nuget System.Collections.Immutable >= 1.3
-nuget Google.ProtocolBuffers 
 nuget FAKE 
-nuget FSharp.Formatting 
 nuget FsCheck 
 nuget FsCheck.Xunit 
 nuget Newtonsoft.Json >= 9.0
-nuget Octokit 
-nuget SourceLink 
-nuget xunit.assert = 2.0.0 
-nuget xunit.runner.console 
-nuget xunit.runner.visualstudio
+nuget xunit >= 2.3.0 prerelease
+nuget xunit.abstractions >= 2.0.0 prerelease
+nuget xunit.assert >= 2.3.0 prerelease
+nuget xunit.runner.console >= 2.3.0 prerelease
+nuget xunit.runner.visualstudio >= 2.3.0 prerelease
 nuget FSharp.Core
 
-nuget Akka >= 1.2
-nuget Akka.Streams >= 1.2
+nuget Akka >= 1.3.1
+nuget Akka.Streams >= 1.3.1
 nuget Akka.Persistence prerelease 
 nuget Akka.Persistence.Sqlite prerelease 
 nuget Akka.Persistence.Sql.Common prerelease 
 nuget Akka.Persistence.Query prerelease 
 nuget Akka.Persistence.Query.Sql prerelease 
-nuget Akka.Remote >= 1.2
-nuget Akka.TestKit >= 1.2
-nuget Akka.TestKit.Xunit2 
-nuget Akka.Cluster >= 1.2
-nuget Akka.Cluster.Sharding >= 1.2 prerelease
-nuget Akka.Cluster.Tools >= 1.2 
-nuget Akka.DistributedData >= 1.2 prerelease
-
-
-github fsharp/FAKE modules/Octokit/Octokit.fsx
+nuget Akka.Remote >= 1.3.1
+nuget Akka.TestKit >= 1.3.1
+nuget Akka.TestKit.Xunit2 >= 1.3.1
+nuget Akka.Cluster >= 1.3.1
+nuget Akka.Cluster.Sharding >= 1.3.1 prerelease
+nuget Akka.Cluster.Tools >= 1.3.1 
+nuget Akka.DistributedData >= 1.3.1 prerelease

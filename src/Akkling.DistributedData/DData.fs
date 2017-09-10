@@ -64,7 +64,7 @@ let (|DeleteSuccess|_|) (msg: obj) =
     
 let (|DeleteFailure|_|) (msg: obj) =
     match msg with
-    | :? ReplicationDeletedFailure as d -> Some (d.Key, d.AlreadyDeleted)
+    | :? ReplicationDeleteFailure as d -> Some (d.Key, d.AlreadyDeleted)
     | _ -> None
 
 let (|Changed|_|) (msg: obj) : (IKey * #IReplicatedData) option=
