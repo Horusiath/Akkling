@@ -76,3 +76,38 @@ let (|GetKeysIdsResult|_|) (msg: obj) =
     match msg with
     | :? GetKeysIdsResult as d -> Some (d.Keys |> Set.ofSeq)
     | _ -> None
+
+/// Merges together two CRDTs of the same type.
+let inline merge<'t when 't:> IReplicatedData<'t>>(x:'t) (y:'t): 't = x.Merge(y)
+
+/// Merge operator - used to merge two CRDTs of the same type.
+let inline (<*>) x y = merge x y
+
+open System.Threading
+
+type Akka.DistributedData.DistributedData with
+    
+    member x.TypedReplicator: IActorRef<IReplicatorMessage> = typed x.Replicator
+
+    member x.AsyncGetKeys(?token: CancellationToken): Async<Set<string>> = 
+        let t = defaultArg token CancellationToken.None
+        async {
+            let! reply = x.GetKeysAsync(t) |> Async.AwaitTask
+            return Set.ofSeq reply }
+
+    member x.AsyncGet(key, ?consistency, ?token): Async<_ option> =
+        let c = defaultArg consistency (Dsl.ReadLocal :> IReadConsistency)
+        let t = defaultArg token CancellationToken.None
+        async {
+            let! reply = x.GetAsync(key, c, t) |> Async.AwaitTask
+            return reply |> Option.ofObj }
+
+    member x.AsyncUpdate(key, value, ?consistency, ?token): Async<unit> =
+        let c = defaultArg consistency (Dsl.WriteLocal :> IWriteConsistency)
+        let t = defaultArg token CancellationToken.None
+        x.UpdateAsync(key, value, c, t) |> Async.AwaitTask
+
+    member x.AsyncDelete(key, ?consistency, ?token) : Async<unit> = 
+        let c = defaultArg consistency (Dsl.WriteLocal :> IWriteConsistency)
+        let t = defaultArg token CancellationToken.None
+        x.DeleteAsync(key, c, t) |> Async.AwaitTask

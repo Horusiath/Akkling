@@ -43,6 +43,16 @@ module Flow =
     /// as they are illegal as stream elements - according to the Reactive Streams specification.
     let inline collect (fn: 'u-> #seq<'w>) (flow) : Flow<'t, 'w, 'mat> =
         FlowOperations.SelectMany(flow, Func<_, _>(fun x -> upcast fn x))
+        
+    /// Givien initial state, transforms each input element into new output state and a 
+    /// sequence-like structure of output elements, that is then flattened into the output stream.
+    let statefulCollect (fn: 'state -> 't -> 'state * #seq<'u>) (zero: 'state) (flow): Flow<'t, 'u, 'mat> =
+        FlowOperations.StatefulSelectMany(flow, Func<_>(fun () ->
+            let mutable state = zero
+            Func<_,_>(fun x ->
+                let newState, result = fn state x
+                state <- newState
+                upcast result)))
 
     /// Transform this stream by applying the given function to each of the elements
     /// as they pass through this processing step. The function returns an Async and the
@@ -51,7 +61,7 @@ module Flow =
     /// These tasks may complete in any order, but the elements that
     /// are emitted downstream are in the same order as received from upstream.
     let inline asyncMap (parallelism: int) (fn: 'u -> Async<'w>) (flow) : Flow<'t, 'w, 'mat> =
-        FlowOperations.SelectAsync(flow, parallelism, Func<_, _>(fun x -> fn(x) |> Async.StartAsTask))
+        FlowOperations.SelectAsync(flow, parallelism, Func<_, _>(fn >> Async.StartAsTask))
 
     /// Transform this stream by applying the given function to each of the elements
     /// as they pass through this processing step. The function returns an Async and the
@@ -60,7 +70,7 @@ module Flow =
     /// as soon as it is ready, i.e. it is possible that the elements are not emitted downstream
     /// in the same order as received from upstream.
     let inline asyncMapUnordered (parallelism: int) (fn: 'u -> Async<'w>) (flow) : Flow<'t, 'w, 'mat> =
-        FlowOperations.SelectAsyncUnordered(flow, parallelism, Func<_, _>(fun x -> fn(x) |> Async.StartAsTask))
+        FlowOperations.SelectAsyncUnordered(flow, parallelism, Func<_, _>(fn >> Async.StartAsTask))
 
     /// Only pass on those elements that satisfy the given predicate function.
     let inline filter (pred: 'u -> bool) (flow) : Flow<'t, 'u, 'mat> = FlowOperations.Where(flow, Predicate<_>(pred))
@@ -253,13 +263,7 @@ module Flow =
     /// Depending on the defined strategy it might drop elements or backpressure the upstream if
     /// there is no space available
     let inline buffer (strategy: OverflowStrategy) (n: int) (flow) : Flow<'t, 'u, 'mat> = FlowOperations.Buffer(flow, n, strategy)
-
-    /// Generic transformation of a stream with a custom processing stage.
-    /// This operator makes it possible to extend the flow API when there is no specialized
-    /// operator that performs the transformation.
-    let inline transform (stageFac: unit -> #Akka.Streams.Stage.IStage<'u, 'w>) (flow) : Flow<'t, 'w, 'mat> =
-        FlowOperations.Transform(flow, Func<_>(fun () -> upcast stageFac()))
-        
+            
     /// Takes up to <paramref name="n"/> elements from the stream and returns a pair containing a strict sequence of the taken element
     /// and a stream representing the remaining elements. If <paramref name="n"/> is zero or negative, then this will return a pair
     /// of an empty collection and a stream containing the whole upstream unchanged.
@@ -519,3 +523,5 @@ module Flow =
     /// Builds a flow from provided sink and source graphs returning a materialized value being result of combineFn.
     let inline ofSinkAndSourceMat (sink: #IGraph<SinkShape<'i>,'mat>) (combineFn: 'mat -> 'mat2 -> 'mat3) (source: #IGraph<SourceShape<'o>,'mat2>) =
         Flow.FromSinkAndSource(sink, source, Func<_,_,_>(combineFn))
+
+        

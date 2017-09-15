@@ -3,6 +3,7 @@ Akka
 Akka.TestKit.Xunit2
 Akka.Remote
 xunit.assert
+xunit.extensibility.execution
 Akka.Persistence
 Akka.Serialization.Hyperion
 Microsoft.NET.Test.Sdk

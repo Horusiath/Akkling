@@ -21,7 +21,7 @@ type ActorBuilder() =
     member __.Bind(_ : IO<'In>, continuation : 'In -> Effect<'In>) : Effect<'In> = upcast Become(fun message -> continuation message)
     member this.Bind(behavior : Effect<'In>, continuation : Effect<'In> -> Effect<'In>) : Effect<'In> = 
         match behavior with
-        | :? Become<'In> as become -> Become<'In>(fun message -> this.Bind(become.Next message, continuation)) :> Effect<'In>
+        | :? Become<'In> as become -> upcast Become<'In>(fun message -> this.Bind(become.Next message, continuation))
         | returned -> continuation returned    
     member __.Bind(asyncInput: Async<'In>, continuation: 'In -> Effect<'Out>) : Effect<'Out> =
         upcast AsyncEffect (async {
@@ -30,21 +30,20 @@ type ActorBuilder() =
         })
     member __.ReturnFrom (effect: Effect<'Message>) = effect
     member __.Return (value: Effect<'Message>) : Effect<'Message> = value
-    member __.Zero () : Effect<'Message> = Ignore :> Effect<'Message>
+    member __.Zero () : Effect<'Message> = upcast Ignore
     member __.Yield value = value
 
     member this.TryWith(tryExpr : unit -> Effect<'In>, catchExpr : exn -> Effect<'In>) : Effect<'In> = 
         try 
-            true, tryExpr ()
-        with error -> false, catchExpr error
-        |> function 
-        | true, Become(next) -> Become<'In>(fun message -> this.TryWith((fun () -> next message), catchExpr)) :> Effect<'In>
-        | _, value -> value    
+            match tryExpr() with
+            | Become next -> upcast Become(fun message -> this.TryWith((fun () -> next message), catchExpr))
+            | behavior -> behavior
+        with error -> catchExpr error
 
     member this.TryFinally(tryExpr : unit -> Effect<'In>, finallyExpr : unit -> unit) : Effect<'In> = 
         try 
             match tryExpr() with
-            | Become next -> Become(fun message -> this.TryFinally((fun () -> next message), finallyExpr)) :> Effect<'In>
+            | Become next -> upcast Become(fun message -> this.TryFinally((fun () -> next message), finallyExpr))
             | behavior -> 
                 finallyExpr()
                 behavior
@@ -72,9 +71,9 @@ type ActorBuilder() =
             if e.MoveNext() then 
                 match continuation e.Current with
                 | Become fn -> 
-                    Become(fun m -> 
+                    upcast Become(fun m -> 
                         fn m |> ignore
-                        loop()) :> Effect<'In>
+                        loop())
                 | _ -> loop()
             else Ignore :> Effect<'In>
         loop()
@@ -85,22 +84,22 @@ type ActorBuilder() =
     
     member this.Combine(first : unit -> Effect<'In>, second : unit -> Effect<'In>) : Effect<'In> = 
         match first () with
-        | Become next -> Become(fun message -> this.Combine((fun () -> next message), second)) :> Effect<'In>
+        | Become next -> upcast Become(fun message -> this.Combine((fun () -> next message), second))
         | _ -> second ()
     
     member this.Combine(first : Effect<'In>, second : unit -> Effect<'In>) : Effect<'In> = 
         match first with
-        | Become next -> Become(fun message -> this.Combine(next message, second)) :> Effect<'In>
+        | Become next -> upcast Become(fun message -> this.Combine(next message, second)) 
         | _ -> second ()
     
     member this.Combine(first : unit -> Effect<'In>, second : Effect<'In>) : Effect<'In> = 
         match first () with
-        | Become next -> Become(fun message -> this.Combine((fun () -> next message), second)) :> Effect<'In>
+        | Become next -> upcast Become(fun message -> this.Combine((fun () -> next message), second))
         | _ -> second
     
     member this.Combine(first : Effect<'In>, second : Effect<'In>) : Effect<'In> = 
         match first with
-        | Become next -> Become(fun message -> this.Combine(next message, second)) :> Effect<'In>
+        | Become next -> upcast Become(fun message -> this.Combine(next message, second))
         | _ -> second
         
 /// Builds an actor message handler using an actor expression syntax.

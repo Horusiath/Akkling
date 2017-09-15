@@ -15,7 +15,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Akkling.Tests</RootNamespace>
     <AssemblyName>Akkling.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <Name>Akkling.Tests</Name>
     <TargetFrameworkProfile />
@@ -118,6 +118,9 @@
       <Project>{d38228d5-ec7f-454e-9f54-ab5ca0ad2da0}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <Reference Include="xunit.execution.desktop">
+      <HintPath>..\..\packages\xunit.extensibility.execution\lib\net452\xunit.execution.desktop.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

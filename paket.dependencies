@@ -18,6 +18,7 @@ nuget xunit.abstractions >= 2.0.0 prerelease
 nuget xunit.assert >= 2.3.0 prerelease
 nuget xunit.runner.console >= 2.3.0 prerelease
 nuget xunit.runner.visualstudio >= 2.3.0 prerelease
+nuget xunit.extensibility.execution >= 2.3.0 prerelease
 nuget FSharp.Core
 
 nuget Akka >= 1.3.1
