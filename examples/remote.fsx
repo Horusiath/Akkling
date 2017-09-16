@@ -11,8 +11,7 @@
 #r "../packages/DotNetty.Handlers/lib/net45/DotNetty.Handlers.dll"
 #r "../packages/DotNetty.Transport/lib/net45/DotNetty.Transport.dll"
 #r "../packages/FsPickler/lib/net45/FsPickler.dll"
-#r "../packages/Google.ProtocolBuffers/lib/net40/Google.ProtocolBuffers.dll"
-#r "../packages/Google.ProtocolBuffers/lib/net40/Google.ProtocolBuffers.Serialization.dll"
+#r "../packages/Google.Protobuf/lib/net451/Google.Protobuf.dll"
 #r "../packages/Akka.Remote/lib/net45/Akka.Remote.dll"
 
 open System

@@ -14,31 +14,6 @@ open Akka.Util
 open System
 open System.Threading.Tasks
 
-/// <summary>
-/// Result of <see cref="ICanTell{Message}.Ask"/> operation, can be either <see cref="Ok" /> or <see cref="Error" />.
-/// </summary>
-type AskResult<'TResult> =
-    | Ok of result: 'TResult
-    | Error of exn
-    with member x.Value =
-            match x with
-            | Ok result -> result
-            | Error err -> raise <| InvalidOperationException("Accessed the Value of an AskResult in an error state.", err)
-
-let private tryCast<'Result>(t: Task<obj>) : AskResult<'Result> =
-    if t.IsFaulted then Error t.Exception
-    else
-        try
-            match t.Result with
-            | :? 'Result as res -> Ok res
-            | :? AskResult<'Result> as res -> res
-            | :? Status.Failure as fail -> Error fail.Cause
-            | :? exn as ex -> Error ex
-            | other ->
-                let msg = sprintf "Ask expected type %s but received type %s: %A" (typeof<'Result>.FullName) (other.GetType().FullName) other
-                Error(InvalidCastException msg)
-        with ex ->
-            Error ex
 
 /// <summary>
 /// Typed version of <see cref="ICanTell"/> interface. Allows to tell/ask using only messages of restricted type.
@@ -46,7 +21,7 @@ let private tryCast<'Result>(t: Task<obj>) : AskResult<'Result> =
 [<Interface>]
 type ICanTell<'Message> =
     abstract Tell : 'Message * IActorRef -> unit
-    abstract Ask : 'Message * TimeSpan option -> Async<AskResult<'Response>>
+    abstract Ask : 'Message * TimeSpan option -> Async<'Response>
 
     abstract member Underlying : ICanTell
 
@@ -111,11 +86,15 @@ type TypedActorRef<'Message>(underlyingRef : IActorRef) =
 
         member __.Tell(message : 'Message, sender : IActorRef) = underlyingRef.Tell(message :> obj, sender)
         member __.Forward(message : 'Message) = underlyingRef.Forward(message)
-        member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<AskResult<'Response>> =
-            underlyingRef
-                .Ask(message, Option.toNullable timeout)
-                .ContinueWith(tryCast<'Response>, TaskContinuationOptions.ExecuteSynchronously)
-            |> Async.AwaitTask
+        member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<'Response> = 
+            let ref = underlyingRef
+            async {
+                let! reply = ref.Ask(message, Option.toNullable timeout) |> Async.AwaitTask
+                match reply with
+                | :? Status.Failure as f -> 
+                    raise f.Cause
+                    return Unchecked.defaultof<'Response>
+                | other -> return other :?> 'Response }
         member __.Underlying = underlyingRef :> ICanTell
         member __.Path = underlyingRef.Path
 
@@ -212,11 +191,15 @@ type TypedActorSelection<'Message>(selection : ActorSelection) =
 
     interface ICanTell<'Message> with
         member __.Tell(message : 'Message, sender : IActorRef) : unit = selection.Tell(message, sender)
-        member __.Ask(message : 'Message, timeout : TimeSpan option) : Async<AskResult<'Response>> =
-            selection
-                .Ask(message, Option.toNullable timeout)
-                .ContinueWith(tryCast<'Response>, TaskContinuationOptions.ExecuteSynchronously)
-            |> Async.AwaitTask
+        member x.Ask(message : 'Message, timeout : TimeSpan option) : Async<'Response> = 
+            let ref = selection
+            async {
+                let! reply = ref.Ask(message, Option.toNullable timeout) |> Async.AwaitTask
+                match reply with
+                | :? Status.Failure as f -> 
+                    raise f.Cause
+                    return Unchecked.defaultof<'Response>
+                | other -> return other :?> 'Response }
 
         member __.Underlying = selection :> ICanTell
 
@@ -238,7 +221,7 @@ let inline (<!) (actorRef : #ICanTell<'Message>) (msg : 'Message) : unit =
 /// Bidirectional send operator. Sends a message object directly to actor
 /// tracked by actorRef and awaits for response send back from corresponding actor.
 /// </summary>
-let inline (<?) (tell : #ICanTell<'Message>) (msg : 'Message) : Async<AskResult<'Response>> = tell.Ask<'Response>(msg, None)
+let inline (<?) (tell : #ICanTell<'Message>) (msg : 'Message) : Async<'Response> = tell.Ask<'Response>(msg, None)
 
 /// <summary>
 /// Unidirectional forward operator.

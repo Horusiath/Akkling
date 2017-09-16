@@ -18,9 +18,6 @@ open Akkling
 let update modify consistency init key = Dsl.Update(key, init, consistency, System.Func<_,_>(modify))
 let get consistency key = Dsl.Get(key, consistency)
 let delete consistency key = Dsl.Delete(key, consistency)
-
-let getReplicator (system: Akka.Actor.ActorSystem) : IActorRef<IReplicatorMessage> = 
-    DistributedData.Get(system).Replicator |> typed
     
 let (|DataDeleted|_|) (msg: obj) =
     match msg with

@@ -16,10 +16,8 @@ System.IO.Directory.SetCurrentDirectory(cd)
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/DotNetty.Handlers.dll"
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/DotNetty.Transport.dll"
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/FsPickler.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Google.ProtocolBuffers.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Google.ProtocolBuffers.Serialization.dll"
+#r "../src/Akkling.Cluster.Sharding/bin/Debug/Google.Protobuf.dll"
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Remote.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Google.ProtocolBuffers.dll"
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Persistence.dll"
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Cluster.dll"
 #r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Cluster.Tools.dll"
@@ -79,23 +77,25 @@ let behavior (ctx : Actor<_>) msg = printfn "%A received %s" (ctx.Self.Path.ToSt
 // spawn two separate systems with shard regions on each of them
 
 let system1 = System.create "cluster-system" (configWithPort 5000)
-let shardRegion1 = spawnSharded id system1 "printer" <| props (actorOf2 behavior)
+let fac1 = entityFactoryFor system1 "printer" <| props (actorOf2 behavior)
 
 // wait a while before starting a second system
 
 let system2 = System.create "cluster-system" (configWithPort 5001)
-let shardRegion2 = spawnSharded id system2 "printer" <| props (actorOf2 behavior)
+let fac2 = entityFactoryFor system2 "printer" <| props (actorOf2 behavior)
 
 System.Threading.Thread.Sleep(5000)
 
-// send hello world to entities on 4 different shards (this means that we will have 4 entities in total)
-// NOTE: even thou we sent all messages through single shard region,
-//       some of them will be executed on the second one thanks to shard balancing
+let entity1 = fac1.RefFor "shard-1" "entity-1"
+let john = fac1.RefFor "shard-2" "john"
+let alice = fac1.RefFor "shard-3" "alice"
+let frank = fac1.RefFor "shard-4" "frank"
 
-shardRegion1 <! ("shard-1", "entity-1", "hello world 1")
-shardRegion1 <! ("shard-2", "entity-1", "hello world 2")
-shardRegion1 <! ("shard-3", "entity-1", "hello world 3")
-shardRegion1 <! ("shard-4", "entity-1", "hello world 4")
+entity1 <! "hello"
+entity1 <! " world"
+john <! "hello John"
+alice <! "hello Alice"
+frank <! "hello Frank"
 
 // check which shards have been build on the second shard region
 
@@ -105,13 +105,12 @@ open Akka.Cluster.Sharding
 
 let printShards shardReg =
     async {
-        let! reply = (retype shardReg) <? GetShardRegionStats.Instance
-        let (stats: ShardRegionStats) = reply.Value
+        let! (stats: ShardRegionStats) = (typed shardReg) <? GetShardRegionStats.Instance
         for kv in stats.Stats do
             printfn "\tShard '%s' has %d entities on it" kv.Key kv.Value
     } |> Async.RunSynchronously
 
 printfn "Shards active on node 'localhost:5000':"
-printShards shardRegion1
+printShards fac1.ShardRegion
 printfn "Shards active on node 'localhost:5001':"
-printShards shardRegion2
+printShards fac2.ShardRegion

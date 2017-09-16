@@ -15,10 +15,8 @@ System.IO.Directory.SetCurrentDirectory(cd)
 #r "../src/Akkling.DistributedData/bin/Debug/DotNetty.Handlers.dll"
 #r "../src/Akkling.DistributedData/bin/Debug/DotNetty.Transport.dll"
 #r "../src/Akkling.DistributedData/bin/Debug/FsPickler.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/Google.ProtocolBuffers.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/Google.ProtocolBuffers.Serialization.dll"
+#r "../src/Akkling.DistributedData/bin/Debug/Google.Protobuf.dll"
 #r "../src/Akkling.DistributedData/bin/Debug/Akka.Remote.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/Google.ProtocolBuffers.dll"
 #r "../src/Akkling.DistributedData/bin/Debug/Akka.Cluster.dll"
 #r "../src/Akkling.DistributedData/bin/Debug/Akka.DistributedData.dll"
 #r "../src/Akkling.DistributedData/bin/Debug/Akka.Serialization.Hyperion.dll"
@@ -26,6 +24,7 @@ System.IO.Directory.SetCurrentDirectory(cd)
 #r "../src/Akkling.DistributedData/bin/Debug/Akkling.DistributedData.dll"
 
 open Akka.Cluster
+open Akka.DistributedData
 open Akkling
 open Akkling.DistributedData
 open Akkling.DistributedData.Consistency
@@ -38,7 +37,7 @@ akka.remote.helios.tcp {
 }
 """
 let cluster = Cluster.Get system
-let replicator = getReplicator system
+let ddata = DistributedData.Get system
 
 // some helper functions
 let (++) set e = ORSet.add cluster e set
@@ -49,29 +48,16 @@ let set = [ 1; 2; 3 ] |> List.fold (++) ORSet.empty
 let key = ORSet.key "test-set"
 
 // write that up in replicator under key 'test-set'
-async {
-    let! reply = (retype replicator) <? update (ORSet.merge set) writeLocal set key
-    match reply.Value with
-    | UpdateSuccess(k, _) -> printfn "Data modified for key '%A'" k
-    | DataDeleted k -> printfn "Data already deleted: '%A'" k
-    | UpdateTimeout k -> printfn "Update of value for the key '%A' timed out" k
-} |> Async.RunSynchronously
+ddata.AsyncUpdate(key, set, writeLocal)
+|> Async.RunSynchronously
 
 // read data 
 async {
-    let! reply = (retype replicator) <? get readLocal key
-    match reply.Value with
-    | GetSuccess(k, (data : ORSet<int>), _) -> printfn "Data for key %A: %A" k (data |> ORSet.value)
-    | NotFound k -> printfn "Data for key '%A' not found" k
-    | DataDeleted k -> printfn "Data for key '%A' has been deleted" k
-    | GetFailure(k, _) -> printfn "Data for key '%A' didn't received in time" k
+    let! reply = ddata.AsyncGet(key, readLocal)
+    match reply with
+    | Some value -> printfn "Data for key %A: %A" key value
+    | None -> printfn "Data for key '%A' not found" key
 } |> Async.RunSynchronously
 
 // delete data 
-async {
-    let! reply = (retype replicator) <? delete writeLocal key
-    match reply.Value with
-    | DeleteSuccess(k, _) -> printfn "Deleted data for key '%A'"  k
-    | DeleteFailure(k, _) -> printfn "Timed out data deletion for key '%A'" k
-    | DataDeleted k -> printfn "Data for key '%A' no longer exists" k
-} |> Async.RunSynchronously
+ddata.AsyncDelete(key, writeLocal) |> Async.RunSynchronously

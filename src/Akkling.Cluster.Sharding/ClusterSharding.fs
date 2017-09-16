@@ -74,6 +74,21 @@ let spawnShardedAsync (extractor: 'Envelope -> string*string*'Message) (system: 
     }
     
 /// <summary>
+/// Creates a shard region and returns a factory function which for a given `shardId` and `entityId` returns a <see cref="IEntityRef{T}"/> representing
+/// a serializable entity reference to a created sharded actor. This ref can be passed as message payload and will always point to a correct entity location
+/// even after rebalancing.
+/// </summary>
+/// <param name="system"></param>
+/// <param name="name"></param>
+/// <param name="props"></param>
+let entityFactoryFor (system: ActorSystem) (name: string) (props: Props<'Message>) : EntityFac<'Message> =
+    let clusterSharding = ClusterSharding.Get(system)
+    let adjustedProps = adjustPersistentProps props
+    let shardRegion = clusterSharding.Start(name, adjustedProps.ToProps(), ClusterShardingSettings.Create(system), new TypedMessageExtractor<_,_>(EntityRefs.entityRefExtractor))
+    { ShardRegion = shardRegion; TypeName = name }
+
+
+/// <summary>
 /// Creates a cluster shard proxy used for routing messages to shards on external nodes without hosting any shards by itself.
 /// Extractor is a function returning tuple of ShardId*EntityId*Message used to determine routing path of message to the destination actor.
 /// </summary>

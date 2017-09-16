@@ -5,7 +5,7 @@
 #r "../src/Akkling/bin/Debug/FSharp.PowerPack.Linq.dll"
 #r "../src/Akkling/bin/Debug/Akkling.dll"
 #r "../src/Akkling/bin/Debug/System.Collections.Immutable.dll"
-#r "../src/Akkling.Persistence/bin/Debug/Google.ProtocolBuffers.dll"
+#r "../src/Akkling.Persistence/bin/Debug/Google.Protobuf.dll"
 #r "../src/Akkling.Persistence/bin/Debug/Akka.Persistence.dll"
 #r "../src/Akkling.Persistence/bin/Debug/Akkling.Persistence.dll"
 
