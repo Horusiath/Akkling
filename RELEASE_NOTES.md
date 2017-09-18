@@ -1,3 +1,10 @@
+## New in 0.7 (Released 2017/09/18)
+* Updated to Akka.NET v1.3.1
+* Added experimental EntityRef for cluster sharding
+* Extended Akkling.DistributedData API
+* Extended Akkling.Streams API
+* Minor bug fixes
+
 ## New in 0.6.1 (Released 2017/04/17)
 * Fixed external package dependencies.
 

@@ -5,13 +5,13 @@ open System.Reflection
 [<assembly: AssemblyTitleAttribute("Akkling.Cluster.Sharding")>]
 [<assembly: AssemblyProductAttribute("Akkling")>]
 [<assembly: AssemblyDescriptionAttribute("F# wrapper library for Akka.NET")>]
-[<assembly: AssemblyVersionAttribute("0.6.1")>]
-[<assembly: AssemblyFileVersionAttribute("0.6.1")>]
+[<assembly: AssemblyVersionAttribute("0.7")>]
+[<assembly: AssemblyFileVersionAttribute("0.7")>]
 do ()
 
 module internal AssemblyVersionInformation =
     let [<Literal>] AssemblyTitle = "Akkling.Cluster.Sharding"
     let [<Literal>] AssemblyProduct = "Akkling"
     let [<Literal>] AssemblyDescription = "F# wrapper library for Akka.NET"
-    let [<Literal>] AssemblyVersion = "0.6.1"
-    let [<Literal>] AssemblyFileVersion = "0.6.1"
+    let [<Literal>] AssemblyVersion = "0.7"
+    let [<Literal>] AssemblyFileVersion = "0.7"
