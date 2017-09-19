@@ -12,9 +12,8 @@ module Akkling.Props
 open System
 open Akka.Actor
 open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Linq.QuotationEvaluation
 
-let internal exprSerializer = MBrace.FsPickler.FsPickler.CreateBinarySerializer()
+open MessagePack
 
 /// <summary>
 /// Typed props are descriptors of how particular actor should be instantiated.
@@ -126,13 +125,13 @@ type Props<'Message> =
     interface Akka.Util.ISurrogated with
         member this.ToSurrogate _ =
             let props = this.ToProps false
-            let surrogate: PropsSurrogate<'Message> = { Wrapped = props; ArgsBytes = exprSerializer.Pickle(this.Args) } 
+            let surrogate: PropsSurrogate<'Message> = { Wrapped = props; ArgsBytes = MessagePackSerializer.Serialize this.Args } 
             surrogate :> Akka.Util.ISurrogate
 
 and PropsSurrogate<'Message> = 
     { Wrapped: Props; ArgsBytes: byte array }
     interface Akka.Util.ISurrogate with
-        member this.FromSurrogate _ = Props<'Message>.From (this.Wrapped, exprSerializer.UnPickle (this.ArgsBytes)) :> Akka.Util.ISurrogated
+        member this.FromSurrogate _ = Props<'Message>.From (this.Wrapped, MessagePackSerializer.Deserialize (this.ArgsBytes)) :> Akka.Util.ISurrogated
 
 /// <summary>
 /// Creates a props describing a way to incarnate actor with behavior described by <paramref name="receive"/> function.

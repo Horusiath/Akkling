@@ -40,5 +40,5 @@ let toExpression<'Actor> (f : System.Linq.Expressions.Expression) =
 type Expression = 
     static member ToExpression(f : System.Linq.Expressions.Expression<System.Func<FunActor<'Message>>>) = 
         toExpression<FunActor<'Message>> f
-    static member ToExpression<'Actor>(f : Quotations.Expr<unit -> 'Actor>) = 
-        toExpression<'Actor> (QuotationEvaluator.ToLinqExpression f)
+    // static member ToExpression<'Actor>(f : Quotations.Expr<unit -> 'Actor>) = 
+    //     toExpression<'Actor> (QuotationEvaluator.ToLinqExpression f)

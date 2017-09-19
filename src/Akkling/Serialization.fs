@@ -12,17 +12,15 @@ open Akka.Util
 open System
 open System.IO
 open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Linq.QuotationEvaluation
-        
-open MBrace.FsPickler
+
+open MessagePack
 
 // used for top level serialization
 type ExprSerializer(system) = 
     inherit Akka.Serialization.Serializer(system)
-    let fsp = FsPickler.CreateBinarySerializer()
     override __.Identifier = 9
     override __.IncludeManifest = true
-    override __.ToBinary(o) = fsp.Pickle (o :?> Expr)
+    override __.ToBinary(o) = MessagePackSerializer.Serialize(o :?> Expr)
     override __.FromBinary(bytes, _) =
-        let deserialized: Expr = fsp.UnPickle bytes
+        let deserialized: Expr = MessagePackSerializer.Deserialize<Expr> bytes
         upcast deserialized

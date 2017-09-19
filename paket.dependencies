@@ -1,11 +1,13 @@
-framework: net40, net45, net451, net452
+framework: net40, net45, net451, net452, netstandard1.6
 redirects: on
 
 source https://nuget.org/api/v2
 
 nuget Akka.Serialization.Hyperion prerelease
+nuget FSharp.NET.Sdk
 nuget FsPickler >= 3.2
 nuget FSPowerPack.Linq.Community >= 3.0
+nuget MessagePack
 nuget Microsoft.NET.Test.Sdk
 nuget Octokit
 nuget Reactive.Streams >= 1.0.2
@@ -13,6 +15,7 @@ nuget FAKE
 nuget FsCheck 
 nuget FsCheck.Xunit 
 nuget Newtonsoft.Json >= 9.0
+nuget System.Linq.Expressions
 nuget xunit >= 2.3.0 prerelease
 nuget xunit.abstractions >= 2.0.0 prerelease
 nuget xunit.assert >= 2.3.0 prerelease
