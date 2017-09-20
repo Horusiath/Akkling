@@ -4,6 +4,7 @@
     <TargetFramework>netstandard1.6</TargetFramework>
     <AssemblyName>Akkling.Streams</AssemblyName>
     <PackageId>Akkling.Streams</PackageId>
+    <Version>0.7.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
