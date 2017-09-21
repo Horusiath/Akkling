@@ -7,6 +7,7 @@
     <Version>0.7.0</Version>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="stubs.fs" />
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Prelude.fs" />
     <Compile Include="Serialization.fs" />
@@ -15,7 +16,7 @@
     <Compile Include="MessagePatterns.fs" />
     <Compile Include="ActorBuilder.fs" />
     <Compile Include="Linq.fs" />
-    <!-- <Compile Include="FaultHandling.fs" /> -->
+    <Compile Include="FaultHandling.fs" />
     <Compile Include="Props.fs" />
     <Compile Include="Spawning.fs" />
     <Compile Include="Behaviors.fs" />

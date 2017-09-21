@@ -12,6 +12,7 @@ open Akka.Actor
 open Akka.Util
 open System
 open Microsoft.FSharp.Quotations
+open FSharp.Quotations.Evaluator
 
 open MessagePack
 
@@ -24,7 +25,7 @@ type ExprDeciderSurrogate(serializedExpr : byte array) =
 
 and ExprDecider(expr : Expr<exn -> Directive>) = 
     member __.Expr = expr
-    member private this.Compiled = lazy this.Expr.Compile () ()
+    member private this.Compiled = lazy QuotationEvaluator.Evaluate this.Expr
     
     interface IDecider with
         member this.Decide(e : exn) : Directive = this.Compiled.Value(e)

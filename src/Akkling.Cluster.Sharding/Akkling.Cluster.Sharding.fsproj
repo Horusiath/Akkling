@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>Akkling.Cluster.Sharding</AssemblyName>
     <PackageId>Akkling.Cluster.Sharding</PackageId>
+    <Version>0.7.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,7 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Akkling\Akkling.fsproj" />
-    <!-- <ProjectReference Include="..\Akkling.Persistence\Akkling.Persistence.fsproj"> -->
+    <ProjectReference Include="..\Akkling.Persistence\Akkling.Persistence.fsproj" />
   </ItemGroup>
 
   <Import Project="..\..\.paket\Paket.Restore.targets" />
