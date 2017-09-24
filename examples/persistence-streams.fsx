@@ -145,8 +145,8 @@ actorRef <! Command Inc
 actorRef <! Command Inc
 actorRef <! Command Dec
 async { let! reply = actorRef <? Command GetState
-        printfn "Current state of %A: %i" actorRef reply.Value } |> Async.RunSynchronously
+        printfn "Current state of %A: %i" actorRef reply } |> Async.RunSynchronously
 
 async { let! reply = aa <? Command GetState
-        printfn "Current state of %A: %i" actorRef reply.Value } |> Async.RunSynchronously
+        printfn "Current state of %A: %i" actorRef reply } |> Async.RunSynchronously
 

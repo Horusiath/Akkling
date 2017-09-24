@@ -14,6 +14,7 @@ open Akka.Persistence
 open Akkling
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Linq.QuotationEvaluation
+open Akka.Event
 
 type PID = string
 
@@ -159,7 +160,8 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
 
 and PersistentLifecycleEvent =
     | ReplaySucceed
-    | ReplayFailed
+    | ReplayFailed of cause:exn * msg:obj
+    interface IDeadLetterSuppression
 
 and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Effect<'Message>) as this =
     inherit UntypedPersistentActor()
@@ -192,6 +194,8 @@ and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Effect<'Messa
     override this.PersistenceId = this.Self.Path.Name
     override this.OnCommand msg = this.Handle msg
     override this.OnRecover msg = this.Handle msg
+    override this.OnReplaySuccess() = this.Handle ReplaySucceed
+    override this.OnRecoveryFailure(e, msg) = this.Handle (ReplayFailed(e, msg))
 
     override this.PostStop() =
         base.PostStop()
