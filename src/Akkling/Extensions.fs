@@ -43,6 +43,4 @@ type CombinedEffect<'Message> (x: Effect<'Message>, y: Effect<'Message>) =
             x.OnApplied(context, message)
             y.OnApplied(context, message)
 
-let inline (@) (x: Effect<'Message>) (y: Effect<'Message>) : Effect<'Message> = CombinedEffect(x, y) :> Effect<'Message>
-
-let inline (/) (x:ActorPath) (y:string) = ActorPath.op_Division(x, y)
+let inline (<@>) (x: Effect<'Message>) (y: Effect<'Message>) : Effect<'Message> = CombinedEffect(x, y) :> Effect<'Message>

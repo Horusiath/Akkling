@@ -50,7 +50,7 @@ let configWithPort port =
               }
             }
           remote {
-            helios.tcp {
+            dot-netty.tcp {
               public-hostname = "localhost"
               hostname = "localhost"
               port = """ + port.ToString() + """

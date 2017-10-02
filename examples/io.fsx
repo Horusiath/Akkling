@@ -20,7 +20,7 @@ let handler connection = fun (ctx: Actor<obj>) ->
         let! msg = ctx.Receive ()
         match msg with
         | Received(data) ->
-            printfn "%s" (data.DecodeString())
+            printfn "%s" (string data)
             return! loop ()
         | Terminated(_, _,_) | ConnectionClosed(_) -> return Stop
         | _ -> return Unhandled

@@ -9,7 +9,6 @@
   <ItemGroup>
     <Compile Include="stubs.fs" />
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Prelude.fs" />
     <Compile Include="Serialization.fs" />
     <Compile Include="ActorRefs.fs" />
     <Compile Include="Actors.fs" />
