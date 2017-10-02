@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="basic.fs" />
+    <Compile Include="examples.fs" />
+    <None Include="App.config" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\src\Akkling\Akkling.fsproj" />
+  </ItemGroup>
+
+  <Import Project="..\.paket\Paket.Restore.targets" />
+</Project>

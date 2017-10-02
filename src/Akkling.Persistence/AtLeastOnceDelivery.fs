@@ -14,7 +14,6 @@ open Akka.Configuration
 open Akka.Persistence
 open Akkling
 open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Linq.QuotationEvaluation
 
 [<Sealed>]
 type AtLeastOnceDeliverySemantic (semantic: Akka.Persistence.AtLeastOnceDeliverySemantic) =

@@ -7,3 +7,5 @@ xunit.extensibility.execution
 Akka.Persistence
 Akka.Serialization.Hyperion
 Microsoft.NET.Test.Sdk
+
+Microsoft.DotNet.Watcher.Tools

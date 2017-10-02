@@ -12,27 +12,27 @@ open Akka.Actor
 open Akka.Util
 open System
 open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Linq.QuotationEvaluation
+open FSharp.Quotations.Evaluator
+
+open MessagePack
 
 type ExprDeciderSurrogate(serializedExpr : byte array) = 
     member __.SerializedExpr = serializedExpr
     interface ISurrogate with
         member this.FromSurrogate _ = 
-            let fsp = MBrace.FsPickler.FsPickler.CreateBinarySerializer()
-            let expr: Expr<(exn->Directive)> = fsp.UnPickle (this.SerializedExpr)
+            let expr: Expr<(exn->Directive)> = MessagePackSerializer.Deserialize<_> (this.SerializedExpr)
             ExprDecider(expr) :> ISurrogated
 
 and ExprDecider(expr : Expr<exn -> Directive>) = 
     member __.Expr = expr
-    member private this.Compiled = lazy this.Expr.Compile () ()
+    member private this.Compiled = lazy QuotationEvaluator.Evaluate this.Expr
     
     interface IDecider with
         member this.Decide(e : exn) : Directive = this.Compiled.Value(e)
     
     interface ISurrogated with
         member this.ToSurrogate _ = 
-            let fsp = MBrace.FsPickler.FsPickler.CreateBinarySerializer()
-            ExprDeciderSurrogate(fsp.Pickle this.Expr) :> ISurrogate
+            ExprDeciderSurrogate(MessagePackSerializer.Serialize this.Expr) :> ISurrogate
 
 type Strategy = 
     

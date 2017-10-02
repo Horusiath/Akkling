@@ -1,5 +1,6 @@
 Akka
-FsPickler
+# FsPickler
 Akka.Serialization.Hyperion
-FSPowerPack.Linq.Community
+# FSharp.Quotations.Evaluator
 FSharp.Core
+MessagePack
