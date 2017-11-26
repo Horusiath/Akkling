@@ -59,6 +59,7 @@ type Props<'Message> =
     member this.ToProps () : Akka.Actor.Props = this.ToProps true
     member internal this.ToProps (withReceiver: bool) : Akka.Actor.Props = 
         let mutable p = if withReceiver then Props.Create(this.ActorType, this.Args) else Props.Create(this.ActorType)
+        
         p <- match this.Dispatcher with
                 | Some dispatcher -> p.WithDispatcher dispatcher
                 | _ -> p

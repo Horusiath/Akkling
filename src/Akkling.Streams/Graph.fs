@@ -16,7 +16,7 @@ open Akka.Streams.Dsl
 module Graph =
     
     /// Creates a complete runnable graph given graph construction function.
-    let runnable (builder: GraphDsl.Builder<'mat> -> unit) : RunnableGraph<'mat> =
+    let runnable<'mat> (builder: GraphDsl.Builder<'mat> -> unit) : RunnableGraph<'mat> =
         RunnableGraph.FromGraph(GraphDsl.CreateMaterialized(Func<_,_>(fun b ->
             builder b
             ClosedShape.Instance)))
@@ -44,19 +44,38 @@ module Graph =
     let run (mat: #IMaterializer) (graph: #IRunnableGraph<'mat>) =
         graph.Run mat
 
-module internal Operators = 
+module Operators = 
     
     open Akka.Streams
 
-    type ForwardFunctor () =
-        static member inline via (l: GraphDsl.ForwardOps< ^o, ^mat>, r: FlowShape< ^i, ^o>) = l.To(r)
-        static member inline via (l: GraphDsl.ForwardOps< ^o, ^mat>, r: IGraph<SinkShape< ^i>, ^mat>) = l.To(r)
-        static member inline via (l: GraphDsl.ForwardOps< ^o, ^mat>, r: SinkShape< ^i>) = l.To(r)
-        static member inline via (l: GraphDsl.ForwardOps< ^o, ^mat>, r: Inlet< ^i>) = l.To(r)
-        static member inline via (l: GraphDsl.ForwardOps< ^o, ^mat>, r: UniformFanInShape< ^i, ^o2> ) = l.To(r)
-        static member inline via (l: GraphDsl.ForwardOps< ^o, ^mat>, r: UniformFanOutShape< ^i, ^o2> ) = l.To(r)
+    type FOps<'o,'mat> = GraphDsl.ForwardOps<'o,'mat>
+    type ROps<'i,'mat> = GraphDsl.ReverseOps<'i,'mat>
 
-    let inline to_< ^a, ^o, ^r, ^mat when ^a :> ForwardFunctor and ^a: (static member via: GraphDsl.ForwardOps< ^o, ^mat> * ^r -> GraphDsl.Builder< ^mat>) > (l: GraphDsl.ForwardOps< ^o, ^mat>) (r: ^r) = 
-        (^a: (static member via: GraphDsl.ForwardOps< ^o, ^mat> * ^r -> GraphDsl.Builder< ^mat>) (l,r))
-    
-    //let inline (=>) x y = Akka.Streams.Dsl.ForwardOps.To(x, y)
+    type GraphDsl.Builder<'mat> with
+        member b.From(source: Source<'i,'mat>) = b.From(source :> IGraph<SourceShape<'i>,'mat>)
+        member b.To(sink: Sink<'o,'mat2>) = b.To(sink :> IGraph<SinkShape<'o>,'mat>)
+
+    [<Struct>]
+    type ForwardFunctor = ForwardFunctor with
+        static member inline (?<-) (l: FOps<'o,'mat>, ForwardFunctor, r: FlowShape<'i,'o>) = l.Via(r)
+        static member inline (?<-) (l: FOps<'o,'mat>, ForwardFunctor, r: IGraph<FlowShape<'i,'o>, 'mat>) = l.Via(r)
+        static member inline (?<-) (l: FOps<'o,'mat>, ForwardFunctor, r: UniformFanInShape<'i,'o2> ) = l.Via(r)
+        static member inline (?<-) (l: FOps<'o,'mat>, ForwardFunctor, r: UniformFanOutShape<'i,'o2> ) = l.Via(r)
+                                       
+        static member inline (?<-) (l: FOps<'o,'mat>, ForwardFunctor, r: IGraph<SinkShape<'i>,'mat>) = l.To(r)
+        static member inline (?<-) (l: FOps<'o,'mat>, ForwardFunctor, r: SinkShape<'i>) = l.To(r)
+        static member inline (?<-) (l: FOps<'o,'mat>, ForwardFunctor, r: Inlet<'i>) = l.To(r)
+
+    [<Struct>]
+    type ReverseFunctor = ReverseFunctor with
+        static member inline (?<-) (l: ROps<'i,'mat>, ReverseFunctor, r: FlowShape<'i,'o>) = l.Via(r)
+        static member inline (?<-) (l: ROps<'i,'mat>, ReverseFunctor, r: IGraph<FlowShape<'i,'o>, 'mat>) = l.Via(r)
+        static member inline (?<-) (l: ROps<'i,'mat>, ReverseFunctor, r: UniformFanInShape<'i2,'o> ) = l.Via(r)
+        static member inline (?<-) (l: ROps<'i,'mat>, ReverseFunctor, r: UniformFanOutShape<'i2,'o> ) = l.Via(r)
+        
+        //static member inline (?<-) (l: GraphDsl.ReverseOps<'i,'mat>, ReverseFunctor, r: IGraph<SourceShape<'o>,'mat>) = l.From(r)
+        //static member inline (?<-) (l: GraphDsl.ReverseOps<'i,'mat>, ReverseFunctor, r: SourceShape<'o>) = l.From(r)
+        //static member inline (?<-) (l: GraphDsl.ReverseOps<'i,'mat>, ReverseFunctor, r: Outlet<'o>) = l.From(r)
+                
+    let inline (=>) (ops: FOps<'o,'mat>) (right) = (ops ? (ForwardFunctor) <- right)
+    let inline (<=) (ops: ROps<'i,'mat>) (right) = (ops ? (ReverseFunctor) <- right)

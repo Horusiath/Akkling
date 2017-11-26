@@ -147,3 +147,5 @@ module Sink =
     /// A BroadcastHub is a special streaming hub that is able to broadcast streamed elements 
     /// to a dynamic set of consumers.
     let inline broadcastHub (bufferSize) = BroadcastHub.Sink(bufferSize)
+
+    let inline mapMaterializedValue (fn: 'mat -> 'mat2) (sink: Sink<'t,'mat>) = sink.MapMaterializedValue(Func<'mat,'mat2>(fn))

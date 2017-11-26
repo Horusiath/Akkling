@@ -88,6 +88,7 @@
     <Compile Include="Actors.fs" />
     <Compile Include="AsyncSupport.fs" />
     <Compile Include="PersistenceApi.fs" />
+    <Compile Include="StreamsApi.fs" />
     <None Include="paket.references" />
     <Content Include="app.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -118,9 +119,6 @@
       <Project>{d38228d5-ec7f-454e-9f54-ab5ca0ad2da0}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <Reference Include="xunit.execution.desktop">
-      <HintPath>..\..\packages\xunit.extensibility.execution\lib\net452\xunit.execution.desktop.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -166,6 +164,17 @@
       <ItemGroup>
         <Reference Include="Akka.Serialization.Hyperion">
           <HintPath>..\..\packages\Akka.Serialization.Hyperion\lib\net45\Akka.Serialization.Hyperion.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2')">
+      <ItemGroup>
+        <Reference Include="Akka.Streams">
+          <HintPath>..\..\packages\Akka.Streams\lib\net45\Akka.Streams.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
@@ -336,6 +345,17 @@
       <ItemGroup>
         <Reference Include="Newtonsoft.Json">
           <HintPath>..\..\packages\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2')">
+      <ItemGroup>
+        <Reference Include="Reactive.Streams">
+          <HintPath>..\..\packages\Reactive.Streams\lib\net45\Reactive.Streams.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
