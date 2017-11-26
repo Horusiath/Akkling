@@ -139,6 +139,6 @@ let ``pipeTo operator doesn't block`` () = testDefault <| fun tck ->
 
 [<Fact>]
 let ``Slash operator works for ActorPath concatenation`` () =
-    let path = ActorPath.Parse("user")
+    let path = ActorPath.Parse("akka.tcp://system@localhost:9000/user")
     let sub = path / "child" / "grandchild"
-    Assert.Equal(ActorPath.Parse("user/child/grandchild"), sub)
+    Assert.Equal(ActorPath.Parse("akka.tcp://system@localhost:9000/user/child/grandchild"), sub)

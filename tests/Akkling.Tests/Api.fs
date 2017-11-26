@@ -12,6 +12,8 @@ open Akkling.TestKit
 open Akka.Actor
 open System
 open Xunit
+open Akka.Routing
+open Akka.Routing
 
 [<Fact>]
 let ``configuration loader should load data from app.config``() = 
@@ -167,3 +169,30 @@ let ``demonitor works on typed refs`` () = testDefault <| fun tck ->
     demonitor tck ref
     ref <! PoisonPill.Instance
     expectNoMsg tck
+
+type RouterMsg =
+    | Inc
+    | Fail
+    | GetState
+
+[<Fact>]
+let ``custom supervisor strategy works with routers`` () = testDefault <| fun tck ->
+    let router = BroadcastPool(2)
+    let strategy = Strategy.OneForOne(fun ex -> Directive.Resume )
+    let rec a state = 
+        function
+        | Inc -> become(a (state+1))
+        | Fail -> failwith "EXPECTED"
+        | GetState -> 
+            typed tck.TestActor <! state
+            become(a state)
+    let p = props <| actorOf (a 0)
+    let router = spawn tck "router-1" { p with Router = Some (upcast router) ; SupervisionStrategy = Some strategy }
+    
+    router <! Inc
+    router <! Inc
+    router <! Inc
+    router <! Fail
+    router <! GetState
+    
+    expectMsg tck 3 |> ignore

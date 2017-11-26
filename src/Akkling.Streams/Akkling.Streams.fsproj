@@ -65,8 +65,9 @@
     <Compile Include="BidiFlow.fs" />
     <Compile Include="Graph.fs" />
     <Compile Include="KillSwitch.fs" />
-    <None Include="paket.references" />
     <Compile Include="Source.fs" />
+    <Compile Include="Tcp.fs" />
+    <None Include="paket.references" />
     <None Include="Akkling.Streams.fsproj.paket.template" />
   </ItemGroup>
   <ItemGroup>

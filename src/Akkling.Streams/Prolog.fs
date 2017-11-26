@@ -33,6 +33,9 @@ module Prolog =
     type Akka.Actor.ActorSystem with
         member x.Materializer(?settings: ActorMaterializerSettings) = ActorMaterializer.Create(x, Option.toObj settings)
 
+    type Akka.Streams.Dsl.Tcp.ServerBinding with
+        member x.AsyncUnbind() = x.Unbind() |> Async.AwaitTask
+
 [<RequireQualifiedAccess>]
 module Keep =    
     let left l r = l

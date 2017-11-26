@@ -35,6 +35,10 @@ module Configuration =
     /// Loads Akka configuration from the project's .config file.
     let load = Akka.Configuration.ConfigurationFactory.Load
 
+    /// Sets a first argument as a fallback configuration of the second one.
+    let inline fallback (other: Akka.Configuration.Config) (config: Akka.Configuration.Config) =
+        config.WithFallback(other)
+
 module System = 
     /// Creates an actor system with remote deployment serialization enabled.
     let create (name : string) (config : Akka.Configuration.Config) : ActorSystem = 

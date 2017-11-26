@@ -90,3 +90,16 @@ let ``at-least-once delivery semantics should redeliver messages`` () = test con
     // ... and then redelivered
     probe.ExpectMsg (Action(3L, "a-3")) |> ignore
     expectNoMsgWithin tck (TimeSpan.FromSeconds 1.)
+
+[<Fact>]
+let ``PersistenceLifecycleEvent should be fired``() = testDefault <| fun tck ->
+    let pref = spawn tck "p-1" <| propsPersist (fun ctx -> 
+        let rec loop () = actor {
+            let! (msg: obj) = ctx.Receive()
+            match msg with
+            | :? PersistentLifecycleEvent as e -> typed tck.TestActor <! e
+            return! loop () }
+        loop ())
+    expectMsg tck ReplaySucceed |> ignore
+
+    

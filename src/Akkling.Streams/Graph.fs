@@ -43,3 +43,20 @@ module Graph =
     /// Executes provided graph using provided materializer.
     let run (mat: #IMaterializer) (graph: #IRunnableGraph<'mat>) =
         graph.Run mat
+
+module internal Operators = 
+    
+    open Akka.Streams
+
+    type ForwardFunctor () =
+        static member inline via (l: GraphDsl.ForwardOps< ^o, ^mat>, r: FlowShape< ^i, ^o>) = l.To(r)
+        static member inline via (l: GraphDsl.ForwardOps< ^o, ^mat>, r: IGraph<SinkShape< ^i>, ^mat>) = l.To(r)
+        static member inline via (l: GraphDsl.ForwardOps< ^o, ^mat>, r: SinkShape< ^i>) = l.To(r)
+        static member inline via (l: GraphDsl.ForwardOps< ^o, ^mat>, r: Inlet< ^i>) = l.To(r)
+        static member inline via (l: GraphDsl.ForwardOps< ^o, ^mat>, r: UniformFanInShape< ^i, ^o2> ) = l.To(r)
+        static member inline via (l: GraphDsl.ForwardOps< ^o, ^mat>, r: UniformFanOutShape< ^i, ^o2> ) = l.To(r)
+
+    let inline to_< ^a, ^o, ^r, ^mat when ^a :> ForwardFunctor and ^a: (static member via: GraphDsl.ForwardOps< ^o, ^mat> * ^r -> GraphDsl.Builder< ^mat>) > (l: GraphDsl.ForwardOps< ^o, ^mat>) (r: ^r) = 
+        (^a: (static member via: GraphDsl.ForwardOps< ^o, ^mat> * ^r -> GraphDsl.Builder< ^mat>) (l,r))
+    
+    //let inline (=>) x y = Akka.Streams.Dsl.ForwardOps.To(x, y)

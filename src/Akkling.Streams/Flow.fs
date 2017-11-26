@@ -523,5 +523,17 @@ module Flow =
     /// Builds a flow from provided sink and source graphs returning a materialized value being result of combineFn.
     let inline ofSinkAndSourceMat (sink: #IGraph<SinkShape<'i>,'mat>) (combineFn: 'mat -> 'mat2 -> 'mat3) (source: #IGraph<SourceShape<'o>,'mat2>) =
         Flow.FromSinkAndSource(sink, source, Func<_,_,_>(combineFn))
-
         
+    /// Joins two flows by cross connecting their inputs and outputs.
+    let inline join (other: #IGraph<FlowShape<'i,'o>,'mat2>) (flow: Flow<'o,'i,'mat>): IRunnableGraph<'mat> = flow.Join(other)
+
+    /// Joins two flows by cross connecting their inputs and outputs with a materialized value determined by `fn` function.
+    let inline joinMat (other: #IGraph<FlowShape<'i,'o>,'mat2>) (fn: 'mat -> 'mat2 -> 'mat3) (flow: Flow<_,_,'mat>): IRunnableGraph<'mat3> = 
+        flow.JoinMaterialized(other, Func<'mat,'mat2,'mat3>(fn))
+
+    let inline joinBidi (bidi: #IGraph<BidiShape<'i1,'o1,'i2,'o2>,'mat2>) (flow: Flow<'o2,'i1,'mat> ) = flow.Join(bidi)
+
+    let inline joinBidiMat (bidi: #IGraph<BidiShape<'i1,'o1,'i2,'o2>,'mat2>) (fn: 'mat -> 'mat2 -> 'mat3) (flow: Flow<'o2,'i1,'mat> ) =
+        flow.JoinMaterialized(bidi, Func<'mat,'mat2,'mat3>(fn))
+
+    let inline iter (fn: 'o -> unit) (flow: Flow<'i,'o,'mat>): Flow<'i,'o,'mat> = flow |> map (fun x -> fn x; x)
