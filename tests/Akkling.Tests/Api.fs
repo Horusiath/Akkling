@@ -174,11 +174,32 @@ type RouterMsg =
     | Inc
     | Fail
     | GetState
+    
+[<Fact>]
+let ``custom supervisor strategy works with actors`` () = testDefault <| fun tck ->
+    let strategy = Strategy.OneForOne((fun ex -> Directive.Resume), retries = 4)
+    let rec a state = 
+        function
+        | Inc -> become(a (state+1))
+        | Fail -> failwith "EXPECTED"
+        | GetState -> 
+            typed tck.TestActor <! state
+            become(a state)
+    let p = props <| actorOf (a 0)
+    let aref = spawn tck "router-1" { p with SupervisionStrategy = Some strategy }
+    
+    aref <! Inc
+    aref <! Inc
+    aref <! Inc
+    aref <! Fail
+    aref <! GetState
+    
+    expectMsg tck 3 |> ignore
 
 [<Fact>]
 let ``custom supervisor strategy works with routers`` () = testDefault <| fun tck ->
     let router = BroadcastPool(2)
-    let strategy = Strategy.OneForOne(fun ex -> Directive.Resume )
+    let strategy = Strategy.OneForOne((fun ex -> Directive.Resume), retries = 4)
     let rec a state = 
         function
         | Inc -> become(a (state+1))

@@ -97,8 +97,10 @@ let ``PersistenceLifecycleEvent should be fired``() = testDefault <| fun tck ->
         let rec loop () = actor {
             let! (msg: obj) = ctx.Receive()
             match msg with
-            | :? PersistentLifecycleEvent as e -> typed tck.TestActor <! e
-            return! loop () }
+            | :? PersistentLifecycleEvent as e -> 
+                typed tck.TestActor <! e
+                return! loop ()
+            | _ -> return Unhandled }
         loop ())
     expectMsg tck ReplaySucceed |> ignore
 
