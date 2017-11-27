@@ -4,6 +4,7 @@ redirects: on
 source https://nuget.org/api/v2
 
 nuget Akka.Serialization.Hyperion prerelease
+nuget FSharp.Formatting
 nuget FsPickler >= 3.2
 nuget FSPowerPack.Linq.Community >= 3.0
 nuget Microsoft.NET.Test.Sdk

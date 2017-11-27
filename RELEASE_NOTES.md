@@ -1,3 +1,7 @@
+## New in 0.8 (Released 2017/11/27)
+* Initial functioning GraphDSL API
+* Akka.Streams TCP wrappers
+
 ## New in 0.7 (Released 2017/09/18)
 * Updated to Akka.NET v1.3.1
 * Added experimental EntityRef for cluster sharding
