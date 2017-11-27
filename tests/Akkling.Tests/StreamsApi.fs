@@ -23,6 +23,20 @@ let config = Configuration.parse "akka.logLevel = DEBUG"
 [<Fact>]
 let ``Graph DSL operators should work`` () = test config <| fun tck ->
     use mat = tck.Sys.Materializer()
+
+    /// VISUAL Explanation:
+    (**
+                +-------------------------------+
+                |           pickMaxOf3          |
+                |  +----------+                 |
+      zip1.in0 ====>          |   +---------+   |
+                |  |   zip1   ====>         |   |
+      zip1.in1 ====>          |   |         |   |
+                |  +----------+   |   zip2  ====> zip2.out
+      zip2.in1 ===================>         |   |
+                |                 +---------+   |              
+                +-------------------------------+
+    *)
     
     let pickMaxOf3 = Graph.create (fun b-> 
         let zip1 = ZipWith.create max<int> |> b.Add
@@ -31,6 +45,19 @@ let ``Graph DSL operators should work`` () = test config <| fun tck ->
         b.From(zip1.Out) => zip2.In0
 
         UniformFanInShape(zip2.Out, zip1.In0, zip1.In1, zip2.In1))
+        
+    /// VISUAL Explanation:
+    (**
+            +------------------------------------------+
+            |        +--------------+                  |
+            | s1 ====>              |   +------------+ | 
+            |        |              |   |            | |
+            | s2 ====>  pickMaxOf3  ====>  Sink.head ==> max
+            |        |              |   |            | |
+            | s3 ====>              |   +------------+ |
+            |        +--------------+                  |
+            +------------------------------------------+
+    *)
 
     let max = 
         Sink.head<int> 
