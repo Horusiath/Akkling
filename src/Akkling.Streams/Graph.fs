@@ -15,11 +15,8 @@ open Akka.Streams.Dsl
 [<RequireQualifiedAccess>]
 module Graph =
     
-    /// Creates a complete runnable graph given graph construction function.
-    let runnable<'mat> (builder: GraphDsl.Builder<'mat> -> unit) : RunnableGraph<'mat> =
-        RunnableGraph.FromGraph(GraphDsl.CreateMaterialized(Func<_,_>(fun b ->
-            builder b
-            ClosedShape.Instance)))
+    let runnable (graph: #IGraph<ClosedShape, 'mat>): RunnableGraph<'mat> =
+        RunnableGraph.FromGraph(graph)
 
     /// Creates a new partial graph using provided builder function
     let create (builder: GraphDsl.Builder<'mat> -> 'shape): IGraph<'shape, 'mat> =

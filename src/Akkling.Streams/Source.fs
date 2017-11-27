@@ -20,6 +20,7 @@ open Reactive.Streams
 
 [<RequireQualifiedAccess>]
 module Source =
+    open Akka
 
     /// Creates a source from an stream created by the given function.
     let inline ofStream (streamFn: unit -> Stream) : Source<ByteString, Async<IOResult>> =
@@ -55,19 +56,19 @@ module Source =
     /// are executed by a series of processor instances
     /// that mediate the flow of elements downstream and the propagation of
     /// back-pressure upstream.
-    let inline ofPublisher (p: #IPublisher<'t>) : Source<'t, unit> = Source.FromPublisher(p).MapMaterializedValue(Func<_,_>(ignore))
+    let inline ofPublisher (p: #IPublisher<'t>) : Source<'t, unit> = Source.FromPublisher(p).MapMaterializedValue(Func<NotUsed,unit>(ignore))
 
     /// Helper to create source from seq.
-    let inline ofSeq (elements: 't seq) : Source<'t, unit> = Source.From(elements).MapMaterializedValue(Func<_,_>(ignore))
+    let inline ofSeq (elements: 't seq) : Source<'t, unit> = Source.From(elements).MapMaterializedValue(Func<NotUsed,unit>(ignore))
 
     /// Helper to create source from array.
-    let inline ofArray (elements: 't []) : Source<'t, unit> = Source.From(elements).MapMaterializedValue(Func<_,_>(ignore))
+    let inline ofArray (elements: 't []) : Source<'t, unit> = Source.From(elements).MapMaterializedValue(Func<NotUsed,unit>(ignore))
 
     /// Helper to create source from list.
-    let inline ofList (elements: 't list) : Source<'t, unit> = Source.From(elements).MapMaterializedValue(Func<_,_>(ignore))
+    let inline ofList (elements: 't list) : Source<'t, unit> = Source.From(elements).MapMaterializedValue(Func<NotUsed,unit>(ignore))
 
     /// Create a source with one element.
-    let inline singleton (elem: 't) : Source<'t, unit> = Source.Single(elem).MapMaterializedValue(Func<_,_>(ignore))
+    let inline singleton (elem: 't) : Source<'t, unit> = Source.Single(elem).MapMaterializedValue(Func<NotUsed,unit>(ignore))
 
     /// Transforms only the materialized value of the Source.
     let inline mapMaterializedValue (fn: 'mat -> 'mat2) (source: Source<'t, 'mat>) : Source<'t, 'mat2> =
