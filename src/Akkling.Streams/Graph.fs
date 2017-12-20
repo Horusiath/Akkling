@@ -50,7 +50,7 @@ module Operators =
 
     type GraphDsl.Builder<'mat> with
         member b.From(source: Source<'i,'mat>) = b.From(source :> IGraph<SourceShape<'i>,'mat>)
-        member b.To(sink: Sink<'o,'mat2>) = b.To(sink :> IGraph<SinkShape<'o>,'mat>)
+        member b.To(sink: Sink<'o,'mat2>) = b.To(sink :> IGraph<SinkShape<'o>,'mat2>)
 
     [<Struct>]
     type ForwardFunctor = ForwardFunctor with
