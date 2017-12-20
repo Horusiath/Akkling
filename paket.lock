@@ -116,3 +116,7 @@ NUGET
       xunit.extensibility.core (2.3.0-beta5-build3769) - restriction: || (&& (== net40) (>= netstandard1.1)) (== net45) (== net451) (== net452)
     xunit.runner.console (2.3.0-beta5-build3769)
     xunit.runner.visualstudio (2.3.0-beta5-build3769)
+GITHUB
+  remote: fsharp/FAKE
+    modules/Octokit/Octokit.fsx (642a01a5e17b870f816cdd7ee09115e018b786f0)
+      Octokit (>= 0.20)
