@@ -8,3 +8,4 @@ Akka.Persistence
 Akka.Serialization.Hyperion
 Microsoft.NET.Test.Sdk
 Akka.Streams
+FSharp.Core
