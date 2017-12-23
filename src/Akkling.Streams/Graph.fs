@@ -41,6 +41,28 @@ module Graph =
     let run (mat: #IMaterializer) (graph: #IRunnableGraph<'mat>) =
         graph.Run mat
 
+    /// Transform only the materialized value of this RunnableGraph, leaving all other properties as they were.
+    let inline mapMaterializedValue (fn: 'mat -> 'mat2) (graph: #IRunnableGraph<'mat>) : IRunnableGraph<'mat2> =
+        graph.MapMaterializedValue(Func<_,_>(fn))
+        
+    /// Change the attributes of this <see cref="T:Akka.Streams.IGraph`1" /> to the given ones and seal the list 
+    /// of attributes. This means that further calls will not be able to remove these attributes, but instead add new ones. 
+    /// Note that this operation has no effect on an empty Flow (because the attributes apply only to the contained 
+    /// processing stages).
+    let inline withAttributes (attributes: Attributes) (graph: #IRunnableGraph<'mat>) : IRunnableGraph<'mat> =
+        graph.WithAttributes(attributes)
+
+    /// Add the given attributes to this <see cref="T:Akka.Streams.IGraph`1" />.
+    /// Further calls to <see cref="M:Akka.Streams.Dsl.IRunnableGraph`1.WithAttributes(Akka.Streams.Attributes)" />
+    /// will not remove these attributes. Note that this operation has no effect on an empty Flow (because the attributes apply
+    /// only to the contained processing stages).
+    let inline addAttributes(attributes: Attributes) (graph: #IRunnableGraph<'mat>) : IRunnableGraph<'mat> =
+        graph.AddAttributes(attributes)
+
+    /// Add a name attribute to this Graph.
+    let inline named (graph: #IRunnableGraph<'mat>) (name: string) : IRunnableGraph<'mat> =
+        graph.Named(name)  
+
 module Operators = 
     
     open Akka.Streams
