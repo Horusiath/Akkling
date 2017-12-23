@@ -188,3 +188,5 @@ docs/content/license.md
 docs/content/release-notes.md
 \.fake/
 release.cmd
+.idea
+.paket/Paket.Restore.Targets
