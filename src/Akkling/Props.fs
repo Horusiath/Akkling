@@ -11,6 +11,7 @@ module Akkling.Props
 
 open System
 open Akka.Actor
+open Akka.Routing
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Linq.QuotationEvaluation
 
@@ -110,7 +111,7 @@ type Props<'Message> =
           Deploy = Some props.Deploy
           Dispatcher = if props.Dispatcher = Deploy.NoDispatcherGiven then None else Some props.Dispatcher
           Mailbox = if props.Mailbox = Deploy.NoMailboxGiven then None else Some props.Mailbox
-          Router =  if props.RouterConfig = Akka.Routing.RouterConfig.NoRouter then None else Some props.RouterConfig
+          Router =  if props.RouterConfig.Equals NoRouter.Instance then None else Some props.RouterConfig
           SupervisionStrategy = if props.SupervisorStrategy = null then None else Some props.SupervisorStrategy
         }
 
@@ -120,7 +121,7 @@ type Props<'Message> =
           Deploy = Some props.Deploy
           Dispatcher = if props.Dispatcher = Deploy.NoDispatcherGiven then None else Some props.Dispatcher
           Mailbox = if props.Mailbox = Deploy.NoMailboxGiven then None else Some props.Mailbox
-          Router =  if props.RouterConfig = Akka.Routing.RouterConfig.NoRouter then None else Some props.RouterConfig
+          Router =  if props.RouterConfig.Equals NoRouter.Instance then None else Some props.RouterConfig
           SupervisionStrategy = if props.SupervisorStrategy = null then None else Some props.SupervisorStrategy
         }
 

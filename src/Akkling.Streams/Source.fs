@@ -401,12 +401,6 @@ module Source =
     let inline buffer (strategy: OverflowStrategy) (n: int) (source) : Source<'t, 'mat> =
         SourceOperations.Buffer(source, n, strategy)
 
-    /// Generic transformation of a stream with a custom processing stage.
-    /// This operator makes it possible to extend the flow API when there is no specialized
-    /// operator that performs the transformation.
-    let inline transform (stageFac: unit -> #IStage<'u, 't>) (source) : Source<'t, 'mat>  =
-        SourceOperations.Transform(source, Func<_>(fun () -> upcast stageFac()))
-
     /// Takes up to n elements from the stream and returns a pair containing a strict sequence of the taken element
     /// and a stream representing the remaining elements. If <paramref name="n"/> is zero or negative, then this will return a pair
     /// of an empty collection and a stream containing the whole upstream unchanged.

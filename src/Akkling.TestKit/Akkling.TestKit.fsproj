@@ -79,6 +79,9 @@
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2')">
       <ItemGroup>
+        <Reference Include="System.Configuration">
+          <Paket>True</Paket>
+        </Reference>
         <Reference Include="Akka">
           <HintPath>..\..\packages\Akka\lib\net45\Akka.dll</HintPath>
           <Private>True</Private>
@@ -130,10 +133,10 @@
     </When>
   </Choose>
   <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2')">
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5.2'">
       <ItemGroup>
         <Reference Include="FsCheck.Xunit">
-          <HintPath>..\..\packages\FsCheck.Xunit\lib\net45\FsCheck.Xunit.dll</HintPath>
+          <HintPath>..\..\packages\FsCheck.Xunit\lib\net452\FsCheck.Xunit.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>

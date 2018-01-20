@@ -129,6 +129,9 @@
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2')">
       <ItemGroup>
+        <Reference Include="System.Configuration">
+          <Paket>True</Paket>
+        </Reference>
         <Reference Include="Akka">
           <HintPath>..\..\packages\Akka\lib\net45\Akka.dll</HintPath>
           <Private>True</Private>
@@ -279,10 +282,10 @@
     </When>
   </Choose>
   <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2')">
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5.2'">
       <ItemGroup>
         <Reference Include="FsCheck.Xunit">
-          <HintPath>..\..\packages\FsCheck.Xunit\lib\net45\FsCheck.Xunit.dll</HintPath>
+          <HintPath>..\..\packages\FsCheck.Xunit\lib\net452\FsCheck.Xunit.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
@@ -301,19 +304,10 @@
     </When>
   </Choose>
   <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2')">
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2')">
       <ItemGroup>
         <Reference Include="Google.Protobuf">
-          <HintPath>..\..\packages\Google.Protobuf\lib\net451\Google.Protobuf.dll</HintPath>
-          <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-      </ItemGroup>
-    </When>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
-      <ItemGroup>
-        <Reference Include="Google.Protobuf">
-          <HintPath>..\..\packages\Google.Protobuf\lib\netstandard1.0\Google.Protobuf.dll</HintPath>
+          <HintPath>..\..\packages\Google.Protobuf\lib\net45\Google.Protobuf.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
@@ -323,8 +317,22 @@
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2')">
       <ItemGroup>
+        <Reference Include="Microsoft.CSharp">
+          <Paket>True</Paket>
+        </Reference>
         <Reference Include="Hyperion">
           <HintPath>..\..\packages\Hyperion\lib\net45\Hyperion.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2')">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.CodeCoverage.Shim">
+          <HintPath>..\..\packages\Microsoft.CodeCoverage\lib\netstandard1.0\Microsoft.VisualStudio.CodeCoverage.Shim.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
@@ -367,6 +375,17 @@
       <ItemGroup>
         <Reference Include="System.Collections.Immutable">
           <HintPath>..\..\packages\System.Collections.Immutable\lib\netstandard1.0\System.Collections.Immutable.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2')">
+      <ItemGroup>
+        <Reference Include="System.Runtime.CompilerServices.Unsafe">
+          <HintPath>..\..\packages\System.Runtime.CompilerServices.Unsafe\lib\netstandard1.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>

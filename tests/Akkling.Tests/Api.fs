@@ -99,7 +99,7 @@ let ``Typed actor refs are serializable/deserializable in both directions`` () :
 let ``Typed props are serializable/deserializable in both directions`` () : unit = testDefault <| fun tck ->
     let p = { (propse <@ Behaviors.echo @>) with 
                  Deploy = Some Deploy.Local; 
-                 Router = Some Akka.Routing.NoRouter.NoRouter; 
+                 Router = Some (upcast NoRouter.Instance) 
                  SupervisionStrategy = Some (SupervisorStrategy.StoppingStrategy  :> SupervisorStrategy);
                  Mailbox = Some "xyz123";
                  Dispatcher = Some "xyz" }
