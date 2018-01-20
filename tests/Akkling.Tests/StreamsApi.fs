@@ -42,7 +42,7 @@ let ``Graph DSL operators should work`` () = test config <| fun tck ->
         let zip1 = ZipWith.create max<int> |> b.Add
         let zip2 = ZipWith.create max<int> |> b.Add
 
-        b.From(zip1.Out) => zip2.In0
+        b.From(zip1.Out) => zip2.In0 |> ignore
 
         UniformFanInShape(zip2.Out, zip1.In0, zip1.In1, zip2.In1))
         
@@ -68,11 +68,11 @@ let ``Graph DSL operators should work`` () = test config <| fun tck ->
             let s2 = Source.singleton 2 |> b.Add
             let s3 = Source.singleton 3 |> b.Add
 
-            b.From s1 => pm3.In(0)
-            b.From s2 => pm3.In(1)
-            b.From s3 => pm3.In(2)
+            b.From s1 => pm3.In(0) |> ignore
+            b.From s2 => pm3.In(1) |> ignore
+            b.From s3 => pm3.In(2) |> ignore
 
-            b.From(pm3.Out) => sink
+            b.From(pm3.Out) => sink |> ignore
 
             ClosedShape.Instance) 
         |> Graph.runnable
