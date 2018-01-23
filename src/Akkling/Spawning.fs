@@ -44,9 +44,6 @@ module System =
     let create (name : string) (config : Akka.Configuration.Config) : ActorSystem = 
         let _ = Akka.Serialization.HyperionSerializer           // I don't know why, but without this system cannot instantiate serializer
         let system = ActorSystem.Create(name, config.WithFallback Configuration.extendedConfig)
-        let exprSerializer = Akkling.Serialization.ExprSerializer(system :?> ExtendedActorSystem)
-        system.Serialization.AddSerializer("ExpSerializer", exprSerializer)
-        system.Serialization.AddSerializationMap(typeof<Expr>, exprSerializer)
         system
 
 [<AutoOpen>]

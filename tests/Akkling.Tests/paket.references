@@ -8,3 +8,5 @@ Akka.Persistence
 Akka.Serialization.Hyperion
 Microsoft.NET.Test.Sdk
 Akka.Streams
+Microsoft.Extensions.Logging.Abstractions
+Microsoft.Extensions.Logging

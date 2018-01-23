@@ -1,0 +1,1 @@
+#r "../../../packages/Octokit/lib/net45/Octokit.dll" 

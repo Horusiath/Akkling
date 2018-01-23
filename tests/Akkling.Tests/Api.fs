@@ -127,7 +127,7 @@ let testBehavior (mailbox:Actor<_>) msg =
     | _ -> mailbox.Sender() <! Fail  
     |> ignored
 
-[<Fact(Skip="FIXME: hanging out in multi-test runs")>]
+[<Fact>]
 let ``can serialize and deserialize discriminated unions over remote nodes`` () =   
 
     let remoteConfig port = 
@@ -135,10 +135,10 @@ let ``can serialize and deserialize discriminated unions over remote nodes`` () 
         akka { 
             actor {
                 ask-timeout = 10s
-                provider = "Akka.Remote.RemoteActorRefProvider, Akka.Remote"
+                provider = remote
             }
             remote {
-                helios.tcp {
+                dot-netty.tcp {
                     port = %i
                     hostname = localhost
                 }
