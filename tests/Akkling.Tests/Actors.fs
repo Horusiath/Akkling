@@ -54,8 +54,8 @@ let ``Actor defined by recursive function stops on return Stop`` () : unit = tes
     expectTerminated tck aref |> ignore
     expectNoMsg tck 
 
-[<Fact(Skip="FIXME")>]
-let ``Actor defined by recursive function dead letters message on return Unhandled`` () : unit = testDefault <| fun tck ->
+[<Fact>]
+let ``Actor defined by recursive function sends message to EventStream on return Unhandled`` () : unit = testDefault <| fun tck ->
     let aref = 
         spawn tck "actor"
         <| props (fun mailbox ->
@@ -69,19 +69,18 @@ let ``Actor defined by recursive function dead letters message on return Unhandl
                         return! loop ()
                 }
             loop ())
-
-    expectEvent 1 
-    <| deadLettersEvents tck
-    <| fun () ->
-        aref <! "a"
-        aref <! "b"
-        aref <! "unhandled"
-        aref <! "c"
-
-        expectMsg tck "a" |> ignore
-        expectMsg tck "b" |> ignore
-        expectMsg tck "c" |> ignore
-        expectNoMsg tck
+    
+    let subscriber = tck.CreateTestProbe()
+    tck.Sys.EventStream.Subscribe(subscriber.Ref, typeof<Akka.Event.UnhandledMessage>) |> ignore
+    aref <! "a"
+    aref <! "b"
+    aref <! "unhandled"
+    aref <! "c"
+    expectMsg tck "a" |> ignore
+    expectMsg tck "b" |> ignore
+    subscriber.ExpectMsg<Akka.Event.UnhandledMessage>() |> ignore
+    expectMsg tck "c" |> ignore
+    expectNoMsg tck
 
 [<Fact>]
 let ``<|> combinator executes right side when left side was unhandled`` () = testDefault <| fun tck ->
