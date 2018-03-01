@@ -21,15 +21,6 @@ let ``configuration loader should load data from app.config``() =
     config.HasPath "akka.test.value" |> equals true
     config.GetInt "akka.test.value" |> equals 10
 
-[<Fact>]
-let ``can serialize expression decider``() = 
-    let decider = ExprDecider <@ fun e -> Directive.Resume @>
-    use sys = System.create "system" (Configuration.defaultConfig())
-    let serializer = sys.Serialization.FindSerializerFor decider
-    let bytes = serializer.ToBinary decider
-    let des = serializer.FromBinary(bytes, typeof<ExprDecider>) :?> IDecider
-    des.Decide(Exception()) |> equals (Directive.Resume)
-
 type TraceableMessage<'a> = 
     { Trace : TraceMetadata
       Message : 'a }
@@ -97,7 +88,7 @@ let ``Typed actor refs are serializable/deserializable in both directions`` () :
     
 [<Fact>]
 let ``Typed props are serializable/deserializable in both directions`` () : unit = testDefault <| fun tck ->
-    let p = { (propse <@ Behaviors.echo @>) with 
+    let p = { (props Behaviors.echo) with 
                  Deploy = Some Deploy.Local; 
                  Router = Some (upcast NoRouter.Instance) 
                  SupervisionStrategy = Some (SupervisorStrategy.StoppingStrategy  :> SupervisorStrategy);
@@ -127,7 +118,7 @@ let testBehavior (mailbox:Actor<_>) msg =
     | _ -> mailbox.Sender() <! Fail  
     |> ignored
 
-[<Fact(Skip="FIXME: hanging out in multi-test runs")>]
+[<Fact>]
 let ``can serialize and deserialize discriminated unions over remote nodes`` () =   
 
     let remoteConfig port = 
@@ -135,10 +126,10 @@ let ``can serialize and deserialize discriminated unions over remote nodes`` () 
         akka { 
             actor {
                 ask-timeout = 10s
-                provider = "Akka.Remote.RemoteActorRefProvider, Akka.Remote"
+                provider = remote
             }
             remote {
-                helios.tcp {
+                dot-netty.tcp {
                     port = %i
                     hostname = localhost
                 }
@@ -150,7 +141,7 @@ let ``can serialize and deserialize discriminated unions over remote nodes`` () 
     use server = System.create "server-system" (remoteConfig 9911)
     use client = System.create "client-system" (remoteConfig 0)
 
-    let aref = spawn client "a-1" { (propse <@ actorOf2 testBehavior @> ) with Deploy = Some(Deploy(RemoteScope (Address.Parse "akka.tcp://server-system@localhost:9911"))) }
+    let aref = spawn client "a-1" { (props (actorOf2 testBehavior) ) with Deploy = Some(Deploy(RemoteScope (Address.Parse "akka.tcp://server-system@localhost:9911"))) }
     let msg = Succeed("a-11", Inner(11, "a-12"))
     let response : OuterUnion = aref <? msg |> Async.RunSynchronously
     response |> equals msg
@@ -179,7 +170,7 @@ type SupervisorMsg =
     | State of int
     | DirectiveInvoked
     
-[<Fact(Skip="FIXME")>]
+[<Fact>]
 let ``custom supervisor strategy works with routers`` () = testDefault <| fun tck ->
     let t = typed tck.TestActor
     let router = BroadcastPool(2)

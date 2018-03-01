@@ -4,3 +4,5 @@ Akka.Cluster
 Akka.Cluster.Tools
 Akka.Persistence
 FSharp.Core
+Microsoft.Extensions.Logging.Abstractions
+Microsoft.Extensions.Logging

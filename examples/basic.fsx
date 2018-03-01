@@ -1,10 +1,5 @@
-#r "../src/Akkling/bin/Debug/Akka.dll"
-#r "../src/Akkling/bin/Debug/Hyperion.dll"
-#r "../src/Akkling/bin/Debug/Newtonsoft.Json.dll"
-#r "../src/Akkling/bin/Debug/FSharp.PowerPack.dll"
-#r "../src/Akkling/bin/Debug/FSharp.PowerPack.Linq.dll"
-#r "../src/Akkling/bin/Debug/Akkling.dll"
-#r "../src/Akkling/bin/Debug/System.Collections.Immutable.dll"
+#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
+#r "../src/Akkling/bin/Debug/net452/Akkling.dll"
 
 open System
 open Akkling

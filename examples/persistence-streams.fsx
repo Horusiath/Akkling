@@ -1,16 +1,10 @@
-﻿#r "../src/Akkling/bin/Debug/Akka.dll"
-#r "../src/Akkling/bin/Debug/Hyperion.dll"
-#r "../src/Akkling/bin/Debug/Newtonsoft.Json.dll"
-#r "../src/Akkling/bin/Debug/FSharp.PowerPack.dll"
-#r "../src/Akkling/bin/Debug/FSharp.PowerPack.Linq.dll"
+﻿#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
+#load "../.paket/load/net452/Akka.Persistence.fsx"
+#load "../.paket/load/net452/Akka.Streams.fsx"
 #r "../src/Akkling/bin/Debug/Akkling.dll"
-#r "../src/Akkling.Persistence/bin/Debug/Google.Protobuf.dll"
-#r "../src/Akkling.Persistence/bin/Debug/Akka.Persistence.dll"
-#r "../src/Akkling.Persistence/bin/Debug/Akkling.Persistence.dll"
-#r "../src/Akkling.Streams/bin/Debug/Akka.Streams.dll"
-#r "../src/Akkling.Streams/bin/Debug/Akkling.Streams.dll"
-#r "../src/Akkling.Streams/bin/Debug/Reactive.Streams.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/System.Collections.Immutable.dll"
+#r "../src/Akkling.Streams/bin/Debug/net452/Akka.Streams.dll"
+#r "../src/Akkling.Streams/bin/Debug/net452/Akkling.Streams.dll"
+#r "../src/Akkling.Persistence/bin/Debug/net452/Akkling.Persistence.dll"
 
 
 open System
@@ -23,7 +17,6 @@ open Newtonsoft
 open Akkling
 open Akkling.Persistence
 open Akkling.Streams
-
 
 let configWith() =
     let config = Configuration.parse("""

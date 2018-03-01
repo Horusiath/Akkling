@@ -1,19 +1,12 @@
-#r "../src/Akkling/bin/Debug/Akka.dll"
-#r "../src/Akkling/bin/Debug/Hyperion.dll"
-#r "../src/Akkling/bin/Debug/Newtonsoft.Json.dll"
-#r "../src/Akkling/bin/Debug/FSharp.PowerPack.dll"
-#r "../src/Akkling/bin/Debug/FSharp.PowerPack.Linq.dll"
-#r "../src/Akkling/bin/Debug/Akkling.dll"
-#r "../src/Akkling/bin/Debug/System.Collections.Immutable.dll"
+#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
+#r "../src/Akkling/bin/Debug/net452/Akkling.dll"
 
 open System
 open Akkling
 open Akkling.IO
 open Akkling.IO.Tcp
 open System.Net
-
 let system = System.create "telnet-sys" <| Configuration.defaultConfig()
-
 let handler connection = fun (ctx: Actor<obj>) ->
     monitor ctx connection |> ignore
     let rec loop () = actor {

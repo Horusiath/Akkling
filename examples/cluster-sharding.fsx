@@ -1,33 +1,10 @@
+#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
+#load "../.paket/load/net452/Akka.Cluster.Sharding.fsx"
+#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.dll"
+#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.Persistence.dll"
+#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.Cluster.Sharding.dll"
+
 open System
-open System.IO
-#if INTERACTIVE
-let cd = Path.Combine(__SOURCE_DIRECTORY__, "../src/Akkling.Cluster.Sharding/bin/Debug")
-System.IO.Directory.SetCurrentDirectory(cd)
-#endif
-
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/System.Collections.Immutable.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Hyperion.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Newtonsoft.Json.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/FSharp.PowerPack.Linq.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/DotNetty.Common.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/DotNetty.Buffers.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/DotNetty.Codecs.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/DotNetty.Handlers.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/DotNetty.Transport.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/FsPickler.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Google.Protobuf.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Remote.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Persistence.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Cluster.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Cluster.Tools.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Cluster.Sharding.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Serialization.Hyperion.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akkling.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akkling.Persistence.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akkling.Cluster.Sharding.dll"
-
-
 open Akka.Actor
 open Akka.Configuration
 open Akka.Cluster
@@ -80,11 +57,12 @@ let system1 = System.create "cluster-system" (configWithPort 5000)
 let fac1 = entityFactoryFor system1 "printer" <| props (actorOf2 behavior)
 
 // wait a while before starting a second system
+System.Threading.Thread.Sleep 5000
 
 let system2 = System.create "cluster-system" (configWithPort 5001)
 let fac2 = entityFactoryFor system2 "printer" <| props (actorOf2 behavior)
 
-System.Threading.Thread.Sleep(5000)
+System.Threading.Thread.Sleep 5000
 
 let entity1 = fac1.RefFor "shard-1" "entity-1"
 let john = fac1.RefFor "shard-2" "john"

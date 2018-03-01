@@ -1,35 +1,10 @@
-open System
-open System.IO
-#if INTERACTIVE
-let cd = Path.Combine(__SOURCE_DIRECTORY__, "../src/Akkling.Cluster.Sharding/bin/Debug")
-System.IO.Directory.SetCurrentDirectory(cd)
-#endif
-
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/System.Collections.Immutable.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Hyperion.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Newtonsoft.Json.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/FSharp.PowerPack.Linq.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/DotNetty.Common.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/DotNetty.Buffers.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/DotNetty.Codecs.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/DotNetty.Handlers.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/DotNetty.Transport.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/FsPickler.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Google.Protobuf.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Remote.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Persistence.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Cluster.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Cluster.Tools.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Cluster.Sharding.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akka.Serialization.Hyperion.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akkling.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akkling.Persistence.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/Akkling.Cluster.Sharding.dll"
-#r "../src/Akkling.Streams/bin/Debug/Akka.Streams.dll"
-#r "../src/Akkling.Streams/bin/Debug/Akkling.Streams.dll"
-#r "../src/Akkling.Streams/bin/Debug/Reactive.Streams.dll"
-
+#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
+#load "../.paket/load/net452/Akka.Cluster.Sharding.fsx"
+#load "../.paket/load/net452/Akka.Streams.fsx"
+#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.dll"
+#r "../src/Akkling.Streams/bin/Debug/net452/Akkling.Streams.dll"
+#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.Persistence.dll"
+#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.Cluster.Sharding.dll"
 
 open Akka.Actor
 open Akka.Configuration

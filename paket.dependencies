@@ -1,12 +1,10 @@
-framework: net40, net45, net451, net452
+framework: net452, netstandard1.6
 redirects: on
 
 source https://nuget.org/api/v2
 
 nuget Akka.Serialization.Hyperion prerelease
 nuget FSharp.Formatting
-nuget FsPickler >= 3.2
-nuget FSPowerPack.Linq.Community >= 3.0
 nuget Microsoft.NET.Test.Sdk
 nuget Octokit
 nuget Reactive.Streams >= 1.0.2
@@ -21,6 +19,11 @@ nuget xunit.runner.console >= 2.3.0 prerelease
 nuget xunit.runner.visualstudio >= 2.3.0 prerelease
 nuget xunit.extensibility.execution >= 2.3.0 prerelease
 nuget FSharp.Core
+
+nuget Microsoft.Extensions.DependencyInjection.Abstractions = 1.1.1
+nuget Microsoft.Extensions.DependencyInjection = 1.1.1
+nuget Microsoft.Extensions.Logging.Abstractions = 1.1.1
+nuget Microsoft.Extensions.Logging = 1.1.1
 
 nuget Akka >= 1.3.1
 nuget Akka.Streams >= 1.3.1
