@@ -10,8 +10,6 @@ module Akkling.Actors
 
 open System
 open Akka.Actor
-open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Linq.QuotationEvaluation
 
 type IO<'T> = 
     | Input
@@ -195,9 +193,7 @@ and FunActor<'Message>(actor : Actor<'Message>->Effect<'Message>) as this =
     inherit Actor()
     let untypedContext = UntypedActor.Context :> IActorContext
     let ctx = TypedContext<'Message, FunActor<'Message>>(untypedContext, this)
-    let mutable behavior = actor ctx
-    new(actor : Expr<Actor<'Message>->Effect<'Message>>) = FunActor(actor.Compile () ())
-    
+    let mutable behavior = actor ctx    
     member __.Next (current : Effect<'Message>) (_context : Actor<'Message>) (message : obj) : Effect<'Message> = 
         match message with
         | :? 'Message as msg -> 

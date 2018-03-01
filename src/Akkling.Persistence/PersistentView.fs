@@ -12,8 +12,6 @@ open System
 open Akka.Actor
 open Akka.Persistence
 open Akkling
-open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Linq.QuotationEvaluation
 
 [<Interface>]
 type View<'Message> = 
@@ -92,7 +90,6 @@ and FunPersistentView<'Message>(actor : View<'Message> -> Effect<'Message>, pers
     let untypedContext = UntypedActor.Context
     let ctx = TypedViewContext<'Message, FunPersistentView<'Message>>(untypedContext, this)
     let mutable behavior = actor ctx
-    new(actor : Expr<View<'Message> -> Effect<'Message>>, persistentId: string) = FunPersistentView(actor.Compile () (), persistentId)
     
     member __.Next (current : Effect<'Message>) (context : Actor<'Message>) (message : obj) : Effect<'Message> = 
         match message with

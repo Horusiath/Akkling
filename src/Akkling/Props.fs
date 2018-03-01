@@ -12,8 +12,6 @@ module Akkling.Props
 open System
 open Akka.Actor
 open Akka.Routing
-open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Linq.QuotationEvaluation
 
 /// <summary>
 /// Typed props are descriptors of how particular actor should be instantiated.
@@ -85,15 +83,6 @@ type Props<'Message> =
           Router = None
           SupervisionStrategy = None }
 
-    static member Create<'Actor, 'Context, 'Message when 'Actor :> ActorBase>(expr: Expr<('Context -> Effect<'Message>)>) : Props<'Message> = 
-        { ActorType = typeof<'Actor>
-          Args = [| expr |]
-          Dispatcher = None
-          Mailbox = None
-          Deploy = None
-          Router = None
-          SupervisionStrategy = None }
-
     static member ArgsCreate<'Actor, 'Context, 'Message when 'Actor :> ActorBase>(args: obj array) : Props<'Message> = 
         { ActorType = typeof<'Actor>
           Args = args
@@ -129,9 +118,3 @@ and PropsSurrogate<'Message> =
 /// </summary>
 let inline props (receive: Actor<'Message>->Effect<'Message>) : Props<'Message> = 
     Props<'Message>.Create<FunActor<'Message>, Actor<'Message>, 'Message>(receive)
-
-/// <summary>
-/// Creates a props describing a way to incarnate actor with behavior described by <paramref name="expr"/> expression.
-/// </summary>
-let inline propse (expr: Expr<(Actor<'Message> -> Effect<'Message>)>) : Props<'Message> =
-    Props<'Message>.Create<FunActor<'Message>, Actor<'Message>, 'Message>(expr)

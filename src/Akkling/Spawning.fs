@@ -10,8 +10,6 @@ namespace Akkling
 
 open Akka.Actor
 open System
-open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Linq.QuotationEvaluation
 
 [<RequireQualifiedAccess>]
 module Configuration = 

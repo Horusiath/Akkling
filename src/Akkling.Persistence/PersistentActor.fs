@@ -12,8 +12,6 @@ open System
 open Akka.Actor
 open Akka.Persistence
 open Akkling
-open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Linq.QuotationEvaluation
 open Akka.Event
 
 type PID = string
@@ -168,7 +166,6 @@ and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Effect<'Messa
     let untypedContext = UntypedActor.Context
     let ctx = TypedPersistentContext<'Message, FunPersistentActor<'Message>>(untypedContext, this)
     let mutable behavior = actor ctx
-    new(actor : Expr<Eventsourced<'Message> -> Effect<'Message>>) = FunPersistentActor(actor.Compile () ())
 
     member __.Next (current : Effect<'Message>) (context : Actor<'Message>) (message : obj) : Effect<'Message> =
         match message with
