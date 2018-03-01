@@ -1,27 +1,7 @@
-open System
-open System.IO
-#if INTERACTIVE
-let cd = Path.Combine(__SOURCE_DIRECTORY__, "../src/Akkling.DistributedData/bin/Debug")
-System.IO.Directory.SetCurrentDirectory(cd)
-#endif
-
-#r "../src/Akkling.DistributedData/bin/Debug/System.Collections.Immutable.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/Akka.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/Newtonsoft.Json.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/FSharp.PowerPack.Linq.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/DotNetty.Common.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/DotNetty.Buffers.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/DotNetty.Codecs.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/DotNetty.Handlers.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/DotNetty.Transport.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/FsPickler.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/Google.Protobuf.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/Akka.Remote.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/Akka.Cluster.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/Akka.DistributedData.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/Akka.Serialization.Hyperion.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/Akkling.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/Akkling.DistributedData.dll"
+#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
+#load "../.paket/load/net452/Akka.DistributedData.fsx"
+#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.dll"
+#r "../src/Akkling.DistributedData/bin/Debug/net452/Akkling.DistributedData.dll"
 
 open Akka.Cluster
 open Akka.DistributedData
@@ -30,8 +10,8 @@ open Akkling.DistributedData
 open Akkling.DistributedData.Consistency
 
 let system = System.create "system" <| Configuration.parse """
-akka.actor.provider = "Akka.Cluster.ClusterActorRefProvider, Akka.Cluster"
-akka.remote.helios.tcp {
+akka.actor.provider = cluster
+akka.remote.dot-netty.tcp {
     hostname = "127.0.0.1"
     port = 4551
 }

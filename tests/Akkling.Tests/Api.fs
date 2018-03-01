@@ -170,7 +170,7 @@ type SupervisorMsg =
     | State of int
     | DirectiveInvoked
     
-[<Fact(Skip="FIXME")>]
+[<Fact>]
 let ``custom supervisor strategy works with routers`` () = testDefault <| fun tck ->
     let t = typed tck.TestActor
     let router = BroadcastPool(2)

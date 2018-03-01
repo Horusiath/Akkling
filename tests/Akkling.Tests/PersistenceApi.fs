@@ -64,7 +64,7 @@ let sender destinations (ctx: Actor<obj>) =
         return! loop () }
     loop ()
 
-[<Fact(Skip = "Make Akka.Persistence.AtLeastOnceDeliverySemantic.RedeliveryTick public")>]
+[<Fact>]
 let ``at-least-once delivery semantics should redeliver messages`` () = test config <| fun tck ->
     Akka.Persistence.Persistence.Instance.Apply(tck.Sys) |> ignore
     let probe = tck.CreateTestProbe()

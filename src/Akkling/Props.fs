@@ -92,7 +92,7 @@ type Props<'Message> =
           Router = None
           SupervisionStrategy = None }
           
-    static member internal From(props: Props) : Props<'Message> =
+    static member From(props: Props) : Props<'Message> =
         { ActorType = props.Type
           Args = props.Arguments
           Deploy = Some props.Deploy

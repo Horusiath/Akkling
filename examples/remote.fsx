@@ -1,18 +1,6 @@
-#r "../src/Akkling/bin/Debug/Akka.dll"
-#r "../src/Akkling/bin/Debug/Hyperion.dll"
-#r "../src/Akkling/bin/Debug/Newtonsoft.Json.dll"
-#r "../src/Akkling/bin/Debug/FSharp.PowerPack.dll"
-#r "../src/Akkling/bin/Debug/FSharp.PowerPack.Linq.dll"
-#r "../src/Akkling/bin/Debug/Akkling.dll"
-#r "../src/Akkling/bin/Debug/System.Collections.Immutable.dll"
-#r "../packages/DotNetty.Common/lib/net45/DotNetty.Common.dll"
-#r "../packages/DotNetty.Buffers/lib/net45/DotNetty.Buffers.dll"
-#r "../packages/DotNetty.Codecs/lib/net45/DotNetty.Codecs.dll"
-#r "../packages/DotNetty.Handlers/lib/net45/DotNetty.Handlers.dll"
-#r "../packages/DotNetty.Transport/lib/net45/DotNetty.Transport.dll"
-#r "../packages/FsPickler/lib/net45/FsPickler.dll"
-#r "../packages/Google.Protobuf/lib/net451/Google.Protobuf.dll"
-#r "../packages/Akka.Remote/lib/net45/Akka.Remote.dll"
+#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
+#load "../.paket/load/net452/Akka.Remote.fsx"
+#r "../src/Akkling/bin/Debug/net452/Akkling.dll"
 
 open System
 open Akkling
@@ -20,8 +8,8 @@ open Akka.Actor
 
 let server = System.create "server" <| Configuration.parse """
     akka {
-        actor.provider = "Akka.Remote.RemoteActorRefProvider, Akka.Remote"
-        remote.helios.tcp {
+        actor.provider = remote
+        remote.dot-netty.tcp {
             hostname = localhost
             port = 4500
         }
@@ -30,8 +18,8 @@ let server = System.create "server" <| Configuration.parse """
 
 let client = System.create "client" <| Configuration.parse """
     akka {
-        actor.provider = "Akka.Remote.RemoteActorRefProvider, Akka.Remote"
-        remote.helios.tcp {
+        actor.provider = remote
+        remote.dot-netty.tcp {
             hostname = localhost
             port = 0
         }
