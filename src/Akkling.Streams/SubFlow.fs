@@ -15,6 +15,7 @@ open Akka.Streams.Dsl
 
 [<RequireQualifiedAccess>]
 module SubFlow =
+    open Stages
 
     /// Recover allows to send last element on failure and gracefully complete the stream
     /// Since the underlying failure signal onError arrives out-of-band, it might jump over existing elements.
@@ -28,6 +29,12 @@ module SubFlow =
     let inline recoverWithRetries (attempts: int) (fn: exn -> #IGraph<SourceShape<'out>, 'mat>) (subFlow) : SubFlow<'out, 'mat, 'closed> =
         SubFlowOperations.RecoverWithRetries(subFlow, Func<exn, Akka.Streams.IGraph<SourceShape<_>, _>>(fun ex -> upcast fn ex), attempts)
         
+    /// While similar to recover, this stage can be used to transform an error signal to a different one without logging
+    /// it as an error in the process. So in that sense it is NOT exactly equivalent to Recover(e => throw e2) since Recover
+    /// would log the e2 error. 
+    let inline mapError (fn: exn -> #exn) (subFlow) : SubFlow<'inp,'out,'closed> =
+        SubFlowOperations.SelectError(subFlow, Func<exn, exn>(fun e -> upcast fn e))
+
     /// Transform this stream by applying the given function to each of the elements
     /// as they pass through this processing step.
     let inline map (fn: 'u -> 'w) (subFlow: SubFlow<'u, 'mat, 'closed>) : SubFlow<'w, 'mat, 'closed> =
@@ -126,6 +133,12 @@ module SubFlow =
     /// restart current value starts at zero again the stream will continue.
     let inline scan (folder: 'w -> 'u -> 'w) (state: 'w) (subFlow) : SubFlow<'w, 'mat, 'closed> = 
         SubFlowOperations.Scan(subFlow, state, Func<_,_,_>(folder))
+
+    /// Similar to scan but with a asynchronous function, emits its current value which 
+    /// starts at zero and then applies the current and next value to the given function
+    /// emitting an Async that resolves to the next current value.
+    let inline asyncScan (folder: 'state -> 'inp -> Async<'state>) (zero: 'state) (subFlow) : SubFlow<'state,'mat,'closed> =
+        SubFlowOperations.ScanAsync(subFlow, zero, Func<_,_,_>(fun s e -> folder s e |> Async.StartAsTask))
 
     /// Similar to scan but only emits its result when the upstream completes,
     /// after which it also completes. Applies the given function towards its current and next value,
@@ -244,6 +257,14 @@ module SubFlow =
     let inline batch (max: int64) (seed: 'u -> 'w) (folder: 'w -> 'u -> 'w) (subFlow) : SubFlow<'w, 'mat, 'closed> =
         SubFlowOperations.Batch(subFlow, max, Func<_,_>(seed), Func<_,_,_>(folder))
 
+    /// Takes up to n elements from the stream and returns a pair containing a strict sequence of the taken element
+    /// and a stream representing the remaining elements. If `n` is zero or negative, then this will return a pair
+    /// of an empty collection and a stream containing the whole upstream unchanged.
+    let inline prefixAndTail (n: int) (subFlow) : SubFlow<'out list * Source<'out, unit>, 'mat, 'closed> = 
+        SubFlowOperations.PrefixAndTail(subFlow, n).Select(Func<_,_>(fun (imm, source) -> 
+            let s = source.MapMaterializedValue(Func<_,_>(ignore))
+            (List.ofSeq imm), s))
+
     /// Allows a faster upstream to progress independently of a slower subscriber by aggregating elements into batches
     /// until the subscriber is ready to accept them.
     let inline batchWeighted (max: int64) (costFn: 'u -> int64) (seed: 'u -> 'w) (folder: 'w -> 'u -> 'w) (subFlow) : SubFlow<'w, 'mat, 'closed> =
@@ -277,6 +298,11 @@ module SubFlow =
     /// substreams are being consumed at any given time.
     let inline collectMerge (breadth: int) (flatten: 'u -> #IGraph<SourceShape<'w>, 'mat>) (subFlow) : SubFlow<'w, 'mat, 'closed> =
         SubFlowOperations.MergeMany(subFlow, breadth, Func<_,_>(fun x -> upcast flatten x))
+
+    /// Combine the elements of current flow into a stream of tuples consisting
+    /// of all elements paired with their index. Indices start at 0.
+    let inline zipi (subFlow) : SubFlow<'out * int64, 'mat, 'closed> =
+        SubFlowOperations.ZipWithIndex(subFlow)
 
     /// If the first element has not passed through this stage before the provided timeout, the stream is failed
     /// with a TimeoutException
@@ -452,3 +478,8 @@ module SubFlow =
     /// limit is reached.
     let inline mergeSubstreamsParallel (n: int) (subFlow: SubFlow<'u, 'mat, 'closed>) : Source<'u, 'mat> =
         downcast subFlow.MergeSubstreamsWithParallelism(n)
+        
+    /// Filters our consecutive duplicated elements from the stream (uniqueness is recognized 
+    /// by provided function).
+    let inline deduplicate (eq: 'out -> 'out -> bool) (subFlow: SubFlow<'out,'mat,'closed>) : SubFlow<'out,'mat,'closed> =
+        downcast subFlow.Via(Deduplicate(eq))

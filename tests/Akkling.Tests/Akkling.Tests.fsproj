@@ -21,6 +21,7 @@
     <ProjectReference Include="..\..\src\Akkling.Streams\Akkling.Streams.fsproj" />
     <ProjectReference Include="..\..\src\Akkling.TestKit\Akkling.TestKit.fsproj" />
     <ProjectReference Include="..\..\src\Akkling\Akkling.fsproj" />
+    <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

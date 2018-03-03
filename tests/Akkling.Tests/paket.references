@@ -10,3 +10,5 @@ Microsoft.NET.Test.Sdk
 Akka.Streams
 Microsoft.Extensions.Logging.Abstractions
 Microsoft.Extensions.Logging
+xunit.runner.visualstudio
+Akka.Streams.TestKit
