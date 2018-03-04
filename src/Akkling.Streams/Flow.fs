@@ -15,6 +15,7 @@ open Akka.Streams.Dsl
 
 [<RequireQualifiedAccess>]
 module Flow =
+    open Reactive.Streams
     open Stages
 
     /// Creates a new empty flow.
@@ -590,6 +591,14 @@ module Flow =
         |> map (fun (x, s) ->
             if x.IsSuccess then Ok x.Value, s
             else Result.Error x.Exception, s) 
+    
+    /// Joins a provided flow with given sink, returning a new sink in the result.
+    let inline toSink (sink: #IGraph<SinkShape<'out>,'mat2>) (flow: Flow<'inp,'out,'mat>) : Sink<'inp,'mat> = 
+        flow.To(sink)
+    
+    /// Joins a provided flow with given sink, returning a new sink in the result.
+    let inline toProcessor (flow: Flow<'inp,'out,'mat>) : IRunnableGraph<IProcessor<'inp,'out>> = 
+        flow.ToProcessor()
     
     /// Filters our consecutive duplicated elements from the stream (uniqueness is recognized 
     /// by provided function).

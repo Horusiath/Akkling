@@ -703,6 +703,15 @@ module Source =
     /// dynamic set of producers
     let inline mergeHub (perProducerBufferSize) = MergeHub.Source(perProducerBufferSize)
     
+    /// Combines current source with provided sink, resulting in a completed runnable graph.
+    let inline toSink (sink: #IGraph<SinkShape<'t>,'mat2>) (source: Source<'t,'mat>) : IRunnableGraph<'mat> = 
+        source.To(sink)
+        
+    let zipn (sources: #(Source<'t, unit> seq)) : Source<'t seq, unit> =
+        Source.ZipN(sources |> Seq.map (mapMaterializedValue (fun () -> NotUsed.Instance)))
+        |> map (fun list -> list :> _ seq)
+        |> mapMaterializedValue ignore 
+    
     /// Filters our consecutive duplicated elements from the stream (uniqueness is recognized 
     /// by provided function).
     let inline deduplicate (eq: 'a -> 'a -> bool) (source: Source<'a,'mat>) : Source<'a, 'mat> =
