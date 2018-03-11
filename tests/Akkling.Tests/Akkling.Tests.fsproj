@@ -17,6 +17,7 @@
     <ProjectReference Include="..\..\src\Akkling.Cluster.Sharding\Akkling.Cluster.Sharding.fsproj" />
     <ProjectReference Include="..\..\src\Akkling.DistributedData\Akkling.DistributedData.fsproj" />
     <ProjectReference Include="..\..\src\Akkling.Persistence\Akkling.Persistence.fsproj" />
+    <ProjectReference Include="..\..\src\Akkling.Streams.TestKit\Akkling.Streams.TestKit.fsproj" />
     <ProjectReference Include="..\..\src\Akkling.Streams\Akkling.Streams.fsproj" />
     <ProjectReference Include="..\..\src\Akkling.TestKit\Akkling.TestKit.fsproj" />
     <ProjectReference Include="..\..\src\Akkling\Akkling.fsproj" />

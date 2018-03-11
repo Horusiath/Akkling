@@ -4,6 +4,7 @@ redirects: on
 source https://nuget.org/api/v2
 
 nuget Akka.Serialization.Hyperion prerelease
+nuget Akka.Streams.TestKit
 nuget FSharp.Formatting
 nuget Microsoft.NET.Test.Sdk
 nuget Octokit

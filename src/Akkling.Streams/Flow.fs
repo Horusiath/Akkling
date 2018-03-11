@@ -537,3 +537,35 @@ module Flow =
         flow.JoinMaterialized(bidi, Func<'mat,'mat2,'mat3>(fn))
 
     let inline iter (fn: 'o -> unit) (flow: Flow<'i,'o,'mat>): Flow<'i,'o,'mat> = flow |> map (fun x -> fn x; x)
+
+    let retry (retryWith: 's -> ('i * 's) option) (flow: Flow<('i * 's), (Result< 'o, exn> * 's), 'mat>)  =
+        let flow: Flow<'i * 's, Akka.Util.Result<'o> * 's, 'mat> = 
+            flow |> map (fun (x, s) -> 
+                match x with 
+                | Ok x -> (Akka.Util.Result.Success x), s
+                | Error e -> (Akka.Util.Result.Failure e), s)
+                
+        Retry.Create(flow, fun s -> 
+            match retryWith s with
+            | Some x -> x
+            | None -> Unchecked.defaultof<_>)
+        |> Flow.FromGraph // I convert IGraph to Flow here in order to map it below. Should I?
+        |> map (fun (x, s) ->
+            if x.IsSuccess then Ok x.Value, s
+            else Result.Error x.Exception, s) 
+
+    let retryLimited limit (retryWith: 's -> ('i * 's) seq option) (flow: Flow<('i * 's), (Result< 'o, exn> * 's), 'mat>)  =
+        let flow: Flow<'i * 's, Akka.Util.Result<'o> * 's, 'mat> = 
+            flow |> map (fun (x, s) -> 
+                match x with 
+                | Ok x -> (Akka.Util.Result.Success x), s
+                | Error e -> (Akka.Util.Result.Failure e), s)
+                
+        Retry.Concat(limit, flow, fun s -> 
+            match retryWith s with
+            | Some x -> x
+            | None -> Unchecked.defaultof<_>)
+        |> Flow.FromGraph // I convert IGraph to Flow here in order to map it below. Should I?
+        |> map (fun (x, s) ->
+            if x.IsSuccess then Ok x.Value, s
+            else Result.Error x.Exception, s) 

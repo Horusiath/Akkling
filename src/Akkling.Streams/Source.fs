@@ -99,12 +99,22 @@ module Source =
 
     /// Create a source that will unfold a value of one type into
     /// a pair of the next state and output elements of type another type
-    let inline unfold (fn: 's -> 's * 'e) (state: 's) : Source<'e, unit> =
-        Source.Unfold(state, Func<_,_>(fn)).MapMaterializedValue(Func<_,_>(ignore))
+    let unfold (fn: 's -> ('s * 'e) option) (state: 's) : Source<'e, unit> =
+        Source.Unfold(state, Func<_,_>(fun x -> 
+            match fn x with
+            | Some tuple -> tuple
+            | None -> Unchecked.defaultof<_>
+            )).MapMaterializedValue(Func<_,_>(ignore))
 
     /// Same as unfold, but uses an async function to generate the next state-element tuple.
-    let inline asyncUnfold (fn: 's -> Async<'s * 'e>) (state: 's) : Source<'e, unit> =
-        Source.UnfoldAsync(state, Func<_, _>(fun x -> fn(x) |> Async.StartAsTask)).MapMaterializedValue(Func<_,_>(ignore))
+    let asyncUnfold (fn: 's -> Async<('s * 'e) option>) (state: 's) : Source<'e, unit> =
+        Source.UnfoldAsync(state, Func<_, _>(fun x -> 
+            async { 
+                let! r = fn x 
+                match r with
+                | Some tuple -> return tuple
+                | None -> return Unchecked.defaultof<'s * 'e> } 
+                |> Async.StartAsTask<'s * 'e>)).MapMaterializedValue(Func<_,_>(ignore))
 
     /// Simpler unfold, for infinite sequences.
     let inline infiniteUnfold (fn: 's -> 's * 'e) (state: 's) : Source<'e, unit> =
