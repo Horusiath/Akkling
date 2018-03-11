@@ -1,3 +1,10 @@
+## New in 0.9 (Released 2018/03/11)
+* .NET Standard update
+* Removed F# quotations from the API
+* Removed FsPickler dependency
+* Akka.Streams.TestKit package
+* More akka streams API exposed (including Graph stages)
+
 ## New in 0.8 (Released 2017/11/27)
 * Initial functioning GraphDSL API
 * Akka.Streams TCP wrappers
