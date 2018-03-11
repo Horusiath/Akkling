@@ -82,18 +82,25 @@ let ``Graph DSL operators should work`` () = test config <| fun tck ->
 
     max |> equals 3
     
-//[<Fact>]
-//let ``A deduplicate must remove consecutive duplicates`` () = test config <| fun tck ->
-//    use mat = tck.Sys.Materializer()
-//    let probe = tck.CreateManualSubscriberProbe<int>()
-//    Source.ofList [1; 1; 1; 2; 2; 1; 1; 3]
-//    |> Source.deduplicate (=)
-//    |> Source.runWith mat (Sink.ofSubscriber probe)
-//
-//    let sub = probe.ExpectSubscription()
-//    sub.request 1000
-//    probe.ExpectNext 1
-//    probe.ExpectNext 2
-//    probe.ExpectNext 1
-//    probe.ExpectNext 3  
-//    probe.ExpectComplete()
+open Akkling.Streams
+open Akkling.Streams.TestKit
+open Akkling.Streams.TestKit.ManualSubscriberProbe
+    
+[<Fact>]
+let ``A deduplicate must remove consecutive duplicates`` () = test config <| fun tck ->
+    use mat = tck.Sys.Materializer()
+    let probe = manualSubscriberProbe tck
+    Source.ofList [1; 1; 1; 2; 2; 1; 1; 3]
+    |> Source.deduplicate (=)
+    |> Source.runWith mat (Sink.ofSubscriber probe)
+
+    let sub = expectSubscription probe
+    sub.Request 1000L
+    
+    probe
+    |> expectNext 1
+    |> expectNext 2
+    |> expectNext 1
+    |> expectNext 3
+    |> expectComplete
+    |> ignore

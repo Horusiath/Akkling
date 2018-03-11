@@ -957,9 +957,5 @@ NUGET
     xunit.runner.visualstudio (2.4.0-beta.1.build3958)
 GITHUB
   remote: fsharp/FAKE
-<<<<<<< HEAD
     modules/Octokit/Octokit.fsx (96f1594fd50ced6c1aa45d7cf74fb6c067d08ac1)
-=======
-    modules/Octokit/Octokit.fsx (dd92a63bf27cae3f34c0ca142102e37fd4af3d70)
->>>>>>> applied remaining akka streams stages
       Octokit (>= 0.20)
