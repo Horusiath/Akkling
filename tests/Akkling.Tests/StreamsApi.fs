@@ -17,6 +17,7 @@ open System
 open Xunit
 open Akka.Streams.Dsl
 open Akka.Streams
+//open Akka.Streams.TestKit
 
 let config = Configuration.parse "akka.logLevel = DEBUG"
 
@@ -80,3 +81,26 @@ let ``Graph DSL operators should work`` () = test config <| fun tck ->
         |> Async.RunSynchronously
 
     max |> equals 3
+    
+open Akkling.Streams
+open Akkling.Streams.TestKit
+open Akkling.Streams.TestKit.ManualSubscriberProbe
+    
+[<Fact>]
+let ``A deduplicate must remove consecutive duplicates`` () = test config <| fun tck ->
+    use mat = tck.Sys.Materializer()
+    let probe = manualSubscriberProbe tck
+    Source.ofList [1; 1; 1; 2; 2; 1; 1; 3]
+    |> Source.deduplicate (=)
+    |> Source.runWith mat (Sink.ofSubscriber probe)
+
+    let sub = expectSubscription probe
+    sub.Request 1000L
+    
+    probe
+    |> expectNext 1
+    |> expectNext 2
+    |> expectNext 1
+    |> expectNext 3
+    |> expectComplete
+    |> ignore

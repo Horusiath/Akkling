@@ -21,6 +21,7 @@ open Reactive.Streams
 [<RequireQualifiedAccess>]
 module Source =
     open Akka
+    open Stages
 
     /// Creates a source from an stream created by the given function.
     let inline ofStream (streamFn: unit -> Stream) : Source<ByteString, Async<IOResult>> =
@@ -164,6 +165,12 @@ module Source =
     /// Source may be materialized.
     let inline recoverWithRetries (attempts: int) (fn: exn -> #IGraph<SourceShape<'out>, 'mat>) (source) : Source<'out, 'mat> =
         SourceOperations.RecoverWithRetries(source, Func<exn, Akka.Streams.IGraph<SourceShape<_>, _>>(fun ex -> upcast fn ex), attempts)
+    
+    /// While similar to recover, this stage can be used to transform an error signal to a different one without logging
+    /// it as an error in the process. So in that sense it is NOT exactly equivalent to Recover(e => throw e2) since Recover
+    /// would log the e2 error. 
+    let inline mapError (fn: exn -> #exn) (source) : Source<'out,'mat> =
+        SourceOperations.SelectError(source, Func<exn, exn>(fun e -> upcast fn e))
 
     /// Transform this stream by applying the given function to each of the elements
     /// as they pass through this processing step.
@@ -270,6 +277,12 @@ module Source =
     /// restart current value starts at zero again the stream will continue.
     let inline scan (folder: 'state -> 't -> 'state) (zero: 'state) (source) : Source<'state, 'mat> =
         SourceOperations.Scan(source, zero, Func<_,_,_>(folder))
+
+    /// Similar to scan but with a asynchronous function, emits its current value which 
+    /// starts at zero and then applies the current and next value to the given function
+    /// emitting an Async that resolves to the next current value.
+    let inline asyncScan (folder: 'state -> 't -> Async<'state>) (zero: 'state) (source) : Source<'state,'mat> =
+        SourceOperations.ScanAsync(source, zero, Func<_,_,_>(fun s e -> folder s e |> Async.StartAsTask))
 
     /// Similar to scan but only emits its result when the upstream completes,
     /// after which it also completes. Applies the given function towards its current and next value,
@@ -412,9 +425,12 @@ module Source =
         SourceOperations.Buffer(source, n, strategy)
 
     /// Takes up to n elements from the stream and returns a pair containing a strict sequence of the taken element
-    /// and a stream representing the remaining elements. If <paramref name="n"/> is zero or negative, then this will return a pair
+    /// and a stream representing the remaining elements. If `n` is zero or negative, then this will return a pair
     /// of an empty collection and a stream containing the whole upstream unchanged.
-    //let inline prefixAndTail n flow = SourceOperations.PrefixAndTail(flow, n)
+    let inline prefixAndTail (n: int) (source) : Source<'out list * Source<'out, unit>, 'mat> = 
+        SourceOperations.PrefixAndTail(source, n).Select(Func<_,_>(fun (imm, source) -> 
+            let s = source.MapMaterializedValue(Func<_,_>(ignore))
+            (List.ofSeq imm), s))
 
     /// This operation demultiplexes the incoming stream into separate output
     /// streams, one for each element key. The key is computed for each element
@@ -463,6 +479,11 @@ module Source =
     /// substreams are being consumed at any given time.
     let inline collectMerge (breadth: int) (flatten: 'u -> #IGraph<SourceShape<'t>, 'mat>) (source) : Source<'t, 'mat> =
         SourceOperations.MergeMany(source, breadth, Func<_,_>(fun x -> upcast flatten x))
+
+    /// Combine the elements of current flow into a stream of tuples consisting
+    /// of all elements paired with their index. Indices start at 0.
+    let inline zipi (source) : Source<'out * int64, 'mat> =
+        SourceOperations.ZipWithIndex(source)
 
     /// If the first element has not passed through this stage before the provided timeout, the stream is failed
     /// with a TimeoutException
@@ -681,3 +702,17 @@ module Source =
     /// A MergeHub is a special streaming hub that is able to collect streamed elements from a 
     /// dynamic set of producers
     let inline mergeHub (perProducerBufferSize) = MergeHub.Source(perProducerBufferSize)
+    
+    /// Combines current source with provided sink, resulting in a completed runnable graph.
+    let inline toSink (sink: #IGraph<SinkShape<'t>,'mat2>) (source: Source<'t,'mat>) : IRunnableGraph<'mat> = 
+        source.To(sink)
+        
+    let zipn (sources: #(Source<'t, unit> seq)) : Source<'t seq, unit> =
+        Source.ZipN(sources |> Seq.map (mapMaterializedValue (fun () -> NotUsed.Instance)))
+        |> map (fun list -> list :> _ seq)
+        |> mapMaterializedValue ignore 
+    
+    /// Filters our consecutive duplicated elements from the stream (uniqueness is recognized 
+    /// by provided function).
+    let inline deduplicate (eq: 'a -> 'a -> bool) (source: Source<'a,'mat>) : Source<'a, 'mat> =
+        source.Via(Deduplicate<'a>(eq))

@@ -15,6 +15,8 @@ open Akka.Streams.Dsl
 
 [<RequireQualifiedAccess>]
 module Flow =
+    open Reactive.Streams
+    open Stages
 
     /// Creates a new empty flow.
     let empty<'t, 'mat> : Flow<'t, 't, 'mat> = Flow.Create<'t, 'mat>()
@@ -31,6 +33,12 @@ module Flow =
     let inline recoverWithRetries (attempts: int) (fn: exn -> #IGraph<SourceShape<'out>, 'mat>) (flow) : Flow<'inp, 'out, 'mat> =
         FlowOperations.RecoverWithRetries(flow, Func<exn, Akka.Streams.IGraph<SourceShape<_>, _>>(fun ex -> upcast fn ex), attempts)
         
+    /// While similar to recover, this stage can be used to transform an error signal to a different one without logging
+    /// it as an error in the process. So in that sense it is NOT exactly equivalent to Recover(e => throw e2) since Recover
+    /// would log the e2 error. 
+    let inline mapError (fn: exn -> #exn) (flow) : Flow<'inp,'out,'mat> =
+        FlowOperations.SelectError(flow, Func<exn, exn>(fun e -> upcast fn e))
+
     /// Transform this stream by applying the given function to each of the elements
     /// as they pass through this processing step.
     let inline map (fn: 'u -> 'w) (flow: Flow<'t, 'u, 'mat>) : Flow<'t, 'w, 'mat> =
@@ -137,6 +145,12 @@ module Flow =
     /// If the function throws an exception and the supervision decision is
     /// restart current value starts at zero again the stream will continue.
     let inline scan (folder: 'w -> 'u -> 'w) (state: 'w) (flow) : Flow<'t, 'w, 'mat> = FlowOperations.Scan(flow, state, Func<_,_,_>(folder))
+
+    /// Similar to scan but with a asynchronous function, emits its current value which 
+    /// starts at zero and then applies the current and next value to the given function
+    /// emitting an Async that resolves to the next current value.
+    let inline asyncScan (folder: 'state -> 'out -> Async<'state>) (zero: 'state) (flow: Flow<'inp,'out,'mat>) : Flow<'inp,'state,'mat> =
+        FlowOperations.ScanAsync(flow, zero, Func<_,_,_>(fun s e -> folder s e |> Async.StartAsTask))
 
     /// Similar to scan but only emits its result when the upstream completes,
     /// after which it also completes. Applies the given function towards its current and next value,
@@ -264,10 +278,13 @@ module Flow =
     /// there is no space available
     let inline buffer (strategy: OverflowStrategy) (n: int) (flow) : Flow<'t, 'u, 'mat> = FlowOperations.Buffer(flow, n, strategy)
             
-    /// Takes up to <paramref name="n"/> elements from the stream and returns a pair containing a strict sequence of the taken element
-    /// and a stream representing the remaining elements. If <paramref name="n"/> is zero or negative, then this will return a pair
+    /// Takes up to n elements from the stream and returns a pair containing a strict sequence of the taken element
+    /// and a stream representing the remaining elements. If `n` is zero or negative, then this will return a pair
     /// of an empty collection and a stream containing the whole upstream unchanged.
-    //let inline prefixAndTail n flow = FlowOperations.PrefixAndTail(flow, n)
+    let inline prefixAndTail (n: int) (flow) : Flow<'inp,'out list * Source<'out, unit>, 'mat> = 
+        FlowOperations.PrefixAndTail(flow, n).Select(Func<_,_>(fun (imm, source) -> 
+            let s = source.MapMaterializedValue(Func<_,_>(ignore))
+            (List.ofSeq imm), s))
 
     /// This operation demultiplexes the incoming stream into separate output
     /// streams, one for each element key. The key is computed for each element
@@ -316,6 +333,11 @@ module Flow =
     /// substreams are being consumed at any given time.
     let inline collectMerge (breadth: int) (flatten: 'u -> #IGraph<SourceShape<'w>, 'mat>) (flow) : Flow<'t, 'w, 'mat> =
         FlowOperations.MergeMany(flow, breadth, Func<_,_>(fun x -> upcast flatten x))
+
+    /// Combine the elements of current flow into a stream of tuples consisting
+    /// of all elements paired with their index. Indices start at 0.
+    let inline zipi (flow) : Flow<'inp, 'out * int64, 'mat> =
+        FlowOperations.ZipWithIndex(flow)
 
     /// If the first element has not passed through this stage before the provided timeout, the stream is failed
     /// with a TimeoutException
@@ -569,3 +591,16 @@ module Flow =
         |> map (fun (x, s) ->
             if x.IsSuccess then Ok x.Value, s
             else Result.Error x.Exception, s) 
+    
+    /// Joins a provided flow with given sink, returning a new sink in the result.
+    let inline toSink (sink: #IGraph<SinkShape<'out>,'mat2>) (flow: Flow<'inp,'out,'mat>) : Sink<'inp,'mat> = 
+        flow.To(sink)
+    
+    /// Joins a provided flow with given sink, returning a new sink in the result.
+    let inline toProcessor (flow: Flow<'inp,'out,'mat>) : IRunnableGraph<IProcessor<'inp,'out>> = 
+        flow.ToProcessor()
+    
+    /// Filters our consecutive duplicated elements from the stream (uniqueness is recognized 
+    /// by provided function).
+    let inline deduplicate (eq: 'out -> 'out -> bool) (flow: Flow<'inp,'out,'mat>) : Flow<'inp, 'out, 'mat> =
+        flow.Via(Deduplicate(eq))
