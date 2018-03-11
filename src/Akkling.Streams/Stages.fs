@@ -8,8 +8,10 @@
 
 module Akkling.Streams.Stages
 
+open Akka.Actor
 open Akka.Streams
 open Akka.Streams.Stage
+open Akkling
 
 [<Sealed>]
 type StageLogic(shape: Shape, init) as this =
@@ -32,6 +34,8 @@ type StageLogic(shape: Shape, init) as this =
     member this.Complete(outlet: Outlet<'a>) = base.Complete(outlet)
     member this.Fail(outlet: Outlet<'a>, error: #exn) = base.Push(outlet, error)
     member this.GetAsyncCallback(handler: 'a -> unit) = base.GetAsyncCallback(System.Action<'a>(handler))
+    member this.StageActorRef<'b>(receive: IActorRef<'b> -> obj -> unit) = 
+        base.GetStageActorRef(StageActorRef.Receive(fun (aref, msg) -> receive (typed aref) msg))
     
 let inline graphStagelogic (shape: #Shape) (init: StageLogic -> unit): GraphStageLogic = upcast StageLogic(shape, init)
 
