@@ -1,4 +1,4 @@
-framework: net452, netstandard1.6
+frameworks: net452, netstandard1.6
 redirects: on
 
 source https://nuget.org/api/v2

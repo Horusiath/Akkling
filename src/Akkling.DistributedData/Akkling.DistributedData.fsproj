@@ -2,6 +2,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard1.6;net452</TargetFrameworks>
+    <Version>0.9.1</Version>
+    <Authors>Bartosz Sypytkowski</Authors>
+    <Description>F# wrapper library for Akka.NET with geo-replicated distributed data support (CRDT)</Description>
+    <PackageProjectUrl>http://github.com/Horusiath/Akkling</PackageProjectUrl>
+    <PackageLicenseUrl>http://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageTags>akka.net fsharp crdt replication geo</PackageTags>
+    <PackageReleaseNotes>Restored multi-framework target</PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />

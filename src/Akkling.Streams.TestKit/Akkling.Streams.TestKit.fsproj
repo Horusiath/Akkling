@@ -2,6 +2,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard1.6;net452</TargetFrameworks>
+    <Version>0.9.1</Version>
+    <Authors>Bartosz Sypytkowski</Authors>
+    <Description>F# wrapper library for Akka.NET Streams TestKit library using FsCheck and xUnit.</Description>
+    <PackageTags>akka.net streams fsharp testing fscheck reactive streams</PackageTags>
+    <PackageLicenseUrl>http://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>http://github.com/Horusiath/Akkling</PackageProjectUrl>
+    <PackageReleaseNotes>Restored multi-framework target</PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Library.fs" />

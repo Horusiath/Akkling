@@ -2,6 +2,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard1.6;net452</TargetFrameworks>
+    <Version>0.9.1</Version>
+    <Authors>Bartosz Sypytkowski</Authors>
+    <Company />
+    <Description>Library used for working with Akka.NET using F# in type safe manner with functional principles in mind</Description>
+    <Copyright>Bartosz Sypytkowski</Copyright>
+    <PackageLicenseUrl>http://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>http://github.com/Horusiath/Akkling</PackageProjectUrl>
+    <PackageTags>akka.net fsharp</PackageTags>
+    <PackageReleaseNotes>Restored multi-framework target</PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />

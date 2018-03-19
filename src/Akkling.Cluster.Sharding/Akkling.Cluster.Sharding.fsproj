@@ -2,6 +2,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard1.6;net452</TargetFrameworks>
+    <Version>0.9.1</Version>
+    <Authors>Bartosz Sypytkowski</Authors>
+    <Description>F# wrapper library for Akka.NET cluster sharding module.</Description>
+    <PackageLicenseUrl>http://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>
+    <Copyright>Bartosz Sypytkowski</Copyright>
+    <PackageProjectUrl>http://github.com/Horusiath/Akkling</PackageProjectUrl>
+    <PackageTags>akka.net fsharp cluster sharding</PackageTags>
+    <PackageReleaseNotes>Restored multi-framework target</PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />

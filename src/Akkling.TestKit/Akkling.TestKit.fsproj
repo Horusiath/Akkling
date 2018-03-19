@@ -2,9 +2,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard1.6;net452</TargetFrameworks>
+    <PackageTags>akka.net fsharp testing fscheck</PackageTags>
+    <Authors>Bartosz Sypytkowski</Authors>
+    <Version>0.9.1</Version>
+    <Description>F# wrapper library for Akka.NET TestKit library using FsCheck and xUnit.</Description>
+    <PackageLicenseUrl>http://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>http://github.com/Horusiath/Akkling</PackageProjectUrl>
+    <PackageReleaseNotes>Restored multi-framework target</PackageReleaseNotes>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="TestKit.fs" />
     <None Include="paket.references" />
     <None Include="Akkling.TestKit.fsproj.paket.template" />

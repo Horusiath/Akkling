@@ -1,3 +1,6 @@
+## New in 0.9.1 (Released 2018/03/17)
+* Restored multi-framework target
+
 ## New in 0.9 (Released 2018/03/11)
 * .NET Standard update
 * Removed F# quotations from the API
