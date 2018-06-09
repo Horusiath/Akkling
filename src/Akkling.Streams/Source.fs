@@ -223,7 +223,7 @@ module Source =
     /// on which the function is defined (read: returns Some) as they pass through this processing step.
     /// Non-matching elements are filtered out.
     let inline choose (fn: 't -> 'u option) (source) : Source<'u, 'mat> =
-        SourceOperations.Collect(source, Func<_, _>(fn)).Where(Predicate<_>(Option.isSome)).Select(Func<_,_>(fun (Some x) -> x))
+        SourceOperations.Collect(source, Func<_, _>(fn)).Where(Predicate<_>(Option.isSome)).Select(Func<_,_>(Option.get))
 
     /// Chunk up this stream into groups of the given size, with the last group
     /// possibly smaller than requested due to end-of-stream.

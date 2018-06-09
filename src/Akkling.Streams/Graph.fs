@@ -66,6 +66,7 @@ module Graph =
 module Operators = 
     
     open Akka.Streams
+    open Akka
 
     type FOps<'o,'mat> = GraphDsl.ForwardOps<'o,'mat>
     type ROps<'i,'mat> = GraphDsl.ReverseOps<'i,'mat>
@@ -76,25 +77,34 @@ module Operators =
 
     [<Struct>]
     type ForwardFunctor = ForwardFunctor with
-        static member inline (?<-) (l: FOps<'o,'mat>, ForwardFunctor, r: FlowShape<'i,'o>) = l.Via(r)
-        static member inline (?<-) (l: FOps<'o,'mat>, ForwardFunctor, r: IGraph<FlowShape<'i,'o>, 'mat>) = l.Via(r)
-        static member inline (?<-) (l: FOps<'o,'mat>, ForwardFunctor, r: UniformFanInShape<'i,'o2> ) = l.Via(r)
-        static member inline (?<-) (l: FOps<'o,'mat>, ForwardFunctor, r: UniformFanOutShape<'i,'o2> ) = l.Via(r)
+        static member inline (?<-) (l: FOps<'i,'mat>, ForwardFunctor, r: FlowShape<'i,'o>) = l.Via(r)
+        static member inline (?<-) (l: FOps<'i,'mat>, ForwardFunctor, r: IGraph<FlowShape<'i,'o>, NotUsed>) = l.Via(r)
+        static member inline (?<-) (l: FOps<'i,'mat>, ForwardFunctor, r: UniformFanInShape<'i,'o2> ) = l.Via(r)
+        static member inline (?<-) (l: FOps<'i,'mat>, ForwardFunctor, r: UniformFanOutShape<'i,'o2> ) = l.Via(r)
                                        
-        static member inline (?<-) (l: FOps<'o,'mat>, ForwardFunctor, r: IGraph<SinkShape<'i>,'mat>) = l.To(r)
-        static member inline (?<-) (l: FOps<'o,'mat>, ForwardFunctor, r: SinkShape<'i>) = l.To(r)
-        static member inline (?<-) (l: FOps<'o,'mat>, ForwardFunctor, r: Inlet<'i>) = l.To(r)
+        static member inline (?<-) (l: FOps<'i,'mat>, ForwardFunctor, r: IGraph<SinkShape<'i>,'mat>) = l.To(r)
+        static member inline (?<-) (l: FOps<'i,'mat>, ForwardFunctor, r: SinkShape<'i>) = l.To(r)
+        static member inline (?<-) (l: FOps<'i,'mat>, ForwardFunctor, r: Inlet<'i>) = l.To(r)
 
     [<Struct>]
     type ReverseFunctor = ReverseFunctor with
-        static member inline (?<-) (l: ROps<'i,'mat>, ReverseFunctor, r: FlowShape<'i,'o>) = l.Via(r)
-        static member inline (?<-) (l: ROps<'i,'mat>, ReverseFunctor, r: IGraph<FlowShape<'i,'o>, 'mat>) = l.Via(r)
-        static member inline (?<-) (l: ROps<'i,'mat>, ReverseFunctor, r: UniformFanInShape<'i2,'o> ) = l.Via(r)
-        static member inline (?<-) (l: ROps<'i,'mat>, ReverseFunctor, r: UniformFanOutShape<'i2,'o> ) = l.Via(r)
+        static member inline (?<-) (l: ROps<'o,'mat>, ReverseFunctor, r: FlowShape<'i,'o>) = l.Via(r)
+        static member inline (?<-) (l: ROps<'o,'mat>, ReverseFunctor, r: IGraph<FlowShape<'i,'o>, 'mat>) = l.Via(r)
+        static member inline (?<-) (l: ROps<'i,'mat>, ReverseFunctor, r: UniformFanInShape<'i,'o> ) = l.Via(r)
+        static member inline (?<-) (l: ROps<'i,'mat>, ReverseFunctor, r: UniformFanOutShape<'i,'o> ) = l.Via(r)
         
         //static member inline (?<-) (l: GraphDsl.ReverseOps<'i,'mat>, ReverseFunctor, r: IGraph<SourceShape<'o>,'mat>) = l.From(r)
         //static member inline (?<-) (l: GraphDsl.ReverseOps<'i,'mat>, ReverseFunctor, r: SourceShape<'o>) = l.From(r)
         //static member inline (?<-) (l: GraphDsl.ReverseOps<'i,'mat>, ReverseFunctor, r: Outlet<'o>) = l.From(r)
                 
-    let inline (=>) (ops: FOps<'o,'mat>) (right) = (ops ? (ForwardFunctor) <- right)
-    let inline (<=) (ops: ROps<'i,'mat>) (right) = (ops ? (ReverseFunctor) <- right)
+    let inline (=>>) (ops: FOps<'o,'mat>) (right) = (ops ? (ForwardFunctor) <- right)
+    let inline (<<=) (ops: ROps<'i,'mat>) (right) = (ops ? (ReverseFunctor) <- right)
+
+    [<Sealed>]
+    type GraphBuilder<'mat>(builder: GraphDsl.Builder<'mat>) =
+        member inline x.Zero () = ClosedShape.Instance
+        member inline x.Return (shape) = shape
+        member x.Bind(expr, cont) = cont (builder.Add expr)
+
+    /// A computation expression for building graph workflows using akka streams API.
+    let graph<'mat> (b: GraphDsl.Builder<'mat>) = GraphBuilder<'mat>(b)

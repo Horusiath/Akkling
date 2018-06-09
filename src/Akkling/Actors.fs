@@ -10,6 +10,7 @@ module Akkling.Actors
 
 open System
 open Akka.Actor
+open Newtonsoft.Json.Linq
 
 type IO<'T> = 
     | Input
@@ -203,6 +204,11 @@ and FunActor<'Message>(actor : Actor<'Message>->Effect<'Message>) as this =
         | :? LifecycleEvent -> 
             // we don't treat unhandled lifecycle events as casual unhandled messages
             current
+        | :? JObject as jobj ->
+            let msg = jobj.ToObject<'Message>()
+            match current with
+            | :? Become<'Message> as become -> become.Next msg
+            | _ -> current
         | other -> 
             this.Unhandled other
             current
