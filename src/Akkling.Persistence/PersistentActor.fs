@@ -13,6 +13,7 @@ open Akka.Actor
 open Akka.Persistence
 open Akkling
 open Akka.Event
+open Newtonsoft.Json.Linq
 
 type PID = string
 
@@ -176,6 +177,11 @@ and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Effect<'Messa
         | :? LifecycleEvent | :? PersistentLifecycleEvent ->
             // we don't treat unhandled lifecycle events as casual unhandled messages
             current
+        | :? JObject as jobj ->
+            let msg = jobj.ToObject<'Message>()
+            match current with
+            | Become(fn) -> fn msg
+            | _ -> current
         | other ->
             base.Unhandled other
             current

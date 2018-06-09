@@ -39,13 +39,13 @@ let ``Graph DSL operators should work`` () = test config <| fun tck ->
                 +-------------------------------+
     *)
     
-    let pickMaxOf3 = Graph.create (fun b-> 
-        let zip1 = ZipWith.create max<int> |> b.Add
-        let zip2 = ZipWith.create max<int> |> b.Add
+    let pickMaxOf3 = Graph.create <| fun b -> graph b {
+        let! zip1 = ZipWith.create max<int>
+        let! zip2 = ZipWith.create max<int>
 
-        b.From(zip1.Out) => zip2.In0 |> ignore
+        b.From zip1.Out =>> zip2.In0 |> ignore
 
-        UniformFanInShape(zip2.Out, zip1.In0, zip1.In1, zip2.In1))
+        return UniformFanInShape(zip2.Out, zip1.In0, zip1.In1, zip2.In1) }
         
     /// VISUAL Explanation:
     (**
@@ -62,20 +62,18 @@ let ``Graph DSL operators should work`` () = test config <| fun tck ->
 
     let max = 
         Sink.head<int> 
-        |> Graph.create1(fun b sink -> 
-            let pm3 = pickMaxOf3 |> b.Add
+        |> Graph.create1 (fun b sink -> graph b {
+            let! pm3 = pickMaxOf3
 
-            let s1 = Source.singleton 1 |> b.Add
-            let s2 = Source.singleton 2 |> b.Add
-            let s3 = Source.singleton 3 |> b.Add
+            let! s1 = Source.singleton 1
+            let! s2 = Source.singleton 2
+            let! s3 = Source.singleton 3    
 
-            b.From s1 => pm3.In(0) |> ignore
-            b.From s2 => pm3.In(1) |> ignore
-            b.From s3 => pm3.In(2) |> ignore
+            b.From s1 =>> pm3.In(0) |> ignore
+            b.From s2 =>> pm3.In(1) |> ignore
+            b.From s3 =>> pm3.In(2) |> ignore
 
-            b.From(pm3.Out) => sink |> ignore
-
-            ClosedShape.Instance) 
+            b.From(pm3.Out) =>> sink |> ignore })
         |> Graph.runnable
         |> Graph.run mat
         |> Async.RunSynchronously
@@ -104,3 +102,12 @@ let ``A deduplicate must remove consecutive duplicates`` () = test config <| fun
     |> expectNext 3
     |> expectComplete
     |> ignore
+    
+[<Fact>]
+let ``A concat must emit elements in correct order`` () = test config <| fun tck ->
+    use mat = tck.Sys.Materializer()
+    Source.ofList [1;2;3]
+    |> Source.concat (Source.ofList [4;5;6])
+    |> Source.runFold mat (fun acc x -> x::acc) []
+    |> Async.RunSynchronously
+    |> equals [1;2;3;10;5;6]
