@@ -15,20 +15,26 @@ open Akka.TestKit.Xunit2
 
 type Tck = TestKit
 
+
+let testConfig = Akka.TestKit.Configs.TestConfigs.TestSchedulerConfig
+
 /// <summary>
 /// Runs a test case function in context of TestKit aware actor system.
 /// </summary>
 /// <param name="config">Configuration used for actor system initialization.</param>
 /// <param name="fn">Test case function</param>
 let test (config : Akka.Configuration.Config) (fn : Tck -> unit) =
-    use system = System.create "test-system" (config.WithFallback Akka.TestKit.Configs.TestConfigs.TestSchedulerConfig)
+    use system = System.create "test-system" (config.WithFallback testConfig)
     use tck = new TestKit(system)
     fn tck
 
 /// <summary>
 /// Runs a test case function using default configuration.
 /// </summary>
-let testDefault t = test (Akka.TestKit.Configs.TestConfigs.TestSchedulerConfig) t
+let testDefault fn = 
+    use system = System.create "test-system" testConfig
+    use tck = new TestKit(system)
+    fn tck
 
 let inline probe (tck: Tck) : TestProbe = tck.CreateTestProbe()
 let inline barrier (tck: Tck) (count: int) : TestBarrier = tck.CreateTestBarrier count

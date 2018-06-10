@@ -25,8 +25,6 @@ module Flow =
     open Reactive.Streams
     open Stages
     open Akka.Streams.Dsl
-    open Akka.Streams.Dsl
-    open Akka.Streams.Dsl
 
     /// Creates a new empty flow.
     let empty<'t, 'mat> : Flow<'t, 't, 'mat> = Flow.Create<'t, 'mat>()
@@ -619,7 +617,7 @@ module Flow =
     let inline deduplicate (eq: 'out -> 'out -> bool) (flow: Flow<'inp,'out,'mat>) : Flow<'inp, 'out, 'mat> =
         flow.Via(Deduplicate(eq))
 
-    /// Materializes into an Async of switch which provides a the method flip that stops or restarts the flow of elements passing through the stage. 
+    /// Materializes into an Async of switch which provides method flip that stops or restarts the flow of elements passing through the stage. 
     /// As long as the valve is closed it will backpressure.
     /// Note that closing the valve could result in one element being buffered inside the stage, and if the stream completes or fails while being closed, that element may be lost.
     let inline valve (mode: SwitchMode) : Flow<'t, 't, Async<IValveSwitch>> =

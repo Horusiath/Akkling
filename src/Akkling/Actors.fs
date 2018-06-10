@@ -205,9 +205,8 @@ and FunActor<'Message>(actor : Actor<'Message>->Effect<'Message>) as this =
             // we don't treat unhandled lifecycle events as casual unhandled messages
             current
         | :? JObject as jobj ->
-            let msg = jobj.ToObject<'Message>()
             match current with
-            | :? Become<'Message> as become -> become.Next msg
+            | :? Become<'Message> as become -> become.Next <| jobj.ToObject<'Message>()
             | _ -> current
         | other -> 
             this.Unhandled other

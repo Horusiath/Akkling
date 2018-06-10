@@ -1,3 +1,9 @@
+## New in 0.9.2 (Released 2018/06/10)
+* New computation expression for Graph DSL
+* Renamed graph join operator from => to =>>
+* ByteString module
+* New streams stages: valve, pulse, managedDelay, partition, statefulPartition, mapMatValue
+
 ## New in 0.9.1 (Released 2018/03/17)
 * Restored multi-framework target
 

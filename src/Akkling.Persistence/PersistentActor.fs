@@ -178,9 +178,8 @@ and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Effect<'Messa
             // we don't treat unhandled lifecycle events as casual unhandled messages
             current
         | :? JObject as jobj ->
-            let msg = jobj.ToObject<'Message>()
             match current with
-            | Become(fn) -> fn msg
+            | Become(fn) -> fn <| jobj.ToObject<'Message>()
             | _ -> current
         | other ->
             base.Unhandled other

@@ -42,7 +42,7 @@ let tags = "akka.net fsharp"
 let solutionFile  = "Akkling.sln"
 
 // Pattern specifying assemblies to be tested using NUnit
-let testAssemblies = "tests/**/bin/Release/*Tests*.dll"
+let testAssemblies = "tests/Akkling.Tests/bin/Release/**/*Tests.dll"
 
 // Git configuration (used for publishing documentation in gh-pages branch)
 // The profile where the project is posted
@@ -283,9 +283,9 @@ Target "All" DoNothing
   ==> "AssemblyInfo"
   ==> "Build"
   ==> "CopyBinaries"
-  ==> "RunTests"
+ // ==> "RunTests"
   //==> "GenerateReferenceDocs"
-  ==> "GenerateDocs"
+  //==> "GenerateDocs"
   ==> "All"
 
 "All" 

@@ -19,10 +19,10 @@ open Akka.Streams.Dsl
 open Akka.Streams
 //open Akka.Streams.TestKit
 
-let config = Configuration.parse "akka.logLevel = DEBUG"
+let config () = Configuration.parse "akka.logLevel = DEBUG"
 
 [<Fact>]
-let ``Graph DSL operators should work`` () = test config <| fun tck ->
+let ``Graph DSL operators should work`` () = test (config()) <| fun tck ->
     use mat = tck.Sys.Materializer()
 
     /// VISUAL Explanation:
@@ -85,7 +85,7 @@ open Akkling.Streams.TestKit
 open Akkling.Streams.TestKit.ManualSubscriberProbe
     
 [<Fact>]
-let ``A deduplicate must remove consecutive duplicates`` () = test config <| fun tck ->
+let ``A deduplicate must remove consecutive duplicates`` () = test (config()) <| fun tck ->
     use mat = tck.Sys.Materializer()
     let probe = manualSubscriberProbe tck
     Source.ofList [1; 1; 1; 2; 2; 1; 1; 3]
@@ -104,10 +104,11 @@ let ``A deduplicate must remove consecutive duplicates`` () = test config <| fun
     |> ignore
     
 [<Fact>]
-let ``A concat must emit elements in correct order`` () = test config <| fun tck ->
+let ``A concat must emit elements in correct order`` () = test (config()) <| fun tck ->
     use mat = tck.Sys.Materializer()
     Source.ofList [1;2;3]
     |> Source.concat (Source.ofList [4;5;6])
     |> Source.runFold mat (fun acc x -> x::acc) []
     |> Async.RunSynchronously
-    |> equals [1;2;3;10;5;6]
+    |> List.rev
+    |> equals [1;2;3;4;5;6]
