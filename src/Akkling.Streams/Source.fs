@@ -653,6 +653,10 @@ module Source =
     /// Nests the current Source and returns a Source with the given Attributes
     let inline attrs (a: Attributes) (source: Source<'t, 'mat>) : Source<'t, 'mat> = source.WithAttributes(a)
 
+    /// Transform the materialized value of this Source, leaving all other properties as they were.
+    let inline mapMatValue (fn: 'mat -> 'mat2) (source: Source<'t,'mat>) : Source<'t,'mat2> = 
+        source.MapMaterializedValue(Func<_,_> fn)
+
     /// Transform this source by appending the given processing steps.
     /// The materialized value of the combined source will be the materialized
     /// value of the current flow (ignoring the other flow’s value).
@@ -701,8 +705,10 @@ module Source =
 
     /// A MergeHub is a special streaming hub that is able to collect streamed elements from a 
     /// dynamic set of producers
-    let inline mergeHub (perProducerBufferSize) = MergeHub.Source(perProducerBufferSize)
-    
+    let inline mergeHub (perProducerBufferSize: int) : Source<'t, Sink<'t, unit>> = 
+        MergeHub.Source(perProducerBufferSize) 
+        |> mapMatValue (Sink.mapMatValue ignore)
+            
     /// Combines current source with provided sink, resulting in a completed runnable graph.
     let inline toSink (sink: #IGraph<SinkShape<'t>,'mat2>) (source: Source<'t,'mat>) : IRunnableGraph<'mat> = 
         source.To(sink)
@@ -716,3 +722,23 @@ module Source =
     /// by provided function).
     let inline deduplicate (eq: 'a -> 'a -> bool) (source: Source<'a,'mat>) : Source<'a, 'mat> =
         source.Via(Deduplicate<'a>(eq))
+
+    /// Pulse stage signals demand only once every "pulse" interval and then back-pressures.
+    /// Requested element is emitted downstream if there is demand.
+    /// It can be used to implement simple time-window processing
+    /// where data is aggregated for predefined amount of time and the computed aggregate is emitted once per this time.
+    let inline pulse (initiallyOpen: bool) (interval: TimeSpan) (source: Source<'t, 'mat>) : Source<'t, 'mat> =
+        source.Via (new Pulse<_>(interval, initiallyOpen))
+        
+    /// Flow stage for universal delay management, allows to manage delay through a given strategy.
+    let managedDelay (strategy: DelayStrategy<'t>) (source: Source<'t, 'mat>) : Source<'t, 'mat> =
+        let strategySupplier () : IDelayStrategy<'t> =
+            match strategy with
+            | FixedDelay delay -> upcast FixedDelay<_>(delay)
+            | LinearIncreasingDelay(init, step, max:TimeSpan, increaseCheck) ->
+                upcast LinearIncreasingDelay<_>(step, Func<_,_>(increaseCheck), init, max)
+            | CustomDelay fn ->
+                { new IDelayStrategy<'t> with
+                    member x.NextDelay(element:'t) : TimeSpan = fn element }
+            
+        source.Via (new DelayFlow<_>(Func<_> strategySupplier))

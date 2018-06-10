@@ -27,6 +27,7 @@ module IO =
 
     type TcpMessage = Akka.IO.TcpMessage 
 
+    /// Helper module with active patterns for TCP-related commands and events.
     module Tcp =
 
         let (|Received|_|) (msg:obj) : ByteString option =
@@ -72,6 +73,7 @@ module IO =
             | :? Tcp.PeerClosed -> PeerClosed
             | :? Tcp.ErrorClosed -> ErrorClosed
             
+    /// Helper module with active patterns for UDP-related commands and events.
     module Udp =
 
         let inline Bind(ref: IActorRef<'t>, localAddress: EndPoint) = 
@@ -89,3 +91,51 @@ module IO =
                 then Some (c.Cmd :?> 'C)
                 else None
             | _ -> None
+
+    [<RequireQualifiedAccess>]
+    module ByteString =
+
+        open System.IO
+
+        /// Gets a total number of bytes stored inside this byte string.
+        let inline length (b: ByteString) = b.Count
+
+        /// Determines if current byte string is empty.
+        let inline isEmpty (b: ByteString) = b.IsEmpty
+
+        /// Determines if current byte string has compact representation.
+        /// Compact byte strings represent bytes stored inside single, continuous
+        /// block of memory.
+        let inline isCompact (b: ByteString) = b.IsCompact
+
+        /// Compacts current byte string, potentially copying its content underneat
+        /// into new byte array.
+        let inline compact (b: ByteString) = b.Compact()
+        
+        /// Slices current byte string, creating a new one which contains a specified 
+        /// range of data from the original. This is non-copying operation.
+        let inline slice (index: int) (length: int) (b: ByteString) = b.Slice(index, length)
+
+        /// Returns an index of the first occurence of provided byte starting 
+        /// from the provided index.
+        let inline indexOf (from: int) (byte: byte) (b: ByteString) = b.IndexOf(byte, from)
+
+        /// Checks if a subsequence determined by the other byte string is 
+        /// can be found in current one, starting from provided index.
+        let inline contains (from: int) (other: ByteString) (b: ByteString) = b.HasSubstring(other, from)
+
+        /// Copies content of a current byte string into a single byte array.
+        let inline toArray (b: ByteString) = b.ToArray()
+
+        /// Appends second parameter byte string at the tail
+        /// of a first one, creating a new byte string in result.
+        /// Contents of byte strings are NOT copied.
+        let inline append (a: ByteString) (b: ByteString) = a.Concat b
+        
+        /// Copies content of the current byte string to a provided 
+        /// writeable stream.
+        let inline writeTo (stream: Stream) (b: ByteString) = b.WriteTo stream
+        
+        /// Copies content of the current byte string to a provided 
+        /// writeable stream.
+        let inline asyncWriteTo (stream: Stream) (b: ByteString) = b.WriteToAsync stream |> Async.AwaitTask

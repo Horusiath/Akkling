@@ -13,10 +13,20 @@ open Akkling
 open Akka.Streams
 open Akka.Streams.Dsl
 
+type SwitchMode = SwitchMode
+
+type DelayStrategy<'a> =
+    | FixedDelay of TimeSpan
+    | LinearIncreasingDelay of init:TimeSpan * step:TimeSpan * max:TimeSpan * increaseCheck:('a -> bool)
+    | CustomDelay of ('a -> TimeSpan)
+
 [<RequireQualifiedAccess>]
 module Flow =
     open Reactive.Streams
     open Stages
+    open Akka.Streams.Dsl
+    open Akka.Streams.Dsl
+    open Akka.Streams.Dsl
 
     /// Creates a new empty flow.
     let empty<'t, 'mat> : Flow<'t, 't, 'mat> = Flow.Create<'t, 'mat>()
@@ -511,6 +521,10 @@ module Flow =
     /// Nests the current Source and returns a Source with the given Attributes
     let inline attrs (a: Attributes) (flow: Flow<'t, 'u, 'mat>) : Flow<'t, 'u, 'mat> = flow.WithAttributes(a)
 
+    /// Transform the materialized value of this Flow, leaving all other properties as they were.
+    let inline mapMatValue (fn: 'mat -> 'mat2) (flow: Flow<'inp,'out,'mat>) : Flow<'inp,'out,'mat2> = 
+        flow.MapMaterializedValue(Func<_,_> fn)
+
     /// Transform this flow by appending the given processing steps.
     /// The materialized value of the combined source will be the materialized
     /// value of the current flow (ignoring the other flow’s value).
@@ -604,3 +618,29 @@ module Flow =
     /// by provided function).
     let inline deduplicate (eq: 'out -> 'out -> bool) (flow: Flow<'inp,'out,'mat>) : Flow<'inp, 'out, 'mat> =
         flow.Via(Deduplicate(eq))
+
+    /// Materializes into an Async of switch which provides a the method flip that stops or restarts the flow of elements passing through the stage. 
+    /// As long as the valve is closed it will backpressure.
+    /// Note that closing the valve could result in one element being buffered inside the stage, and if the stream completes or fails while being closed, that element may be lost.
+    let inline valve (mode: SwitchMode) : Flow<'t, 't, Async<IValveSwitch>> =
+        Flow.FromGraph(new Valve<_>(mode)) |> mapMatValue Async.AwaitTask
+
+    /// Pulse stage signals demand only once every "pulse" interval and then back-pressures.
+    /// Requested element is emitted downstream if there is demand.
+    /// It can be used to implement simple time-window processing
+    /// where data is aggregated for predefined amount of time and the computed aggregate is emitted once per this time.
+    let inline pulse (initiallyOpen: bool) (interval: TimeSpan) (flow: Flow<'t, 't, 'mat>) : Flow<'t, 't, 'mat> =
+        flow.Via (new Pulse<_>(interval, initiallyOpen))
+    
+    /// Flow stage for universal delay management, allows to manage delay through a given strategy.
+    let managedDelay (strategy: DelayStrategy<'t>) (flow: Flow<'t, 't, 'mat>) : Flow<'t, 't, 'mat> =
+        let strategySupplier () : IDelayStrategy<'t> =
+            match strategy with
+            | FixedDelay delay -> upcast FixedDelay<_>(delay)
+            | LinearIncreasingDelay(init, step, max:TimeSpan, increaseCheck) ->
+                upcast LinearIncreasingDelay<_>(step, Func<_,_>(increaseCheck), init, max)
+            | CustomDelay fn ->
+                { new IDelayStrategy<'t> with
+                    member x.NextDelay(element:'t) : TimeSpan = fn element }
+            
+        flow.Via (new DelayFlow<_>(Func<_> strategySupplier))
