@@ -143,9 +143,34 @@ module Sink =
     /// to read the values produced by the stream this Sink is attached to.
     /// This Sink is intended for inter-operation with legacy APIs since it is inherently blocking.
     let inline asStreamWithTimeout (timeout: TimeSpan): Sink<ByteString, Stream> = StreamConverters.AsInputStream(Nullable timeout)
+    
+    /// Transform the materialized value of this Source, leaving all other properties as they were.
+    let inline mapMatValue (fn: 'mat -> 'mat2) (sink: Sink<'t,'mat>) = sink.MapMaterializedValue(Func<'mat,'mat2> fn)
 
     /// A BroadcastHub is a special streaming hub that is able to broadcast streamed elements 
     /// to a dynamic set of consumers.
-    let inline broadcastHub (bufferSize) = BroadcastHub.Sink(bufferSize)
+    let inline broadcastHub (perConsumerBufferSize: int) : Sink<'t, Source<'t, unit>> = 
+        BroadcastHub.Sink(perConsumerBufferSize)
+        |> mapMatValue (fun source -> source.MapMaterializedValue(Func<_,_> (fun _ -> ())))
 
-    let inline mapMaterializedValue (fn: 'mat -> 'mat2) (sink: Sink<'t,'mat>) = sink.MapMaterializedValue(Func<'mat,'mat2>(fn))
+    let statefulPartition 
+        (bufferSize: int) 
+        (startAfterNrOfConsumers: int) 
+        (initialState: 'state) 
+        (partitioner: PartitionHub.IConsumerInfo -> 'state -> 't -> 'state * int64) : Sink<'t, Source<'t, unit>> =
+            let partitionFunc : Func<Func<PartitionHub.IConsumerInfo, 't, int64>> = Func<_> (fun () ->
+                let mutable state = initialState
+                let picker info elem = 
+                    let (newState, bucket) = partitioner info state elem
+                    state <- newState
+                    bucket
+
+                Func<_,_,_> picker)
+
+            PartitionHub.StatefulSink(partitionFunc, startAfterNrOfConsumers, bufferSize)
+            |> mapMatValue (fun source -> source.MapMaterializedValue(Func<_,_> (fun _ -> ())))
+
+    let partition (bufferSize: int) (startAfterNrOfConsumers: int) (partitioner: int -> 't -> int) : Sink<'t, Source<'t, unit>> =
+        PartitionHub.Sink (Func<_,_,_>(partitioner), startAfterNrOfConsumers, bufferSize)
+        |> mapMatValue (fun source -> source.MapMaterializedValue(Func<_,_> (fun _ -> ())))
+        
