@@ -22,11 +22,11 @@
     <Compile Include="Framing.fs" />
     <Compile Include="Prolog.fs" />
     <Compile Include="Stages.fs" />
-    <Compile Include="Flow.fs" />
     <Compile Include="Sink.fs" />
     <Compile Include="SubFlow.fs" />
     <Compile Include="BidiFlow.fs" />
     <Compile Include="Graph.fs" />
+    <Compile Include="Flow.fs" />
     <Compile Include="KillSwitch.fs" />
     <Compile Include="Source.fs" />
     <Compile Include="Tcp.fs" />

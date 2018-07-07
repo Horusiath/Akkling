@@ -10,6 +10,7 @@ namespace Akkling.Streams
 
 open System
 open Akkling
+open Akkling.Streams.Operators
 open Akka.Streams
 open Akka.Streams.Dsl
 
@@ -22,6 +23,7 @@ type DelayStrategy<'a> =
 
 [<RequireQualifiedAccess>]
 module Flow =
+    open Akka
     open Reactive.Streams
     open Stages
     open Akka.Streams.Dsl
@@ -571,7 +573,7 @@ module Flow =
         flow.JoinMaterialized(bidi, Func<'mat,'mat2,'mat3>(fn))
 
     let inline iter (fn: 'o -> unit) (flow: Flow<'i,'o,'mat>): Flow<'i,'o,'mat> = flow |> map (fun x -> fn x; x)
-
+    
     let retry (retryWith: 's -> ('i * 's) option) (flow: Flow<('i * 's), (Result< 'o, exn> * 's), 'mat>)  =
         let flow: Flow<'i * 's, Akka.Util.Result<'o> * 's, 'mat> = 
             flow |> map (fun (x, s) -> 
@@ -587,6 +589,73 @@ module Flow =
         |> map (fun (x, s) ->
             if x.IsSuccess then Ok x.Value, s
             else Result.Error x.Exception, s) 
+
+    type private State<'i, 's> = 'i * 's
+    
+    /// <summary>    
+    /// Retry flow factory. Given a flow that produces `Result<'out, #exn>`, this wrapping flow may be used to try
+    /// and pass failed elements through the flow again. More accurately, the given flow consumes a tuple
+    /// of `input` and `state`, and produces a tuple of `Result<'out, #exn> of `output` and `state`.
+    /// If the flow emits an Error element, the `retryWith` function is fed with the failed element 
+    /// and `state` of it, and may produce a new state to pass through the original flow. 
+    /// The function may also yield `None` instead of `Some state`, which means not to retry a failed element.
+    /// </summary>
+    ///
+    /// <param name="flow">the flow to retry</param>
+    /// <param name="retryWith">if output was failure, we can optionaly recover from it,
+    /// and retry with a new pair of input and new state we get from this function.</param>
+    /// <typeparam name="'i">input elements type</typeparam>
+    /// <typeparam name="'s">state to create a new `(I,S)` to retry with</typeparam>
+    /// <typeparam name="'out">output elements type</typeparam>
+    /// <example>
+    /// 
+    /// let plainFlow = Flow.id |> Flow.map (fun x -> if x = 2 then Error (exn "it's 3 and we fail") else Ok x)
+    /// let retryFlow = 
+    ///     (plainFlow, 0)
+    ///     ||> retry (fun (i: int, attempt: int) ->
+    ///           printfn "Elem %d, Attempt %d" i attempt
+    ///           if attempt > 3 then None else Some (attempt + 1)
+    ///         )
+    ///        
+    /// [1..3]
+    /// |> Source.ofList
+    /// |> Source.via retryFlow
+    /// |> Source.runForEach mat (printfn "got %A")
+    /// |> Async.RunSynchronously
+    ///
+    /// </example>
+    let retrySimple (retryWith: 'i * 's -> 's option) (flow: Flow<'i, Result<'o, #exn>, NotUsed>) (initialState: 's) =
+        let flow: Flow<'i * State<'i, 's>, Util.Result<'o> * State<'i, 's>, NotUsed> =
+            Graph.create (fun b -> graph b {
+                let flow =
+                    flow
+                    |> map (fun o -> 
+                        match o with 
+                        | Ok x -> Util.Result.Success x
+                        | Error e -> Util.Result.Failure e)
+                        
+                let! broadcast = Broadcast(2)
+                let! zip = ZipWith.create (fun o s -> o, s)
+                b.From broadcast =>> (id |> map fst) =>> flow =>> zip.In0 |> ignore
+                b.From broadcast =>> (id |> map snd) =>> zip.In1 |> ignore
+    
+                return FlowShape(broadcast.In, zip.Out)
+            })
+            |> Flow.FromGraph
+        
+        let retryFlow =        
+            Retry.Create(flow, fun ((i, _) as state) -> 
+                match retryWith state with
+                | Some newState -> i, (i, newState)
+                | None -> Unchecked.defaultof<_>)
+            |> Flow.FromGraph
+            |> map (fun (x, _) ->
+                if x.IsSuccess then Ok x.Value
+                else Result.Error x.Exception)
+        
+        id 
+        |> map (fun i -> i, (i, initialState)) 
+        |> via retryFlow  
 
     let retryLimited limit (retryWith: 's -> ('i * 's) seq option) (flow: Flow<('i * 's), (Result< 'o, exn> * 's), 'mat>)  =
         let flow: Flow<'i * 's, Akka.Util.Result<'o> * 's, 'mat> = 
