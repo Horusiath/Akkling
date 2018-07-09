@@ -19,7 +19,7 @@ nuget xunit.assert >= 2.3.0 prerelease
 nuget xunit.runner.console >= 2.3.0 prerelease
 nuget xunit.runner.visualstudio >= 2.3.0 prerelease
 nuget xunit.extensibility.execution >= 2.3.0 prerelease
-nuget FSharp.Core
+nuget FSharp.Core 4.3.4
 
 nuget Microsoft.Extensions.DependencyInjection.Abstractions = 1.1.1
 nuget Microsoft.Extensions.DependencyInjection = 1.1.1

@@ -1,3 +1,6 @@
+## New in 0.9.3 (Released 2018/07/09)
+* Rollback FSharp.Core to 4.3.4
+
 ## New in 0.9.2 (Released 2018/06/10)
 * New computation expression for Graph DSL
 * Renamed graph join operator from => to =>>
