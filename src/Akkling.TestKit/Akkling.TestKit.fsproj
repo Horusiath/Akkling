@@ -4,18 +4,14 @@
     <TargetFrameworks>netstandard1.6;net452</TargetFrameworks>
     <PackageTags>akka.net fsharp testing fscheck</PackageTags>
     <Authors>Bartosz Sypytkowski</Authors>
-    <Version>0.9.2</Version>
+    <Version>0.9.3</Version>
     <Description>F# wrapper library for Akka.NET TestKit library using FsCheck and xUnit.</Description>
     <PackageLicenseUrl>http://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>http://github.com/Horusiath/Akkling</PackageProjectUrl>
-    <PackageReleaseNotes>* New computation expression for Graph DSL
-
-* Renamed graph join operator from =&gt; to =&gt;&gt;
-* 
-ByteString module
-
-* New streams stages: valve, pulse, managedDelay, partition, statefulPartition, mapMatValue</PackageReleaseNotes>
+    <PackageReleaseNotes>Rollback FSharp.Core to 4.3.4
+Include XML docs</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="TestKit.fs" />
@@ -27,7 +23,7 @@ ByteString module
     <ProjectReference Include="..\Akkling\Akkling.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="4.5.0" />
+    <PackageReference Update="FSharp.Core" Version="4.3.4" />
     <PackageReference Update="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 </Project>
