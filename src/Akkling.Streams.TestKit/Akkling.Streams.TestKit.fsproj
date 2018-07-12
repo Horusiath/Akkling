@@ -8,8 +8,10 @@
     <PackageTags>akka.net streams fsharp testing fscheck reactive streams</PackageTags>
     <PackageLicenseUrl>http://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>http://github.com/Horusiath/Akkling</PackageProjectUrl>
-    <PackageReleaseNotes>Rollback FSharp.Core to 4.3.4</PackageReleaseNotes>
+    <PackageReleaseNotes>Rollback FSharp.Core to 4.3.4
+Include XML docs</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Library.fs" />

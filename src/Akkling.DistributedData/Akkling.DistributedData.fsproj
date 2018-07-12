@@ -8,8 +8,10 @@
     <PackageProjectUrl>http://github.com/Horusiath/Akkling</PackageProjectUrl>
     <PackageLicenseUrl>http://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>
     <PackageTags>akka.net fsharp crdt replication geo</PackageTags>
-    <PackageReleaseNotes>Rollback FSharp.Core to 4.3.4</PackageReleaseNotes>
+    <PackageReleaseNotes>Rollback FSharp.Core to 4.3.4
+Include XML docs</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />

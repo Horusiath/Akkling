@@ -8,8 +8,10 @@
     <Version>0.9.3</Version>
     <Description>F# wrapper library for Akka.NET with reactive streams support</Description>
     <PackageTags>akka.net fsharp reactive streams</PackageTags>
-    <PackageReleaseNotes>Rollback FSharp.Core to 4.3.4</PackageReleaseNotes>
+    <PackageReleaseNotes>Rollback FSharp.Core to 4.3.4
+Include XML docs</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
