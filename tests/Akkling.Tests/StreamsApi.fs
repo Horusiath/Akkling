@@ -80,6 +80,7 @@ let ``Graph DSL operators should work`` () = test (config()) <| fun tck ->
 
     max |> equals 3
     
+open Akka.Streams.TestKit
 open Akkling.Streams
 open Akkling.Streams.TestKit
 open Akkling.Streams.TestKit.ManualSubscriberProbe
@@ -112,3 +113,23 @@ let ``A concat must emit elements in correct order`` () = test (config()) <| fun
     |> Async.RunSynchronously
     |> List.rev
     |> equals [1;2;3;4;5;6]
+    
+[<Fact>]
+let ``Expand must pass through elements unchanged when there is no rate difference`` () = test (config()) <| fun tck ->
+    use mat = tck.Sys.Materializer()
+    let publisher = TestPublisher.CreatePublisherProbe(tck)
+    let subscriber = TestSubscriber.CreateSubscriberProbe(tck)
+    
+    Source.FromPublisher publisher
+    |> Source.expand (fun x -> List.replicate 200 x)
+    |> Source.toSink (Sink.ofSubscriber subscriber)
+    |> Graph.run mat
+    |> ignore
+    
+    for i in 1..100 do
+        // Order is important here: If the request comes first it will be extrapolated!
+        publisher.SendNext i |> ignore
+        subscriber.RequestNext i |> ignore
+    
+    subscriber.Cancel() |> ignore
+   
