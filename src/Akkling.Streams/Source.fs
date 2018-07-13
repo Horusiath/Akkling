@@ -416,7 +416,7 @@ module Source =
     ///
     /// Expand does not support restart and resume directives. Exceptions from the extrapolate function will complete the stream with failure.
     let inline expand (extrapolate: 'u -> #seq<'t>) (source) : Source<'t, 'mat>  =
-        SourceOperations.Expand(source, Func<_,_>(fun x -> upcast extrapolate x))
+        SourceOperations.Expand(source, Func<_,_>(fun x -> (extrapolate x).GetEnumerator()))
 
     /// Adds a fixed size buffer in the flow that allows to store elements from a faster upstream until it becomes full.
     /// Depending on the defined strategy it might drop elements or backpressure the upstream if

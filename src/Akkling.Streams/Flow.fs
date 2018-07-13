@@ -279,7 +279,7 @@ module Flow =
     ///
     /// Expand does not support restart and resume directives. Exceptions from the extrapolate function will complete the stream with failure.
     let inline expand (extrapolate: 'u -> #seq<'w> ) (flow) : Flow<'t, 'w, 'mat> =
-        FlowOperations.Expand(flow, Func<_,_>(fun x -> upcast extrapolate x))
+        FlowOperations.Expand(flow, Func<_,_>(fun x -> (extrapolate x).GetEnumerator()))
 
     /// Adds a fixed size buffer in the flow that allows to store elements from a faster upstream until it becomes full.
     /// Depending on the defined strategy it might drop elements or backpressure the upstream if
