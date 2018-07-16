@@ -483,3 +483,7 @@ module SubFlow =
     /// by provided function).
     let inline deduplicate (eq: 'out -> 'out -> bool) (subFlow: SubFlow<'out,'mat,'closed>) : SubFlow<'out,'mat,'closed> =
         downcast subFlow.Via(Deduplicate(eq))
+        
+    /// Injects the first element from given `SubFlow` repeatedly, every given interval.        
+    let injectFirst (interval: TimeSpan) (firstElemFactory: 'i -> 'i) (subFlow: SubFlow<'i, 'o, 'mat>) = 
+        subFlow |> via (Flow.Ops.injectFirst interval firstElemFactory)

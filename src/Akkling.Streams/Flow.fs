@@ -711,3 +711,25 @@ module Flow =
                     member x.NextDelay(element:'t) : TimeSpan = fn element }
             
         flow.Via (new DelayFlow<_>(Func<_> strategySupplier))
+        
+    module internal Ops =
+        /// Injects the first element from given `Flow` repeatedly, every given interval. 
+        let injectFirst (interval: TimeSpan) (firstElemFactory: 'a -> 'a) : IGraph<FlowShape<'a, 'a>, 'mat> =
+            Graph.create (fun b -> graph b {
+                let! broadcast = Broadcast(2)
+                let! merge = Merge<_>(2)
+                b.From broadcast =>> merge |> ignore
+                b.From broadcast =>>
+                    (id
+                     |> take 1L
+                     |> collect (fun elem ->
+                         let firstElem = firstElemFactory elem  
+                         Seq.initInfinite (fun _ -> firstElem))
+                     |> pulse true interval
+                    ) =>> merge |> ignore
+                return FlowShape(broadcast.In, merge.Out)
+            })
+            
+    /// Injects the first element from given `Flow` repeatedly, every given interval.            
+    let injectFirst (interval: TimeSpan) (firstElemFactory: 'i -> 'i) (flow: Flow<'i, 'i, 'mat>) = 
+        flow |> via (Ops.injectFirst interval firstElemFactory)

@@ -17,7 +17,6 @@ open System
 open Xunit
 open Akka.Streams.Dsl
 open Akka.Streams
-//open Akka.Streams.TestKit
 
 let config () = Configuration.parse "akka.logLevel = DEBUG"
 
@@ -133,3 +132,37 @@ let ``Expand must pass through elements unchanged when there is no rate differen
     
     subscriber.Cancel() |> ignore
    
+[<Fact>]
+let ``InjectFirst must emits the first element every given interval`` () = test (config()) <| fun tck ->
+    use mat = tck.Sys.Materializer()
+        
+    [1, Some 1; 2, Some 2; 1, Some 11; 2, Some 22]
+    |> Source.ofList
+    |> Source.pulse true (TimeSpan.FromMilliseconds 250.0)
+    |> Source.groupBy 100 fst
+    //|> SubFlow.injectFirst (TimeSpan.FromMilliseconds 100.0) (fun (i, _) -> i, None)
+    |> SubFlow.mergeSubstreams
+    |> Source.take 4L
+    |> Source.runFold mat (fun acc x -> x :: acc) []
+    |> Async.RunSynchronously
+    |> List.rev
+    |> equals [
+        1, Some 1 
+        1, None
+        1, None
+        2, Some 2
+        1, None
+        2, None
+        1, None
+        2, None
+        1, Some 11
+        1, None
+        2, None
+        1, None
+        2, None
+        2, Some 22
+        1, None
+        2, None
+        1, None
+        2, None
+       ]
