@@ -96,6 +96,29 @@ module IO =
     module ByteString =
 
         open System.IO
+        open System
+        
+        /// Creates a new `ByteString` from a given byte array segment.
+        /// WARNING: returned ByteString will operate directly on the underlying byte array. 
+        /// Don't modify its elemnts after this operation.
+        let inline ofArraySegmentUnsafe (b: ArraySegment<byte>) = ByteString.FromBytes(b)
+
+        /// Creates a new `ByteString` from a given byte array. 
+        /// WARNING: returned ByteString will operate directly on the underlying byte array. 
+        /// Don't modify its elemnts after this operation.
+        let inline ofArrayUnsafe (b: byte[]) = ByteString.FromBytes(b)
+        
+        /// Creates a new `ByteString` from a given byte array segment by copying its elements.
+        let inline ofArraySegment (b: ArraySegment<byte>) = ByteString.CopyFrom(b)
+
+        /// Creates a new `ByteString` from a given byte array by copying its elements.
+        let inline ofArray (b: byte[]) = ByteString.CopyFrom(b)
+
+        /// Creates a new `ByteString` from a given string using given encoding.
+        let inline ofString encoding s = ByteString.FromString(s, encoding)
+        
+        /// Creates a new `ByteString` from a given string using UTF8 encoding.
+        let inline ofUtf8String s = ByteString.FromString s
 
         /// Gets a total number of bytes stored inside this byte string.
         let inline length (b: ByteString) = b.Count
