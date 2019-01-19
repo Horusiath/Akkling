@@ -11,32 +11,6 @@ namespace Akkling
 open Akka.Actor
 open System
 
-[<RequireQualifiedAccess>]
-module Configuration = 
-    let internal extendedConfig = (Akka.Configuration.ConfigurationFactory.ParseString """
-            akka.actor {
-                serializers {
-                    hyperion = "Akka.Serialization.HyperionSerializer, Akka.Serialization.Hyperion"
-                }
-                serialization-bindings {
-                  "System.Object" = hyperion
-                }
-            }
-        """)
-
-    /// Parses provided HOCON string into a valid Akka configuration object.
-    let parse = Akka.Configuration.ConfigurationFactory.ParseString
-    
-    /// Returns default Akka for F# configuration.
-    let defaultConfig () = extendedConfig.WithFallback(Akka.Configuration.ConfigurationFactory.Default())
-    
-    /// Loads Akka configuration from the project's .config file.
-    let load = Akka.Configuration.ConfigurationFactory.Load
-
-    /// Sets a first argument as a fallback configuration of the second one.
-    let inline fallback (other: Akka.Configuration.Config) (config: Akka.Configuration.Config) =
-        config.WithFallback(other)
-
 module System = 
     /// Creates an actor system with remote deployment serialization enabled.
     let create (name : string) (config : Akka.Configuration.Config) : ActorSystem = 
