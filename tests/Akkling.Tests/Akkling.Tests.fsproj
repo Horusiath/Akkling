@@ -10,6 +10,7 @@
     </None>
     <Compile Include="Tests.fs" />
     <Compile Include="ComputationExpressions.fs" />
+    <Compile Include="Configuration.fs" />
     <Compile Include="Api.fs" />
     <Compile Include="Actors.fs" />
     <Compile Include="AsyncSupport.fs" />
@@ -26,7 +27,6 @@
     <ProjectReference Include="..\..\src\Akkling\Akkling.fsproj" />
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <PackageReference Include="FsCheck.Xunit" Version="2.10.10" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.2" />
