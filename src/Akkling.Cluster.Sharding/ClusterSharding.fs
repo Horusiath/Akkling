@@ -37,6 +37,31 @@ type internal TypedMessageExtractor<'Envelope, 'Message>(extractor: 'Envelope ->
             | _ -> null
             
 
+type Extractor<'Envelope, 'Message> = 'Envelope -> string*string*'Message
+type ShardResolver = string -> string
+
+type internal TypedMessageExtractorEx<'Envelope, 'Message>(extractor: Extractor<_,'Message>, shardResolver :ShardResolver) =
+    interface IMessageExtractor with
+        member _.ShardId message =
+            match message with
+            | :? 'Envelope as env ->
+                let shardId, _, _ = extractor env
+                shardId
+            | :? ShardRegion.StartEntity as e -> shardResolver (e.EntityId)
+            | _ -> invalidOp <| message.ToString()
+        member _.EntityId message =
+            match message with
+            | :? 'Envelope as env ->
+                let _, entityId, _ = extractor env
+                entityId
+            | other -> invalidOp <| string other
+        member _.EntityMessage message =
+            match message with
+            | :? 'Envelope as env ->
+                let _, _, msg = extractor env
+                box msg
+            | other -> invalidOp <| string other
+
 open Akkling.Persistence
 // HACK over persistent actors
 type FunPersistentShardingActor<'Message>(actor : Eventsourced<'Message> -> Effect<'Message>) as this =
@@ -86,7 +111,26 @@ let entityFactoryFor (system: ActorSystem) (name: string) (props: Props<'Message
     let adjustedProps = adjustPersistentProps props
     let shardRegion = clusterSharding.Start(name, adjustedProps.ToProps(), ClusterShardingSettings.Create(system), new TypedMessageExtractor<_,_>(EntityRefs.entityRefExtractor))
     { ShardRegion = shardRegion; TypeName = name }
-
+/// <summary>
+/// Creates a shard region and returns a factory function which for a given `shardId` and `entityId` returns a <see cref="IEntityRef{T}"/> representing
+/// a serializable entity reference to a created sharded actor. This ref can be passed as message payload and will always point to a correct entity location
+/// even after rebalancing. It also offers support for remember entities
+/// </summary>
+/// <param name="system"></param>
+/// <param name="shardResolver">used for shard resolution from entity id. For remember entities support</param>
+/// <param name="name"></param>
+/// <param name="props"></param>
+let entityFactoryForEx (system: ActorSystem) (shardResolver:ShardResolver) (name: string) (props: Props<'Message>) (rememberEntities) : EntityFac<'Message> =
+    let clusterSharding = ClusterSharding.Get(system)
+    let adjustedProps = adjustPersistentProps props
+    let shardSettings =
+        match rememberEntities with
+        | true -> ClusterShardingSettings.Create(system).WithRememberEntities(true)
+        | _ -> ClusterShardingSettings.Create(system);
+    let shardRegion =
+        clusterSharding.Start(name, adjustedProps.ToProps(),
+            shardSettings, new TypedMessageExtractorEx<_,_>(EntityRefs.entityRefExtractor, shardResolver))
+    { ShardRegion = shardRegion; TypeName = name }
 
 /// <summary>
 /// Creates a cluster shard proxy used for routing messages to shards on external nodes without hosting any shards by itself.

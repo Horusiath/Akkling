@@ -33,3 +33,8 @@ let (|PersistentLifecycleEvent|_|) (message: obj) : PersistentLifecycleEvent opt
     match message with
     | :? PersistentLifecycleEvent as e -> Some e
     | _ -> None
+
+let (|Recovering|_|) (context: Eventsourced<'Message>) (msg: 'Message) : 'Message option =
+    if context.IsRecovering ()
+    then Some msg
+    else None
