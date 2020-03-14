@@ -29,6 +29,11 @@ module KillSwitch =
     /// of that unique materialization. Different materializations result in different, independent switches.
     let inline singleBidi<'in1, 'out1> = KillSwitches.SingleBidi<'in1,'out1>()
     
+    /// Creates a flow stage out of the cancellation token that will gracefully shutdown the stream once
+    /// cancellation token will be triggered. It can be injected into the flow using `Flow.via` function.
     let inline ofCancellationTokenGraceful (c: CancellationToken) = KillSwitches.AsFlow(c, cancelGracefully=true)
     
+    /// Creates a flow stage out of the cancellation token that will abruptly shutdown the stream with
+    /// `OperationCanceledException` once cancellation token will be triggered. It can be injected into the flow
+    /// using `Flow.via` function.
     let inline ofCancellationTokenAbrupt (c: CancellationToken) = KillSwitches.AsFlow(c, cancelGracefully=false)

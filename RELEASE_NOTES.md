@@ -1,3 +1,9 @@
+## New in 0.10 (Released 2020/03/14)
+* Upgraded Akka.NET dependencies to 1.4.2
+* Consolidated supported .NET version to .NET Standard 2.0
+* Removed PersistentView (as its no longer supported)
+* Akkling.Streams: dded support to stream refs, observables, cancellation tokens and withContext variants.
+
 ## New in 0.9.3 (Released 2018/07/09)
 * Rollback FSharp.Core to 4.3.4
 * Include XML docs

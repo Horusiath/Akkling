@@ -22,6 +22,7 @@ open System.Threading.Tasks
 type ICanTell<'Message> =
     abstract Tell : 'Message * IActorRef -> unit
     abstract Ask : 'Message * TimeSpan option -> Async<'Response>
+    abstract AskWith : (ICanTell<'Response> -> 'Message) * TimeSpan option -> Async<'Response>
 
     abstract member Underlying : ICanTell
 
@@ -95,6 +96,16 @@ type TypedActorRef<'Message>(underlyingRef : IActorRef) =
                     raise f.Cause
                     return Unchecked.defaultof<'Response>
                 | other -> return other :?> 'Response }
+        member __.AskWith(messageFactory: ICanTell<'Response> -> 'Message, timeout: TimeSpan option): Async<'Response> =
+            let ref = underlyingRef
+            async {
+                let! reply = ref.Ask(Func<IActorRef,obj>(fun ref -> upcast messageFactory(TypedActorRef<'T>(ref) :> IActorRef<'T>)), Option.toNullable timeout) |> Async.AwaitTask
+                match reply with
+                | :? Status.Failure as f -> 
+                    raise f.Cause
+                    return Unchecked.defaultof<'Response>
+                | other -> return other :?> 'Response }
+            
         member __.Underlying = underlyingRef :> ICanTell
         member __.Path = underlyingRef.Path
 
@@ -195,6 +206,15 @@ type TypedActorSelection<'Message>(selection : ActorSelection) =
             let ref = selection
             async {
                 let! reply = ref.Ask(message, Option.toNullable timeout) |> Async.AwaitTask
+                match reply with
+                | :? Status.Failure as f -> 
+                    raise f.Cause
+                    return Unchecked.defaultof<'Response>
+                | other -> return other :?> 'Response }
+        member __.AskWith(messageFactory: ICanTell<'Response> -> 'Message, timeout: TimeSpan option): Async<'Response> =
+            let ref = selection
+            async {
+                let! reply = ref.Ask(Func<IActorRef,obj>(fun ref -> upcast messageFactory(TypedActorRef<'T>(ref) :> IActorRef<'T>)), Option.toNullable timeout) |> Async.AwaitTask
                 match reply with
                 | :? Status.Failure as f -> 
                     raise f.Cause

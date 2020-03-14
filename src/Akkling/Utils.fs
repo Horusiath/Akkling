@@ -15,14 +15,20 @@ open System
 module Watchers = 
     /// <summary>
     /// Orders a <paramref name="watcher"/> to monitor an actor targeted by provided <paramref name="subject"/>.
-    /// When an actor refered by subject dies, a watcher should receive a <see cref="Terminated"/> message.
+    /// When an actor referred by subject dies, a watcher should receive a <see cref="Terminated"/> message.
     /// </summary>
-    let monitor (watcher : #ICanWatch) (subject : IActorRef<'Message>) : IActorRef = watcher.Watch (untyped subject)
+    let inline monitor (watcher : #ICanWatch) (subject : IActorRef<'Message>) : IActorRef = watcher.Watch (untyped subject)
     
     /// <summary>
-    /// Orders a <paramref name="watcher"/> to stop monitoring an actor refered by provided <paramref name="subject"/>.
+    /// Orders a <paramref name="watcher"/> to monitor an actor targeted by provided <paramref name="subject"/>.
+    /// When an actor referred by subject dies, a watcher should receive a <paramref name="reply"/>.
     /// </summary>
-    let demonitor (watcher : #ICanWatch) (subject : IActorRef<'Message>) : IActorRef = watcher.Unwatch (untyped subject)
+    let inline monitorWith (reply: 'Reply) (watcher : #ICanWatch) (subject : IActorRef<'Message>) : IActorRef = watcher.WatchWith(untyped subject, box reply)
+    
+    /// <summary>
+    /// Orders a <paramref name="watcher"/> to stop monitoring an actor referred by provided <paramref name="subject"/>.
+    /// </summary>
+    let inline demonitor (watcher : #ICanWatch) (subject : IActorRef<'Message>) : IActorRef = watcher.Unwatch (untyped subject)
 
 [<AutoOpen>]
 module EventStreaming = 
