@@ -9,6 +9,7 @@
 namespace Akkling.Streams
 
 open System
+open System.Threading.Tasks
 open Akkling
 open Akkling.Streams.Operators
 open Akka.Streams
@@ -80,6 +81,15 @@ module Flow =
     /// are emitted downstream are in the same order as received from upstream.
     let inline asyncMap (parallelism: int) (fn: 'u -> Async<'w>) (flow) : Flow<'t, 'w, 'mat> =
         FlowOperations.SelectAsync(flow, parallelism, Func<_, _>(fn >> Async.StartAsTask))
+        
+    /// Transform this stream by applying the given function to each of the elements
+    /// as they pass through this processing step. The function returns a Task and the
+    /// value of that computation will be emitted downstream. The number of tasks
+    /// that shall run in parallel is given as the first argument.
+    /// These tasks may complete in any order, but the elements that
+    /// are emitted downstream are in the same order as received from upstream.
+    let inline taskMap (parallelism: int) (fn: 'u -> Task<'w>) (flow) : Flow<'t, 'w, 'mat> =
+        FlowOperations.SelectAsync(flow, parallelism, Func<_, _>(fn))
 
     /// Transform this stream by applying the given function to each of the elements
     /// as they pass through this processing step. The function returns an Async and the

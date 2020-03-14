@@ -10,11 +10,13 @@ namespace Akkling.Streams
 
 open System
 open System.IO
+open System.Threading.Tasks
 open Akkling
 open Akka.IO
 open Akka.Streams
 open Akka.Streams.Stage
 open Akka.Streams.IO
+open Akka.Streams.Dsl
 open Akka.Streams.Dsl
 open Reactive.Streams
 
@@ -193,6 +195,15 @@ module Source =
     /// are emitted downstream are in the same order as received from upstream.
     let inline asyncMap (parallelism: int) (fn: 't -> Async<'u>) (source) : Source<'u, 'mat> =
         SourceOperations.SelectAsync(source, parallelism, Func<_, _>(fun x -> fn(x) |> Async.StartAsTask))
+        
+    /// Transform this stream by applying the given function to each of the elements
+    /// as they pass through this processing step. The function returns a Task and the
+    /// value of that computation will be emitted downstream. The number of tasks
+    /// that shall run in parallel is given as the first argument.
+    /// These tasks may complete in any order, but the elements that
+    /// are emitted downstream are in the same order as received from upstream.
+    let inline taskMap (parallelism: int) (fn: 't -> Task<'u>) source : Source<'u,'mat> =
+        SourceOperations.SelectAsync(source, parallelism, Func<_, _>(fn))
 
     /// Transform this stream by applying the given function to each of the elements
     /// as they pass through this processing step. The function returns an Async and the
@@ -742,3 +753,11 @@ module Source =
                     member x.NextDelay(element:'t) : TimeSpan = fn element }
             
         source.Via (new DelayFlow<_>(Func<_> strategySupplier))
+        
+    /// A local source which materializes a sink ref which can be used by other streams (including remote ones),
+    /// to consume data from this local stream, as if they were attached in the spot of the local Sink directly.
+    let ref<'t> : Source<'t, Async<ISinkRef<'t>>> =
+        StreamRefs.SinkRef().MapMaterializedValue(Func<_,_>(Async.AwaitTask<ISinkRef<'t>>))
+        
+    let inline ofRef (sourceRef: ISourceRef<'t>) : Source<'t, unit> =
+        sourceRef.Source.MapMaterializedValue(Func<_,_>(Microsoft.FSharp.Core.Operators.ignore))

@@ -174,3 +174,10 @@ module Sink =
         PartitionHub.Sink (Func<_,_,_>(partitioner), startAfterNrOfConsumers, bufferSize)
         |> mapMatValue (fun source -> source.MapMaterializedValue(Func<_,_> (fun _ -> ())))
         
+    /// A local sink which materializes a source ref which can be used by other streams (including remote ones),
+    /// to consume data from this local stream, as if they were attached in the spot of the local Sink directly.
+    let ref<'t> : Sink<'t, Async<ISourceRef<'t>>> =
+        StreamRefs.SourceRef().MapMaterializedValue(Func<_,_>(Async.AwaitTask<ISourceRef<'t>>))
+        
+    let inline ofRef (sourceRef: ISinkRef<'t>) : Sink<'t, unit> =
+        sourceRef.Sink.MapMaterializedValue(Func<_,_>(Microsoft.FSharp.Core.Operators.ignore))
