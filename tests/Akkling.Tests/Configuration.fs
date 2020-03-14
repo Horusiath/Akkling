@@ -76,13 +76,13 @@ let ``Dynamic config operation must return TimeSpan`` () =
 [<Fact>]
 let ``Dynamic config operation must return float`` () = 
     let c1 = config?outer 
-    let (value: float) = c1?SomeStrangeFloat
-    equals 2.5 value
+    let (value: float32) = c1?SomeStrangeFloat
+    equals 2.5f value
 
 [<Fact>]
 let ``Dynamic config operation must return double`` () = 
     let c1 = config?outer 
-    let (value: double) = c1?SomeStrangeFloat
+    let (value: float) = c1?SomeStrangeFloat
     equals 2.5 value
 
 [<Fact>]

@@ -2,7 +2,7 @@
 // <copyright file="Source.fs" company="Akka.NET Project">
 //     Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
 //     Copyright (C) 2013-2015 Akka.NET project <https://github.com/akkadotnet/akka.net>
-//     Copyright (C) 2015 Bartosz Sypytkowski <gttps://github.com/Horusiath>
+//     Copyright (C) 2015-2020 Bartosz Sypytkowski <gttps://github.com/Horusiath>
 // </copyright>
 //-----------------------------------------------------------------------
 
@@ -10,6 +10,7 @@ namespace Akkling.Streams
 
 open System
 open System.IO
+open System.Threading.Tasks
 open Akkling
 open Akka.IO
 open Akka.Streams
@@ -31,7 +32,7 @@ module Source =
     /// Emitted elements are chunk sized ByteString elements,
     /// except the final element, which will be up to chunkSize in size.
     let inline ofStreamChunked (chunkSize: int) (streamFn: unit -> Stream) : Source<ByteString, Async<IOResult>> =
-        StreamConverters.FromInputStream(Func<_>(streamFn)).MapMaterializedValue(Func<_,_>(Async.AwaitTask))
+        StreamConverters.FromInputStream(Func<_>(streamFn), chunkSize).MapMaterializedValue(Func<_,_>(Async.AwaitTask))
 
     /// Creates a source which when materialized will return an stream which it is possible
     /// to write the ByteStrings to the stream this Source is attached to.
@@ -67,7 +68,13 @@ module Source =
 
     /// Helper to create source from list.
     let inline ofList (elements: 't list) : Source<'t, unit> = Source.From(elements).MapMaterializedValue(Func<NotUsed,unit>(ignore))
-
+    
+    /// Start a new source attached to an existing `observable`. In case when upstream (an observable)
+    /// is producing events in a faster pace, than downstream is able to consume them, a buffering will occur.
+    /// It can be configured via `maxCapacity` and `overflowStrategy` parameters.
+    let inline ofObservableBounded (overflowStrategy: OverflowStrategy) (maxCapacity: int) (observable: IObservable<'t>) : Source<'t,unit> =
+        Source.FromObservable(observable, maxCapacity, overflowStrategy).MapMaterializedValue(Func<NotUsed,unit>(ignore))
+        
     /// Create a source with one element.
     let inline singleton (elem: 't) : Source<'t, unit> = Source.Single(elem).MapMaterializedValue(Func<NotUsed,unit>(ignore))
 
@@ -100,25 +107,25 @@ module Source =
 
     /// Create a source that will unfold a value of one type into
     /// a pair of the next state and output elements of type another type
-    let unfold (fn: 's -> ('s * 'e) option) (state: 's) : Source<'e, unit> =
+    let unfold (fn: 's -> struct('s * 'e) option) (state: 's) : Source<'e, unit> =
         Source.Unfold(state, Func<_,_>(fun x -> 
             match fn x with
-            | Some tuple -> tuple
-            | None -> Unchecked.defaultof<_>
+            | Some tuple -> Akka.Util.Option<_> tuple
+            | None -> Akka.Util.Option<_>.None
             )).MapMaterializedValue(Func<_,_>(ignore))
 
     /// Same as unfold, but uses an async function to generate the next state-element tuple.
-    let asyncUnfold (fn: 's -> Async<('s * 'e) option>) (state: 's) : Source<'e, unit> =
+    let asyncUnfold (fn: 's -> Async<struct('s * 'e) option>) (state: 's) : Source<'e, unit> =
         Source.UnfoldAsync(state, Func<_, _>(fun x -> 
             async { 
                 let! r = fn x 
                 match r with
-                | Some tuple -> return tuple
-                | None -> return Unchecked.defaultof<'s * 'e> } 
-                |> Async.StartAsTask<'s * 'e>)).MapMaterializedValue(Func<_,_>(ignore))
+                | Some tuple -> return Akka.Util.Option<_> tuple
+                | None -> return Akka.Util.Option<_>.None } 
+                |> Async.StartAsTask<_>)).MapMaterializedValue(Func<_,_>(ignore))
 
     /// Simpler unfold, for infinite sequences.
-    let inline infiniteUnfold (fn: 's -> 's * 'e) (state: 's) : Source<'e, unit> =
+    let inline infiniteUnfold (fn: 's -> struct('s * 'e)) (state: 's) : Source<'e, unit> =
         Source.UnfoldInfinite(state, Func<_,_>(fn)).MapMaterializedValue(Func<_,_>(ignore))
 
     /// A source with no elements, i.e. an empty stream that is completed immediately for every connected sink.
@@ -193,6 +200,15 @@ module Source =
     /// are emitted downstream are in the same order as received from upstream.
     let inline asyncMap (parallelism: int) (fn: 't -> Async<'u>) (source) : Source<'u, 'mat> =
         SourceOperations.SelectAsync(source, parallelism, Func<_, _>(fun x -> fn(x) |> Async.StartAsTask))
+        
+    /// Transform this stream by applying the given function to each of the elements
+    /// as they pass through this processing step. The function returns a Task and the
+    /// value of that computation will be emitted downstream. The number of tasks
+    /// that shall run in parallel is given as the first argument.
+    /// These tasks may complete in any order, but the elements that
+    /// are emitted downstream are in the same order as received from upstream.
+    let inline taskMap (parallelism: int) (fn: 't -> Task<'u>) source : Source<'u,'mat> =
+        SourceOperations.SelectAsync(source, parallelism, Func<_, _>(fn))
 
     /// Transform this stream by applying the given function to each of the elements
     /// as they pass through this processing step. The function returns an Async and the
@@ -428,7 +444,7 @@ module Source =
     /// and a stream representing the remaining elements. If `n` is zero or negative, then this will return a pair
     /// of an empty collection and a stream containing the whole upstream unchanged.
     let inline prefixAndTail (n: int) (source) : Source<'out list * Source<'out, unit>, 'mat> = 
-        SourceOperations.PrefixAndTail(source, n).Select(Func<_,_>(fun (imm, source) -> 
+        SourceOperations.PrefixAndTail(source, n).Select(Func<_,_>(fun (struct(imm, source)) -> 
             let s = source.MapMaterializedValue(Func<_,_>(ignore))
             (List.ofSeq imm), s))
 
@@ -482,7 +498,7 @@ module Source =
 
     /// Combine the elements of current flow into a stream of tuples consisting
     /// of all elements paired with their index. Indices start at 0.
-    let inline zipi (source) : Source<'out * int64, 'mat> =
+    let inline zipi (source) : Source<struct('out * int64), 'mat> =
         SourceOperations.ZipWithIndex(source)
 
     /// If the first element has not passed through this stage before the provided timeout, the stream is failed
@@ -742,3 +758,39 @@ module Source =
                     member x.NextDelay(element:'t) : TimeSpan = fn element }
             
         source.Via (new DelayFlow<_>(Func<_> strategySupplier))
+        
+    /// A local source which materializes a sink ref which can be used by other streams (including remote ones),
+    /// to consume data from this local stream, as if they were attached in the spot of the local Sink directly.
+    let ref<'t> : Source<'t, Async<ISinkRef<'t>>> =
+        StreamRefs.SinkRef().MapMaterializedValue(Func<_,_>(Async.AwaitTask<ISinkRef<'t>>))
+        
+    let inline ofRef (sourceRef: ISourceRef<'t>) : Source<'t, unit> =
+        sourceRef.Source.MapMaterializedValue(Func<_,_>(Microsoft.FSharp.Core.Operators.ignore))
+        
+    /// The operator fails with an `WatchedActorTerminatedException` if the target actor is terminated.
+    let inline watch (actorRef: IActorRef<_>) (source: Source<'t,'mat>) : Source<'t,'mat> =
+         source.Watch(ActorRefs.untyped actorRef)
+        
+    /// Use the `ask` pattern to send a request-reply message to the target `actorRef`.
+    /// If any of the asks times out it will fail the stream with a `AskTimeoutException`.
+    /// 
+    /// Parallelism limits the number of how many asks can be "in flight" at the same time.
+    /// Please note that the elements emitted by this operator are in-order with regards to the asks being issued
+    /// (i.e. same behaviour as `asyncMap`).
+    /// 
+    /// The operator fails with an `WatchedActorTerminatedException` if the target actor is terminated,
+    /// or with an `TimeoutException` in case the ask exceeds the timeout passed in.
+    let inline askParallel (maxParallelism: int) (timeout: TimeSpan) (actorRef: IActorRef<'t>) (source: Source<'t,'mat>) : Source<'u,'mat> =
+        source.Ask(ActorRefs.untyped actorRef, timeout, maxParallelism)
+        
+    /// Use the `ask` pattern to send a request-reply message to the target `actorRef`.
+    /// If any of the asks times out it will fail the stream with a `AskTimeoutException`.
+    /// 
+    /// The operator fails with an `WatchedActorTerminatedException` if the target actor is terminated,
+    /// or with an `TimeoutException` in case the ask exceeds the timeout passed in.
+    let inline ask (timeout: TimeSpan) (actorRef: IActorRef<'t>) (source: Source<'t,'mat>) : Source<'u,'mat> =
+        askParallel 1 timeout actorRef source
+                
+    /// Turns a source into a SourceWithContext which manages a context per element along a stream.
+    let inline withContext (extract: 'o -> 'ctx) (source: Source<'o,'mat>) =
+        source.AsSourceWithContext(Func<_,_>(extract))

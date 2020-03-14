@@ -2,7 +2,7 @@
 // <copyright file="Tcp.fs" company="Akka.NET Project">
 //     Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
 //     Copyright (C) 2013-2015 Akka.NET project <https://github.com/akkadotnet/akka.net>
-//     Copyright (C) 2015 Bartosz Sypytkowski <gttps://github.com/Horusiath>
+//     Copyright (C) 2015-2020 Bartosz Sypytkowski <gttps://github.com/Horusiath>
 // </copyright>
 //-----------------------------------------------------------------------
 
@@ -36,7 +36,7 @@ type StageLogic(shape: Shape, init) as this =
     member this.FailStage(error: #exn): unit = base.FailStage(error)
     member this.GetAsyncCallback(handler: 'a -> unit): ('a -> unit) = base.GetAsyncCallback(System.Action<'a>(handler)).Invoke
     member this.StageActorRef<'b>(receive: IActorRef<'b> -> obj -> unit) = 
-        base.GetStageActorRef(StageActorRef.Receive(fun (aref, msg) -> receive (typed aref) msg))
+        base.GetStageActor(StageActorRef.Receive(fun (struct(aref, msg)) -> receive (typed aref) msg))
     member this.Emit(outlet: Outlet<'a>, elem: 'a): unit = base.Emit(outlet, elem)
     
 let inline graphStagelogic (shape: #Shape) (init: StageLogic -> unit): GraphStageLogic = upcast StageLogic(shape, init)

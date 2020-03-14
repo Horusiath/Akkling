@@ -2,7 +2,7 @@
 // <copyright file="ClusterSharding.fs" company="Akka.NET Project">
 //     Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
 //     Copyright (C) 2013-2015 Akka.NET project <https://github.com/akkadotnet/akka.net>
-//     Copyright (C) 2016 Bartosz Sypytkowski <gttps://github.com/Horusiath>
+//     Copyright (C) 2016-2020 Bartosz Sypytkowski <gttps://github.com/Horusiath>
 // </copyright>
 //-----------------------------------------------------------------------
 
@@ -57,7 +57,15 @@ type internal EntityRef<'Message>(shardRegion: IActorRef, typeName: string, shar
                 | :? Status.Failure as f -> 
                     raise f.Cause
                     return Unchecked.defaultof<_>()
-                | other -> return other :?> _ }            
+                | other -> return other :?> _ } 
+        member __.AskWith(fac: ICanTell<'Reply> -> 'Message, ?timeout) = async {
+                let env = System.Func<IActorRef,obj>(fun reply -> upcast { ShardId = shardId; EntityId = entityId; Message = fac (typed reply) })
+                let! reply = shardRegion.Ask(env, Option.toNullable timeout) |> Async.AwaitTask
+                match reply with
+                | :? Status.Failure as f -> 
+                    raise f.Cause
+                    return Unchecked.defaultof<_>()
+                | other -> return other :?> _ }             
         member __.Tell(msg, sender) =
             let env = { ShardId = shardId; EntityId = entityId; Message = box msg }
             shardRegion.Tell(env, sender)

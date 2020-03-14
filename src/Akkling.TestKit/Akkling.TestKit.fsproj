@@ -1,15 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.6;net452</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <PackageTags>akka.net fsharp testing fscheck</PackageTags>
     <Authors>Bartosz Sypytkowski</Authors>
-    <Version>0.9.3</Version>
+    <Version>0.10.0</Version>
     <Description>F# wrapper library for Akka.NET TestKit library using FsCheck and xUnit.</Description>
-    <PackageLicenseUrl>http://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>http://github.com/Horusiath/Akkling</PackageProjectUrl>
-    <PackageReleaseNotes>Rollback FSharp.Core to 4.3.4
-Include XML docs</PackageReleaseNotes>
+    <PackageLicenseUrl>https://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/Horusiath/Akkling</PackageProjectUrl>
+    <PackageReleaseNotes>
+      * Upgraded Akka.NET dependencies to 1.4.2
+      * Consolidated supported .NET version to .NET Standard 2.0
+      * Removed PersistentView (as its no longer supported)
+      * Akkling.Streams: added support to stream refs, observables, cancellation tokens and withContext variants.
+      * Akkling.Streams: switched tuple args to value tuples to match Akka.Streams API.
+    </PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
@@ -17,13 +22,13 @@ Include XML docs</PackageReleaseNotes>
     <Compile Include="TestKit.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Akka.TestKit.Xunit2" Version="1.3.8" />
+    <PackageReference Include="Akka.TestKit.Xunit2" Version="1.4.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Akkling\Akkling.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="4.3.4" />
+    <PackageReference Include="FSharp.Core" Version="4.7.0" />
     <PackageReference Update="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 </Project>

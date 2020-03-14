@@ -2,7 +2,7 @@
 // <copyright file="Sink.fs" company="Akka.NET Project">
 //     Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
 //     Copyright (C) 2013-2015 Akka.NET project <https://github.com/akkadotnet/akka.net>
-//     Copyright (C) 2015 Bartosz Sypytkowski <gttps://github.com/Horusiath>
+//     Copyright (C) 2015-2020 Bartosz Sypytkowski <gttps://github.com/Horusiath>
 // </copyright>
 //-----------------------------------------------------------------------
 
@@ -40,6 +40,9 @@ module Sink =
 
     /// A sink that materializes into a publisher that can handle one subscriber.
     let inline publisher<'t> : Sink<'t, IPublisher<'t>> = Sink.Publisher<'t>()
+    
+    /// A sink that materializes into an Observable.
+    let inline observable<'t> : Sink<'t, IObservable<'t>> = Sink.AsObservable<'t>() 
     
     /// A sink that materializes into a publisher that can handle multiple subscribers.
     let inline fanoutPublisher<'t> : Sink<'t, IPublisher<'t>> = Sink.FanoutPublisher<'t>()
@@ -174,3 +177,10 @@ module Sink =
         PartitionHub.Sink (Func<_,_,_>(partitioner), startAfterNrOfConsumers, bufferSize)
         |> mapMatValue (fun source -> source.MapMaterializedValue(Func<_,_> (fun _ -> ())))
         
+    /// A local sink which materializes a source ref which can be used by other streams (including remote ones),
+    /// to consume data from this local stream, as if they were attached in the spot of the local Sink directly.
+    let ref<'t> : Sink<'t, Async<ISourceRef<'t>>> =
+        StreamRefs.SourceRef().MapMaterializedValue(Func<_,_>(Async.AwaitTask<ISourceRef<'t>>))
+        
+    let inline ofRef (sourceRef: ISinkRef<'t>) : Sink<'t, unit> =
+        sourceRef.Sink.MapMaterializedValue(Func<_,_>(Microsoft.FSharp.Core.Operators.ignore))

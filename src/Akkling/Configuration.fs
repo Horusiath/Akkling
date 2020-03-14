@@ -2,7 +2,7 @@
 // <copyright file="Configuration.fs" company="Akka.NET Project">
 //     Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
 //     Copyright (C) 2013-2015 Akka.NET project <https://github.com/akkadotnet/akka.net>
-//     Copyright (C) 2015 Bartosz Sypytkowski <gttps://github.com/Horusiath>
+//     Copyright (C) 2015-2020 Bartosz Sypytkowski <gttps://github.com/Horusiath>
 // </copyright>
 //-----------------------------------------------------------------------
 
@@ -39,8 +39,8 @@ module HoconExtensions =
         elif t = typeof<int64> then box (conf.GetLong(path)) :?> 'a
         elif t = typeof<bool> then box (conf.GetBoolean(path)) :?> 'a
         elif t = typeof<TimeSpan> then box (conf.GetTimeSpan(path)) :?> 'a
-        elif t = typeof<float> then box (conf.GetFloat(path)) :?> 'a
-        elif t = typeof<double> then box (conf.GetDouble(path)) :?> 'a
+        elif t = typeof<float32> then box (conf.GetFloat(path)) :?> 'a
+        elif t = typeof<float> then box (conf.GetDouble(path)) :?> 'a
         elif t = typeof<decimal> then box (conf.GetDecimal(path)) :?> 'a
         elif t = typeof<string seq> then box (conf.GetStringList(path)) :?> 'a
         elif t = typeof<int seq> then box (conf.GetIntList(path)) :?> 'a

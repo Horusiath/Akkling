@@ -2,13 +2,14 @@
 // <copyright file="Flow.fs" company="Akka.NET Project">
 //     Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
 //     Copyright (C) 2013-2015 Akka.NET project <https://github.com/akkadotnet/akka.net>
-//     Copyright (C) 2015 Bartosz Sypytkowski <gttps://github.com/Horusiath>
+//     Copyright (C) 2015-2020 Bartosz Sypytkowski <gttps://github.com/Horusiath>
 // </copyright>
 //-----------------------------------------------------------------------
 
 namespace Akkling.Streams
 
 open System
+open System.Threading.Tasks
 open Akkling
 open Akkling.Streams.Operators
 open Akka.Streams
@@ -80,6 +81,15 @@ module Flow =
     /// are emitted downstream are in the same order as received from upstream.
     let inline asyncMap (parallelism: int) (fn: 'u -> Async<'w>) (flow) : Flow<'t, 'w, 'mat> =
         FlowOperations.SelectAsync(flow, parallelism, Func<_, _>(fn >> Async.StartAsTask))
+        
+    /// Transform this stream by applying the given function to each of the elements
+    /// as they pass through this processing step. The function returns a Task and the
+    /// value of that computation will be emitted downstream. The number of tasks
+    /// that shall run in parallel is given as the first argument.
+    /// These tasks may complete in any order, but the elements that
+    /// are emitted downstream are in the same order as received from upstream.
+    let inline taskMap (parallelism: int) (fn: 'u -> Task<'w>) (flow) : Flow<'t, 'w, 'mat> =
+        FlowOperations.SelectAsync(flow, parallelism, Func<_, _>(fn))
 
     /// Transform this stream by applying the given function to each of the elements
     /// as they pass through this processing step. The function returns an Async and the
@@ -292,7 +302,7 @@ module Flow =
     /// and a stream representing the remaining elements. If `n` is zero or negative, then this will return a pair
     /// of an empty collection and a stream containing the whole upstream unchanged.
     let inline prefixAndTail (n: int) (flow) : Flow<'inp,'out list * Source<'out, unit>, 'mat> = 
-        FlowOperations.PrefixAndTail(flow, n).Select(Func<_,_>(fun (imm, source) -> 
+        FlowOperations.PrefixAndTail(flow, n).Select(Func<_,_>(fun (struct(imm, source)) -> 
             let s = source.MapMaterializedValue(Func<_,_>(ignore))
             (List.ofSeq imm), s))
 
@@ -346,7 +356,7 @@ module Flow =
 
     /// Combine the elements of current flow into a stream of tuples consisting
     /// of all elements paired with their index. Indices start at 0.
-    let inline zipi (flow) : Flow<'inp, 'out * int64, 'mat> =
+    let inline zipi (flow) : Flow<'inp, ValueTuple<'out, int64>, 'mat> =
         FlowOperations.ZipWithIndex(flow)
 
     /// If the first element has not passed through this stage before the provided timeout, the stream is failed
@@ -550,7 +560,7 @@ module Flow =
         
     /// Creates flow from the Reactive Streams Processor and returns a materialized value.
     let inline ofProcMat (fac: unit -> #Reactive.Streams.IProcessor<'i,'o> * 'mat) =
-        Flow.FromProcessorMaterialized(Func<_>(fun () -> let proc, mat = fac() in Tuple.Create<_,_>(upcast proc, mat)))
+        Flow.FromProcessorMaterialized(Func<_>(fun () -> let proc, mat = fac() in struct(upcast proc, mat)))
 
     /// Builds a flow from provided sink and source graphs.
     let inline ofSinkAndSource (sink: #IGraph<SinkShape<'i>,'mat>) (source: #IGraph<SourceShape<'o>,'mat>) =
@@ -574,19 +584,19 @@ module Flow =
 
     let inline iter (fn: 'o -> unit) (flow: Flow<'i,'o,'mat>): Flow<'i,'o,'mat> = flow |> map (fun x -> fn x; x)
     
-    let retry (retryWith: 's -> ('i * 's) option) (flow: Flow<('i * 's), (Result< 'o, exn> * 's), 'mat>)  =
-        let flow: Flow<'i * 's, Akka.Util.Result<'o> * 's, 'mat> = 
-            flow |> map (fun (x, s) -> 
+    let retry (retryWith: 's -> (struct('i * 's)) option) (flow: Flow<struct('i * 's), struct(Result< 'o, exn> * 's), 'mat>)  =
+        let flow: Flow<struct('i * 's), struct(Akka.Util.Result<'o> * 's), 'mat> = 
+            flow |> map (fun (struct(x, s)) -> 
                 match x with 
-                | Ok x -> (Akka.Util.Result.Success x), s
-                | Error e -> (Akka.Util.Result.Failure e), s)
+                | Ok x -> struct((Akka.Util.Result.Success x), s)
+                | Error e -> struct((Akka.Util.Result.Failure e), s))
                 
         Retry.Create(flow, fun s -> 
             match retryWith s with
-            | Some x -> x
+            | Some (i,s) -> Akka.Util.Option<_>(struct(i,s))
             | None -> Unchecked.defaultof<_>)
         |> Flow.FromGraph // I convert IGraph to Flow here in order to map it below. Should I?
-        |> map (fun (x, s) ->
+        |> map (fun (struct(x, s)) ->
             if x.IsSuccess then Ok x.Value, s
             else Result.Error x.Exception, s) 
 
@@ -624,8 +634,8 @@ module Flow =
     /// |> Async.RunSynchronously
     ///
     /// </example>
-    let retrySimple (retryWith: 'i * 's -> 's option) (flow: Flow<'i, Result<'o, #exn>, NotUsed>) (initialState: 's) =
-        let flow: Flow<'i * State<'i, 's>, Util.Result<'o> * State<'i, 's>, NotUsed> =
+    let retrySimple (retryWith: ('i * 's) -> 's option) (flow: Flow<'i, Result<'o, #exn>, NotUsed>) (initialState: 's) =
+        let flow: Flow<struct('i * State<'i, 's>), struct(Util.Result<'o> * State<'i, 's>), NotUsed> =
             Graph.create (fun b -> graph b {
                 let flow =
                     flow
@@ -635,9 +645,9 @@ module Flow =
                         | Error e -> Util.Result.Failure e)
                         
                 let! broadcast = Broadcast(2)
-                let! zip = ZipWith.create (fun o s -> o, s)
-                b.From broadcast =>> (id |> map fst) =>> flow =>> zip.In0 |> ignore
-                b.From broadcast =>> (id |> map snd) =>> zip.In1 |> ignore
+                let! zip = ZipWith.create (fun o s -> struct(o, s))
+                b.From broadcast =>> (id |> map (fun (struct(x,_)) -> x)) =>> flow =>> zip.In0 |> ignore
+                b.From broadcast =>> (id |> map (fun (struct(_,x)) -> x)) =>> zip.In1 |> ignore
     
                 return FlowShape(broadcast.In, zip.Out)
             })
@@ -646,30 +656,30 @@ module Flow =
         let retryFlow =        
             Retry.Create(flow, fun ((i, _) as state) -> 
                 match retryWith state with
-                | Some newState -> i, (i, newState)
-                | None -> Unchecked.defaultof<_>)
+                | Some newState -> Akka.Util.Option<_> (struct (i, (i, newState)))
+                | None -> Akka.Util.Option<_>.None)
             |> Flow.FromGraph
-            |> map (fun (x, _) ->
+            |> map (fun (struct(x, _)) ->
                 if x.IsSuccess then Ok x.Value
                 else Result.Error x.Exception)
         
         id 
-        |> map (fun i -> i, (i, initialState)) 
+        |> map (fun i -> struct(i, (i, initialState))) 
         |> via retryFlow  
 
-    let retryLimited limit (retryWith: 's -> ('i * 's) seq option) (flow: Flow<('i * 's), (Result< 'o, exn> * 's), 'mat>)  =
-        let flow: Flow<'i * 's, Akka.Util.Result<'o> * 's, 'mat> = 
-            flow |> map (fun (x, s) -> 
+    let retryLimited limit (retryWith: 's -> struct ('i * 's) seq option) (flow: Flow<struct('i * 's), struct(Result< 'o, exn> * 's), 'mat>)  =
+        let flow: Flow<struct('i * 's), struct(Akka.Util.Result<'o> * 's), 'mat> = 
+            flow |> map (fun (struct(x, s)) -> 
                 match x with 
-                | Ok x -> (Akka.Util.Result.Success x), s
-                | Error e -> (Akka.Util.Result.Failure e), s)
+                | Ok x -> struct((Akka.Util.Result.Success x), s)
+                | Error e -> struct((Akka.Util.Result.Failure e), s))
                 
         Retry.Concat(limit, flow, fun s -> 
             match retryWith s with
             | Some x -> x
             | None -> Unchecked.defaultof<_>)
         |> Flow.FromGraph // I convert IGraph to Flow here in order to map it below. Should I?
-        |> map (fun (x, s) ->
+        |> map (fun (struct(x, s)) ->
             if x.IsSuccess then Ok x.Value, s
             else Result.Error x.Exception, s) 
     
@@ -711,3 +721,31 @@ module Flow =
                     member x.NextDelay(element:'t) : TimeSpan = fn element }
             
         flow.Via (new DelayFlow<_>(Func<_> strategySupplier))
+        
+    /// The operator fails with an `WatchedActorTerminatedException` if the target actor is terminated.
+    let inline watch (actorRef: IActorRef<_>) (flow: Flow<'t,'t,'mat>) : Flow<'t,'t,'mat> =
+        FlowOperations.Watch(flow, ActorRefs.untyped actorRef)
+        
+    /// Use the `ask` pattern to send a request-reply message to the target `actorRef`.
+    /// If any of the asks times out it will fail the stream with a `AskTimeoutException`.
+    /// 
+    /// Parallelism limits the number of how many asks can be "in flight" at the same time.
+    /// Please note that the elements emitted by this operator are in-order with regards to the asks being issued
+    /// (i.e. same behaviour as `asyncMap`).
+    /// 
+    /// The operator fails with an `WatchedActorTerminatedException` if the target actor is terminated,
+    /// or with an `TimeoutException` in case the ask exceeds the timeout passed in.
+    let inline askParallel (maxParallelism: int) (timeout: TimeSpan) (actorRef: IActorRef<'t>) (flow: Flow<'t,'t,'mat>) : Flow<'t,'u,'mat> =
+        flow.Ask(ActorRefs.untyped actorRef, timeout, maxParallelism)
+        
+    /// Use the `ask` pattern to send a request-reply message to the target `actorRef`.
+    /// If any of the asks times out it will fail the stream with a `AskTimeoutException`.
+    /// 
+    /// The operator fails with an `WatchedActorTerminatedException` if the target actor is terminated,
+    /// or with an `TimeoutException` in case the ask exceeds the timeout passed in.
+    let inline ask (timeout: TimeSpan) (actorRef: IActorRef<'t>) (flow: Flow<'t,'t,'mat>) : Flow<'t,'u,'mat> =
+        askParallel 1 timeout actorRef flow
+        
+    /// Turns a Flow into a FlowWithContext which manages a context per element along a stream.
+    let inline withContext (collapse: 'i -> 'ci -> 'i2) (extract: 'o -> 'co) (flow: Flow<'i2,'o,'mat>) =
+        flow.AsFlowWithContext(Func<_,_,_>(collapse), Func<_,_>(extract))
