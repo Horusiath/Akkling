@@ -25,6 +25,7 @@ Include XML docs</PackageReleaseNotes>
     <Compile Include="Flow.fs" />
     <Compile Include="KillSwitch.fs" />
     <Compile Include="Source.fs" />
+    <Compile Include="WithContext.fs" />
     <Compile Include="Tcp.fs" />
   </ItemGroup>
   <ItemGroup>

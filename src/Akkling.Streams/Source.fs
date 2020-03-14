@@ -2,7 +2,7 @@
 // <copyright file="Source.fs" company="Akka.NET Project">
 //     Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
 //     Copyright (C) 2013-2015 Akka.NET project <https://github.com/akkadotnet/akka.net>
-//     Copyright (C) 2015 Bartosz Sypytkowski <gttps://github.com/Horusiath>
+//     Copyright (C) 2015-2020 Bartosz Sypytkowski <gttps://github.com/Horusiath>
 // </copyright>
 //-----------------------------------------------------------------------
 
@@ -16,7 +16,6 @@ open Akka.IO
 open Akka.Streams
 open Akka.Streams.Stage
 open Akka.Streams.IO
-open Akka.Streams.Dsl
 open Akka.Streams.Dsl
 open Reactive.Streams
 
@@ -33,7 +32,7 @@ module Source =
     /// Emitted elements are chunk sized ByteString elements,
     /// except the final element, which will be up to chunkSize in size.
     let inline ofStreamChunked (chunkSize: int) (streamFn: unit -> Stream) : Source<ByteString, Async<IOResult>> =
-        StreamConverters.FromInputStream(Func<_>(streamFn)).MapMaterializedValue(Func<_,_>(Async.AwaitTask))
+        StreamConverters.FromInputStream(Func<_>(streamFn), chunkSize).MapMaterializedValue(Func<_,_>(Async.AwaitTask))
 
     /// Creates a source which when materialized will return an stream which it is possible
     /// to write the ByteStrings to the stream this Source is attached to.
@@ -69,7 +68,13 @@ module Source =
 
     /// Helper to create source from list.
     let inline ofList (elements: 't list) : Source<'t, unit> = Source.From(elements).MapMaterializedValue(Func<NotUsed,unit>(ignore))
-
+    
+    /// Start a new source attached to an existing `observable`. In case when upstream (an observable)
+    /// is producing events in a faster pace, than downstream is able to consume them, a buffering will occur.
+    /// It can be configured via `maxCapacity` and `overflowStrategy` parameters.
+    let inline ofObservableBounded (overflowStrategy: OverflowStrategy) (maxCapacity: int) (observable: IObservable<'t>) : Source<'t,unit> =
+        Source.FromObservable(observable, maxCapacity, overflowStrategy).MapMaterializedValue(Func<NotUsed,unit>(ignore))
+        
     /// Create a source with one element.
     let inline singleton (elem: 't) : Source<'t, unit> = Source.Single(elem).MapMaterializedValue(Func<NotUsed,unit>(ignore))
 
@@ -761,3 +766,31 @@ module Source =
         
     let inline ofRef (sourceRef: ISourceRef<'t>) : Source<'t, unit> =
         sourceRef.Source.MapMaterializedValue(Func<_,_>(Microsoft.FSharp.Core.Operators.ignore))
+        
+    /// The operator fails with an `WatchedActorTerminatedException` if the target actor is terminated.
+    let inline watch (actorRef: IActorRef<_>) (source: Source<'t,'mat>) : Source<'t,'mat> =
+         source.Watch(ActorRefs.untyped actorRef)
+        
+    /// Use the `ask` pattern to send a request-reply message to the target `actorRef`.
+    /// If any of the asks times out it will fail the stream with a `AskTimeoutException`.
+    /// 
+    /// Parallelism limits the number of how many asks can be "in flight" at the same time.
+    /// Please note that the elements emitted by this operator are in-order with regards to the asks being issued
+    /// (i.e. same behaviour as `asyncMap`).
+    /// 
+    /// The operator fails with an `WatchedActorTerminatedException` if the target actor is terminated,
+    /// or with an `TimeoutException` in case the ask exceeds the timeout passed in.
+    let inline askParallel (maxParallelism: int) (timeout: TimeSpan) (actorRef: IActorRef<'t>) (source: Source<'t,'mat>) : Source<'u,'mat> =
+        source.Ask(ActorRefs.untyped actorRef, timeout, maxParallelism)
+        
+    /// Use the `ask` pattern to send a request-reply message to the target `actorRef`.
+    /// If any of the asks times out it will fail the stream with a `AskTimeoutException`.
+    /// 
+    /// The operator fails with an `WatchedActorTerminatedException` if the target actor is terminated,
+    /// or with an `TimeoutException` in case the ask exceeds the timeout passed in.
+    let inline ask (timeout: TimeSpan) (actorRef: IActorRef<'t>) (source: Source<'t,'mat>) : Source<'u,'mat> =
+        askParallel 1 timeout actorRef source
+                
+    /// Turns a source into a SourceWithContext which manages a context per element along a stream.
+    let inline withContext (extract: 'o -> 'ctx) (source: Source<'o,'mat>) =
+        source.AsSourceWithContext(Func<_,_>(extract))

@@ -2,7 +2,7 @@
 // <copyright file="Flow.fs" company="Akka.NET Project">
 //     Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
 //     Copyright (C) 2013-2015 Akka.NET project <https://github.com/akkadotnet/akka.net>
-//     Copyright (C) 2015 Bartosz Sypytkowski <gttps://github.com/Horusiath>
+//     Copyright (C) 2015-2020 Bartosz Sypytkowski <gttps://github.com/Horusiath>
 // </copyright>
 //-----------------------------------------------------------------------
 
@@ -721,3 +721,31 @@ module Flow =
                     member x.NextDelay(element:'t) : TimeSpan = fn element }
             
         flow.Via (new DelayFlow<_>(Func<_> strategySupplier))
+        
+    /// The operator fails with an `WatchedActorTerminatedException` if the target actor is terminated.
+    let inline watch (actorRef: IActorRef<_>) (flow: Flow<'t,'t,'mat>) : Flow<'t,'t,'mat> =
+        FlowOperations.Watch(flow, ActorRefs.untyped actorRef)
+        
+    /// Use the `ask` pattern to send a request-reply message to the target `actorRef`.
+    /// If any of the asks times out it will fail the stream with a `AskTimeoutException`.
+    /// 
+    /// Parallelism limits the number of how many asks can be "in flight" at the same time.
+    /// Please note that the elements emitted by this operator are in-order with regards to the asks being issued
+    /// (i.e. same behaviour as `asyncMap`).
+    /// 
+    /// The operator fails with an `WatchedActorTerminatedException` if the target actor is terminated,
+    /// or with an `TimeoutException` in case the ask exceeds the timeout passed in.
+    let inline askParallel (maxParallelism: int) (timeout: TimeSpan) (actorRef: IActorRef<'t>) (flow: Flow<'t,'t,'mat>) : Flow<'t,'u,'mat> =
+        flow.Ask(ActorRefs.untyped actorRef, timeout, maxParallelism)
+        
+    /// Use the `ask` pattern to send a request-reply message to the target `actorRef`.
+    /// If any of the asks times out it will fail the stream with a `AskTimeoutException`.
+    /// 
+    /// The operator fails with an `WatchedActorTerminatedException` if the target actor is terminated,
+    /// or with an `TimeoutException` in case the ask exceeds the timeout passed in.
+    let inline ask (timeout: TimeSpan) (actorRef: IActorRef<'t>) (flow: Flow<'t,'t,'mat>) : Flow<'t,'u,'mat> =
+        askParallel 1 timeout actorRef flow
+        
+    /// Turns a Flow into a FlowWithContext which manages a context per element along a stream.
+    let inline withContext (collapse: 'i -> 'ci -> 'i2) (extract: 'o -> 'co) (flow: Flow<'i2,'o,'mat>) =
+        flow.AsFlowWithContext(Func<_,_,_>(collapse), Func<_,_>(extract))
