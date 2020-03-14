@@ -2,7 +2,8 @@
 * Upgraded Akka.NET dependencies to 1.4.2
 * Consolidated supported .NET version to .NET Standard 2.0
 * Removed PersistentView (as its no longer supported)
-* Akkling.Streams: dded support to stream refs, observables, cancellation tokens and withContext variants.
+* Akkling.Streams: added support to stream refs, observables, cancellation tokens and withContext variants.
+* Akkling.Streams: switched tuple args to value tuples to match Akka.Streams API.
 
 ## New in 0.9.3 (Released 2018/07/09)
 * Rollback FSharp.Core to 4.3.4
