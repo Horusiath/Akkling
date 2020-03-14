@@ -36,7 +36,7 @@ type StageLogic(shape: Shape, init) as this =
     member this.FailStage(error: #exn): unit = base.FailStage(error)
     member this.GetAsyncCallback(handler: 'a -> unit): ('a -> unit) = base.GetAsyncCallback(System.Action<'a>(handler)).Invoke
     member this.StageActorRef<'b>(receive: IActorRef<'b> -> obj -> unit) = 
-        base.GetStageActorRef(StageActorRef.Receive(fun (aref, msg) -> receive (typed aref) msg))
+        base.GetStageActor(StageActorRef.Receive(fun (struct(aref, msg)) -> receive (typed aref) msg))
     member this.Emit(outlet: Outlet<'a>, elem: 'a): unit = base.Emit(outlet, elem)
     
 let inline graphStagelogic (shape: #Shape) (init: StageLogic -> unit): GraphStageLogic = upcast StageLogic(shape, init)

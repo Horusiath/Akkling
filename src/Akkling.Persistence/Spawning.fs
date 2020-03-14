@@ -20,10 +20,4 @@ module Props =
     /// </summary>
     let propsPersist (receive: Eventsourced<'Message> -> Effect<'Message>) : Props<'Message> =
         Props<'Message>.Create<FunPersistentActor<'Message>, Eventsourced<'Message>, 'Message>(receive)
-                
-    /// <summary>
-    /// Creates a props describing a way to incarnate persistent view with behavior described by <paramref name="receive"/> function.
-    /// </summary>
-    let propsView (persistentId: string) (receive: View<'Message> -> Effect<'Message>) : Props<'Message> =
-        Props<'Message>.ArgsCreate<FunPersistentView<'Message>, View<'Message>, 'Message>([| receive; persistentId |])
         

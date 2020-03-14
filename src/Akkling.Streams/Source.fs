@@ -100,25 +100,25 @@ module Source =
 
     /// Create a source that will unfold a value of one type into
     /// a pair of the next state and output elements of type another type
-    let unfold (fn: 's -> ('s * 'e) option) (state: 's) : Source<'e, unit> =
+    let unfold (fn: 's -> struct('s * 'e) option) (state: 's) : Source<'e, unit> =
         Source.Unfold(state, Func<_,_>(fun x -> 
             match fn x with
-            | Some tuple -> tuple
-            | None -> Unchecked.defaultof<_>
+            | Some tuple -> Akka.Util.Option<_> tuple
+            | None -> Akka.Util.Option<_>.None
             )).MapMaterializedValue(Func<_,_>(ignore))
 
     /// Same as unfold, but uses an async function to generate the next state-element tuple.
-    let asyncUnfold (fn: 's -> Async<('s * 'e) option>) (state: 's) : Source<'e, unit> =
+    let asyncUnfold (fn: 's -> Async<struct('s * 'e) option>) (state: 's) : Source<'e, unit> =
         Source.UnfoldAsync(state, Func<_, _>(fun x -> 
             async { 
                 let! r = fn x 
                 match r with
-                | Some tuple -> return tuple
-                | None -> return Unchecked.defaultof<'s * 'e> } 
-                |> Async.StartAsTask<'s * 'e>)).MapMaterializedValue(Func<_,_>(ignore))
+                | Some tuple -> return Akka.Util.Option<_> tuple
+                | None -> return Akka.Util.Option<_>.None } 
+                |> Async.StartAsTask<_>)).MapMaterializedValue(Func<_,_>(ignore))
 
     /// Simpler unfold, for infinite sequences.
-    let inline infiniteUnfold (fn: 's -> 's * 'e) (state: 's) : Source<'e, unit> =
+    let inline infiniteUnfold (fn: 's -> struct('s * 'e)) (state: 's) : Source<'e, unit> =
         Source.UnfoldInfinite(state, Func<_,_>(fn)).MapMaterializedValue(Func<_,_>(ignore))
 
     /// A source with no elements, i.e. an empty stream that is completed immediately for every connected sink.
@@ -428,7 +428,7 @@ module Source =
     /// and a stream representing the remaining elements. If `n` is zero or negative, then this will return a pair
     /// of an empty collection and a stream containing the whole upstream unchanged.
     let inline prefixAndTail (n: int) (source) : Source<'out list * Source<'out, unit>, 'mat> = 
-        SourceOperations.PrefixAndTail(source, n).Select(Func<_,_>(fun (imm, source) -> 
+        SourceOperations.PrefixAndTail(source, n).Select(Func<_,_>(fun (struct(imm, source)) -> 
             let s = source.MapMaterializedValue(Func<_,_>(ignore))
             (List.ofSeq imm), s))
 
@@ -482,7 +482,7 @@ module Source =
 
     /// Combine the elements of current flow into a stream of tuples consisting
     /// of all elements paired with their index. Indices start at 0.
-    let inline zipi (source) : Source<'out * int64, 'mat> =
+    let inline zipi (source) : Source<struct('out * int64), 'mat> =
         SourceOperations.ZipWithIndex(source)
 
     /// If the first element has not passed through this stage before the provided timeout, the stream is failed

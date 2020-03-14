@@ -21,7 +21,7 @@ module SubFlow =
     /// Since the underlying failure signal onError arrives out-of-band, it might jump over existing elements.
     /// This stage can recover the failure signal, but not the skipped elements, which will be dropped.
     let recover (fn: exn -> 'out option) (subFlow: SubFlow<'out, 'mat, 'closed>) : SubFlow<'out option, 'mat, 'closed> =
-        SubFlowOperations.Recover(subFlow, Func<exn, Util.Option<'out>>(fn >> toCsOption)).Select(Func<Util.Option<'out>, 'out option>(ofCsOption))
+        SubFlowOperations.Recover(subFlow, Func<exn, Akka.Util.Option<'out>>(fn >> toCsOption)).Select(Func<Akka.Util.Option<'out>, 'out option>(ofCsOption))
         
     /// RecoverWith allows to switch to alternative Source on subFlow failure. It will stay in effect after
     /// a failure has been recovered so that each time there is a failure it is fed into the <paramref name="partialFunc"/> and a new
@@ -261,7 +261,7 @@ module SubFlow =
     /// and a stream representing the remaining elements. If `n` is zero or negative, then this will return a pair
     /// of an empty collection and a stream containing the whole upstream unchanged.
     let inline prefixAndTail (n: int) (subFlow) : SubFlow<'out list * Source<'out, unit>, 'mat, 'closed> = 
-        SubFlowOperations.PrefixAndTail(subFlow, n).Select(Func<_,_>(fun (imm, source) -> 
+        SubFlowOperations.PrefixAndTail(subFlow, n).Select(Func<_,_>(fun (struct(imm, source)) -> 
             let s = source.MapMaterializedValue(Func<_,_>(ignore))
             (List.ofSeq imm), s))
 
@@ -301,7 +301,7 @@ module SubFlow =
 
     /// Combine the elements of current flow into a stream of tuples consisting
     /// of all elements paired with their index. Indices start at 0.
-    let inline zipi (subFlow) : SubFlow<'out * int64, 'mat, 'closed> =
+    let inline zipi (subFlow) : SubFlow<struct('out * int64), 'mat, 'closed> =
         SubFlowOperations.ZipWithIndex(subFlow)
 
     /// If the first element has not passed through this stage before the provided timeout, the stream is failed

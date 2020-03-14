@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.6;net452</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <Version>0.9.3</Version>
     <Authors>Bartosz Sypytkowski</Authors>
     <Description>F# wrapper library for Akka.NET with persistence support</Description>
@@ -16,20 +16,19 @@ Include XML docs</PackageReleaseNotes>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="PersistentActor.fs" />
-    <Compile Include="PersistentView.fs" />
     <Compile Include="AtLeastOnceDelivery.fs" />
     <Compile Include="Patterns.fs" />
     <Compile Include="Spawning.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Akka.Persistence" Version="1.3.8" />
+    <PackageReference Include="Akka.Persistence" Version="1.4.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Akkling.Streams\Akkling.Streams.fsproj" />
     <ProjectReference Include="..\Akkling\Akkling.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="4.3.4" />
+    <PackageReference Include="FSharp.Core" Version="4.7.0" />
     <PackageReference Update="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 </Project>

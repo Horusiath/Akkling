@@ -1,4 +1,4 @@
-frameworks: net452, netstandard1.6
+frameworks: netstandard2.0
 redirects: on
 
 source https://nuget.org/api/v2
@@ -8,37 +8,37 @@ nuget Akka.Streams.TestKit
 nuget FSharp.Formatting
 nuget Microsoft.NET.Test.Sdk
 nuget Octokit
-nuget Reactive.Streams >= 1.0.2
+nuget Reactive.Streams
 nuget FAKE 
 nuget FsCheck 
 nuget FsCheck.Xunit 
-nuget Newtonsoft.Json >= 9.0
-nuget xunit >= 2.3.0 prerelease
-nuget xunit.abstractions >= 2.0.0 prerelease
-nuget xunit.assert >= 2.3.0 prerelease
-nuget xunit.runner.console >= 2.3.0 prerelease
-nuget xunit.runner.visualstudio >= 2.3.0 prerelease
-nuget xunit.extensibility.execution >= 2.3.0 prerelease
-nuget FSharp.Core 4.3.4
+nuget Newtonsoft.Json
+nuget xunit
+nuget xunit.abstractions
+nuget xunit.assert
+nuget xunit.runner.console
+nuget xunit.runner.visualstudio
+nuget xunit.extensibility.execution
+nuget FSharp.Core
 
-nuget Microsoft.Extensions.DependencyInjection.Abstractions = 1.1.1
-nuget Microsoft.Extensions.DependencyInjection = 1.1.1
-nuget Microsoft.Extensions.Logging.Abstractions = 1.1.1
-nuget Microsoft.Extensions.Logging = 1.1.1
+nuget Microsoft.Extensions.DependencyInjection.Abstractions
+nuget Microsoft.Extensions.DependencyInjection
+nuget Microsoft.Extensions.Logging.Abstractions
+nuget Microsoft.Extensions.Logging
 
-nuget Akka >= 1.3.1
-nuget Akka.Streams >= 1.3.1
-nuget Akka.Persistence prerelease 
-nuget Akka.Persistence.Sqlite prerelease 
-nuget Akka.Persistence.Sql.Common prerelease 
-nuget Akka.Persistence.Query prerelease 
-nuget Akka.Persistence.Query.Sql prerelease 
-nuget Akka.Remote >= 1.3.1
-nuget Akka.TestKit >= 1.3.1
-nuget Akka.TestKit.Xunit2 >= 1.3.1
-nuget Akka.Cluster >= 1.3.1
-nuget Akka.Cluster.Sharding >= 1.3.1 prerelease
-nuget Akka.Cluster.Tools >= 1.3.1 
-nuget Akka.DistributedData >= 1.3.1 prerelease
+nuget Akka >= 1.4
+nuget Akka.Streams >= 1.4
+nuget Akka.Persistence >= 1.4
+nuget Akka.Persistence.Sqlite >= 1.4 
+nuget Akka.Persistence.Sql.Common >= 1.4 
+nuget Akka.Persistence.Query >= 1.4
+nuget Akka.Persistence.Query.Sql >= 1.4 
+nuget Akka.Remote >= 1.4
+nuget Akka.TestKit >= 1.4
+nuget Akka.TestKit.Xunit2 >= 1.4
+nuget Akka.Cluster >= 1.4
+nuget Akka.Cluster.Sharding >= 1.4
+nuget Akka.Cluster.Tools >= 1.4
+nuget Akka.DistributedData >= 1.4
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx
