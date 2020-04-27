@@ -1,7 +1,7 @@
-#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
-#load "../.paket/load/net452/Akka.Persistence.fsx"
-#r "../src/Akkling/bin/Debug/net452/Akkling.dll"
-#r "../src/Akkling.Persistence/bin/Debug/net452/Akkling.Persistence.dll"
+#load "../.paket/load/netstandard2.0/Akka.Serialization.Hyperion.fsx"
+#load "../.paket/load/netstandard2.0/Akka.Persistence.fsx"
+#r "../src/Akkling/bin/Debug/netstandard2.0/Akkling.dll"
+#r "../src/Akkling.Persistence/bin/Debug/netstandard2.0/Akkling.Persistence.dll"
 
 open System
 open Akka.Persistence

@@ -1,10 +1,10 @@
-﻿#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
-#load "../.paket/load/net452/Akka.Persistence.fsx"
-#load "../.paket/load/net452/Akka.Streams.fsx"
+﻿#load "../.paket/load/netstandard2.0/Akka.Serialization.Hyperion.fsx"
+#load "../.paket/load/netstandard2.0/Akka.Persistence.fsx"
+#load "../.paket/load/netstandard2.0/Akka.Streams.fsx"
 #r "../src/Akkling/bin/Debug/Akkling.dll"
-#r "../src/Akkling.Streams/bin/Debug/net452/Akka.Streams.dll"
-#r "../src/Akkling.Streams/bin/Debug/net452/Akkling.Streams.dll"
-#r "../src/Akkling.Persistence/bin/Debug/net452/Akkling.Persistence.dll"
+#r "../src/Akkling.Streams/bin/Debug/netstandard2.0/Akka.Streams.dll"
+#r "../src/Akkling.Streams/bin/Debug/netstandard2.0/Akkling.Streams.dll"
+#r "../src/Akkling.Persistence/bin/Debug/netstandard2.0/Akkling.Persistence.dll"
 
 
 open System

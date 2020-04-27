@@ -1,5 +1,5 @@
-#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
-#r "../src/Akkling/bin/Debug/net452/Akkling.dll"
+#load "../.paket/load/netstandard2.0/Akka.Serialization.Hyperion.fsx"
+#r "../src/Akkling/bin/Debug/netstandard2.0/Akkling.dll"
 
 open System
 open Akkling
