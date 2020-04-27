@@ -1,5 +1,0 @@
-#load @"DotNetty.Buffers.fsx" 
-#load @"DotNetty.Codecs.fsx" 
-#load @"DotNetty.Common.fsx" 
-#load @"DotNetty.Transport.fsx" 
-#r "../../../packages/DotNetty.Handlers/lib/net45/DotNetty.Handlers.dll" 

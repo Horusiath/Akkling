@@ -1,1 +1,0 @@
-#r "../../../packages/FSharp.Compiler.Service/lib/net45/FSharp.Compiler.Service.dll" 
