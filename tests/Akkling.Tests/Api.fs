@@ -8,6 +8,7 @@
 module Akkling.Tests.Api
 
 open Akkling
+open Akkling.Hocon
 open Akkling.TestKit
 open Akka.Actor
 open System
@@ -138,13 +139,34 @@ let ``can serialize and deserialize discriminated unions over remote nodes`` () 
         """ port
         |> Configuration.parse
 
+    let remoteConfig2 remotePort =
+        akka {
+            actor {
+                ask_timeout 10<s>
+                provider "remote"
+            }
+            remote.dot_netty.tcp {
+                port remotePort
+                hostname "localhost"
+            }
+        }
+        |> Configuration.parse
+
     use server = System.create "server-system" (remoteConfig 9911)
+    use server2 = System.create "server-system" (remoteConfig2 9912)
     use client = System.create "client-system" (remoteConfig 0)
+    use client2 = System.create "client-system" (remoteConfig2 0)
 
     let aref = spawn client "a-1" { (props (actorOf2 testBehavior) ) with Deploy = Some(Deploy(RemoteScope (Address.Parse "akka.tcp://server-system@localhost:9911"))) }
+    let aref2 = spawn client2 "a-1" { (props (actorOf2 testBehavior) ) with Deploy = Some(Deploy(RemoteScope (Address.Parse "akka.tcp://server-system@localhost:9912"))) }
+
     let msg = Succeed("a-11", Inner(11, "a-12"))
+    
     let response : OuterUnion = aref <? msg |> Async.RunSynchronously
+    let response2 : OuterUnion = aref2 <? msg |> Async.RunSynchronously
+    
     response |> equals msg
+    response2 |> equals msg
 
 [<Fact>]
 let ``monitor works on typed refs`` () = testDefault <| fun tck ->
