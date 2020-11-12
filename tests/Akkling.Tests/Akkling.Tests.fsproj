@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Akkling.Cluster.Sharding\Akkling.Cluster.Sharding.fsproj" />
     <ProjectReference Include="..\..\src\Akkling.DistributedData\Akkling.DistributedData.fsproj" />
+    <ProjectReference Include="..\..\src\Akkling.Hocon\Akkling.Hocon.fsproj" />
     <ProjectReference Include="..\..\src\Akkling.Persistence\Akkling.Persistence.fsproj" />
     <ProjectReference Include="..\..\src\Akkling.Streams.TestKit\Akkling.Streams.TestKit.fsproj" />
     <ProjectReference Include="..\..\src\Akkling.Streams\Akkling.Streams.fsproj" />

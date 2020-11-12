@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>0.10.0</Version>
+    <Authors>Bartosz Sypytkowski</Authors>
+    <Description>Akka.NET HOCON computation expressions</Description>
+    <PackageProjectUrl>https://github.com/Horusiath/Akkling</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageTags>akka.net fsharp hocon</PackageTags>
+    <PackageReleaseNotes>
+      * Upgraded Akka.NET dependencies to 1.4.2
+      * Consolidated supported .NET version to .NET Standard 2.0
+      * Removed PersistentView (as its no longer supported)
+      * Akkling.Streams: added support to stream refs, observables, cancellation tokens and withContext variants.
+      * Akkling.Streams: switched tuple args to value tuples to match Akka.Streams API.
+    </PackageReleaseNotes>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Types.fs" />
+    <Compile Include="Common.fs" />
+    <Compile Include="Shared.fs" />
+    <Compile Include="Shared.Debug.fs" />
+    <Compile Include="Actor.Typed.fs" />
+    <Compile Include="Actor.Inbox.fs" />
+    <Compile Include="Actor.Router.fs" />
+    <Compile Include="Actor.Dispatcher.fs" />
+    <Compile Include="Actor.DefaultMailbox.fs" />
+    <Compile Include="Actor.Mailbox.fs" />
+    <Compile Include="Actor.Serializers.fs" />
+    <Compile Include="IO.Pools.fs" />
+    <Compile Include="Remote.Protocols.fs" />
+    <Compile Include="Shared.Tcp.fs" />
+    <Compile Include="Shared.Udp.fs" />
+    <Compile Include="IO.Dns.fs" />
+    <Compile Include="IO.fs" />
+    <Compile Include="Cluster.Metrics.fs" />
+    <Compile Include="Cluster.PubSub.fs" />
+    <Compile Include="Cluster.Client.fs" />
+    <Compile Include="Cluster.Role.fs" />
+    <Compile Include="Cluster.FailureDetector.fs" />
+    <Compile Include="Cluster.SplitBrainResolver.fs" />
+    <Compile Include="Cluster.Singleton.fs" />
+    <Compile Include="Shared.Cluster.fs" />
+    <Compile Include="Actor.Deployment.fs" />
+    <Compile Include="Actor.fs" />
+    <Compile Include="Remote.TransportFailureDetector.fs" />
+    <Compile Include="Remote.WatchFailureDetector.fs" />
+    <Compile Include="Remote.Gremlin.fs" />
+    <Compile Include="Remote.DotNetty.fs" />
+    <Compile Include="Remote.fs" />
+    <Compile Include="Scheduler.fs" />
+    <Compile Include="CoordinatedShutdown.fs" />
+    <Compile Include="Persistence.FSM.fs" />
+    <Compile Include="Persistence.AtLeastOnceDelivery.fs" />
+    <Compile Include="Persistence.View.fs" />
+    <Compile Include="Persistence.Plugin.fs" />
+    <Compile Include="Persistence.Proxy.fs" />
+    <Compile Include="Persistence.PluginFallback.fs" />
+    <Compile Include="Persistence.Journal.fs" />
+    <Compile Include="Persistence.SnapshotStore.fs" />
+    <Compile Include="Persistence.fs" />
+    <Compile Include="Streams.fs" />
+    <Compile Include="Test.fs" />
+    <Compile Include="Akka.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharp.Core" Version="4.7.0" />
+  </ItemGroup>
+</Project>
