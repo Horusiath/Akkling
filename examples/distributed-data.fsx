@@ -1,7 +1,7 @@
-#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
-#load "../.paket/load/net452/Akka.DistributedData.fsx"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.dll"
-#r "../src/Akkling.DistributedData/bin/Debug/net452/Akkling.DistributedData.dll"
+#r "nuget: Akka.Serialization.Hyperion"
+#r "nuget: Akka.DistributedData"
+#r "nuget: Akkling"
+#r "nuget: Akkling.DistributedData"
 
 open Akka.Cluster
 open Akka.DistributedData

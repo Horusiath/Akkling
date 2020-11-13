@@ -1,10 +1,10 @@
-#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
-#load "../.paket/load/net452/Akka.Cluster.Sharding.fsx"
-#load "../.paket/load/net452/Akka.Streams.fsx"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.dll"
-#r "../src/Akkling.Streams/bin/Debug/net452/Akkling.Streams.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.Persistence.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.Cluster.Sharding.dll"
+#r "nuget: Akka.Serialization.Hyperion"
+#r "nuget: Akka.Cluster.Sharding"
+#r "nuget: Akka.Streams"
+#r "nuget: Akkling"
+#r "nuget: Akkling.Streams"
+#r "nuget: Akkling.Persistence"
+#r "nuget: Akkling.Cluster.Sharding"
 
 open Akka.Actor
 open Akka.Configuration

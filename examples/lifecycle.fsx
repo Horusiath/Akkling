@@ -1,5 +1,5 @@
-#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
-#r "../src/Akkling/bin/Debug/net452/Akkling.dll"
+#r "nuget: Akka.Serialization.Hyperion"
+#r "nuget: Akkling"
 
 open System
 open Akkling
