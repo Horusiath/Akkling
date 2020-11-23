@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net50</TargetFramework>
     <PackageTags>akka.net fsharp testing fscheck</PackageTags>
     <Authors>Bartosz Sypytkowski</Authors>
     <Version>0.10.0</Version>
@@ -22,13 +22,9 @@
     <Compile Include="TestKit.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Akka.TestKit.Xunit2" Version="1.4.2" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Akkling\Akkling.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.Core" Version="4.7.0" />
-    <PackageReference Update="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="Akka.TestKit.Xunit2" Version="1.4.12" />
   </ItemGroup>
 </Project>

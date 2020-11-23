@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net50</TargetFramework>
     <Version>0.10.0</Version>
     <Authors>Bartosz Sypytkowski</Authors>
     <Company />
@@ -40,9 +40,7 @@
     <Compile Include="IO.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.Core" Version="4.7.0" />
-    <PackageReference Include="Akka" Version="1.4.2" />
-    <PackageReference Include="Akka.Serialization.Hyperion" Version="1.4.2" />
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="Akka" Version="1.4.12" />
+    <PackageReference Include="Akka.Serialization.Hyperion" Version="1.4.12" />
   </ItemGroup>
 </Project>

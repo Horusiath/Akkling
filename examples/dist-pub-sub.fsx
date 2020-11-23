@@ -6,6 +6,7 @@
 #r "nuget: Akkling.Persistence"
 #r "nuget: Akkling.Cluster.Sharding"
 
+open System
 open Akka.Actor
 open Akka.Configuration
 open Akka.Cluster
@@ -28,17 +29,11 @@ open Akkling.Streams
 let configWithPort port =
     let config = Configuration.parse ("""
         akka {
-            actor {
-              provider = "Akka.Cluster.ClusterActorRefProvider, Akka.Cluster"
-              serializers {
-                hyperion = "Akka.Serialization.HyperionSerializer, Akka.Serialization.Hyperion"
-              }
-              serialization-bindings {
-                "System.Object" = hyperion
-              }
-            }
+          actor {
+            provider = cluster
+          }
           remote {
-            helios.tcp {
+            dot-netty.tcp {
               public-hostname = "localhost"
               hostname = "localhost"
               port = """ + port.ToString() + """
@@ -129,5 +124,6 @@ let system2 = System.create "cluster-system" (configWithPort 5001)
 let mediator2 = DistributedPubSub.Get(system2).Mediator;
 mediator2.Tell(new Publish(topic, Message "msg 2"));
 
-
-
+while true do 
+  let msg = Console.ReadLine()
+  mediator.Tell(new Publish(topic, Message msg));
