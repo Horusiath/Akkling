@@ -1,7 +1,7 @@
-#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
-#load "../.paket/load/net452/Akka.Streams.fsx"
-#r "../src/Akkling/bin/Debug/net452/Akkling.dll"
-#r "../src/Akkling.Streams/bin/Debug/net452/Akkling.Streams.dll"
+#r "nuget: Akka.Serialization.Hyperion"
+#r "nuget: Akka.Streams"
+#r "nuget: Akkling"
+#r "nuget: Akkling.Streams"
 
 open System
 open Akka.Streams

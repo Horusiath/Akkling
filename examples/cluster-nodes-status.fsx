@@ -1,8 +1,8 @@
-#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
-#load "../.paket/load/net452/Akka.Cluster.Sharding.fsx"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.Persistence.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.Cluster.Sharding.dll"
+#r "nuget: Akka.Serialization.Hyperion"
+#r "nuget: Akka.Cluster.Sharding"
+#r "nuget: Akkling"
+#r "nuget: Akkling.Persistence"
+#r "nuget: Akkling.Cluster.Sharding"
 
 open System
 open System.IO

@@ -1,8 +1,8 @@
-#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
-#load "../.paket/load/net452/Akka.Persistence.fsx"
-#r "../src/Akkling/bin/Debug/net452/Akkling.dll"
-#r "../src/Akkling.Streams/bin/Debug/net452/Akka.Streams.dll"
-#r "../src/Akkling.Persistence/bin/Debug/net452/Akkling.Persistence.dll"
+#r "nuget: Akka.Serialization.Hyperion"
+#r "nuget: Akka.Persistence"
+#r "nuget: Akkling"
+#r "nuget: Akka.Streams"
+#r "nuget: Akkling.Persistence"
 
 open System
 open Akkling

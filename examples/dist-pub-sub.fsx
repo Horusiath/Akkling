@@ -1,11 +1,12 @@
-#load "../.paket/load/net452/Akka.Serialization.Hyperion.fsx"
-#load "../.paket/load/net452/Akka.Cluster.Sharding.fsx"
-#load "../.paket/load/net452/Akka.Streams.fsx"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.dll"
-#r "../src/Akkling.Streams/bin/Debug/net452/Akkling.Streams.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.Persistence.dll"
-#r "../src/Akkling.Cluster.Sharding/bin/Debug/net452/Akkling.Cluster.Sharding.dll"
+#r "nuget: Akka.Serialization.Hyperion"
+#r "nuget: Akka.Cluster.Sharding"
+#r "nuget: Akka.Streams"
+#r "nuget: Akkling"
+#r "nuget: Akkling.Streams"
+#r "nuget: Akkling.Persistence"
+#r "nuget: Akkling.Cluster.Sharding"
 
+open System
 open Akka.Actor
 open Akka.Configuration
 open Akka.Cluster
@@ -28,17 +29,11 @@ open Akkling.Streams
 let configWithPort port =
     let config = Configuration.parse ("""
         akka {
-            actor {
-              provider = "Akka.Cluster.ClusterActorRefProvider, Akka.Cluster"
-              serializers {
-                hyperion = "Akka.Serialization.HyperionSerializer, Akka.Serialization.Hyperion"
-              }
-              serialization-bindings {
-                "System.Object" = hyperion
-              }
-            }
+          actor {
+            provider = cluster
+          }
           remote {
-            helios.tcp {
+            dot-netty.tcp {
               public-hostname = "localhost"
               hostname = "localhost"
               port = """ + port.ToString() + """
@@ -129,5 +124,6 @@ let system2 = System.create "cluster-system" (configWithPort 5001)
 let mediator2 = DistributedPubSub.Get(system2).Mediator;
 mediator2.Tell(new Publish(topic, Message "msg 2"));
 
-
-
+while true do 
+  let msg = Console.ReadLine()
+  mediator.Tell(new Publish(topic, Message msg));

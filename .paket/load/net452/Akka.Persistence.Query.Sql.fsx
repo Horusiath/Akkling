@@ -1,6 +1,0 @@
-#load @"Akka.Persistence.fsx" 
-#load @"Akka.Persistence.Query.fsx" 
-#load @"Akka.Persistence.Sql.Common.fsx" 
-#r "System.Core" 
-#r "System.Xml.Linq" 
-#r "../../../packages/Akka.Persistence.Query.Sql/lib/net45/Akka.Persistence.Query.Sql.dll" 

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net50</TargetFramework>
     <Version>0.10.0</Version>
     <Authors>Bartosz Sypytkowski</Authors>
     <Description>F# wrapper library for Akka.NET with geo-replicated distributed data support (CRDT)</Description>
@@ -25,13 +25,9 @@
     <Compile Include="DData.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Akka.DistributedData" Version="1.4.2" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Akkling\Akkling.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.Core" Version="4.7.0" />
-    <PackageReference Update="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="Akka.DistributedData" Version="1.4.12" />
   </ItemGroup>
 </Project>

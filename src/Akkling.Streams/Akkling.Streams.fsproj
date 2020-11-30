@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net50</TargetFramework>
     <PackageLicenseUrl>https://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Horusiath/Akkling</PackageProjectUrl>
     <Authors>Bartosz Sypytkowski</Authors>
@@ -34,13 +34,9 @@
     <Compile Include="Tcp.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Akka.Streams" Version="1.4.2" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Akkling\Akkling.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.Core" Version="4.7.0" />
-    <PackageReference Update="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="Akka.Streams" Version="1.4.12" />
   </ItemGroup>
 </Project>
