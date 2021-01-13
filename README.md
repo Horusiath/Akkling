@@ -34,7 +34,7 @@ type Message =
 let rec greeter lastKnown = function
     | Hi -> printfn "Who sent Hi? %s?" lastKnown |> ignored
     | Greet(who) ->
-        printfn "%s sends greetings"
+        printfn "%s sends greetings" who
         become (greeter who)
 
 let aref = spawn system "greeter" <| props(actorOf (greeter "Unknown"))
