@@ -62,19 +62,19 @@ and [<Interface>]PersistentContext<'Event> =
     /// Persists sequence of events in the event journal. Use second argument to define
     /// function which will update state depending on events.
     /// </summary>
-    abstract PersistEvent : 'Event seq -> unit
+    abstract PersistEvent : 'Event seq * (unit->unit) -> unit
 
     /// <summary>
     /// Asynchronously persists sequence of events in the event journal. Use second argument
     /// to define function which will update state depending on events.
     /// </summary>
-    abstract AsyncPersistEvent : 'Event seq -> unit
+    abstract AsyncPersistEvent : 'Event seq * (unit->unit) -> unit
 
     /// <summary>
     /// Defers a second argument (update state callback) to be called after persisting target
     /// event will be confirmed.
     /// </summary>
-    abstract DeferEvent : 'Event seq -> unit
+    abstract DeferEvent : 'Event seq * (unit->unit) -> unit
 
 
 and [<Interface>]ExtEventsourced<'Message> =
@@ -88,33 +88,47 @@ and PersistentEffect<'Message> =
     | PersistAsync of 'Message
     | PersistAllAsync of 'Message seq
     | Defer of 'Message seq
+    | AndThen of PersistentEffect<'Message> * (unit -> unit)
     interface Effect<'Message> with
         member __.WasHandled() = true
         member this.OnApplied(context, message) =
+            let rec apply (ctx: ExtEventsourced<'Message>) effect (callback: (unit->unit)) =
+                match effect with
+                | Persist(event) -> ctx.PersistEvent([event], callback)
+                | PersistAll(events) -> ctx.PersistEvent(events, callback)
+                | PersistAsync(event) -> ctx.AsyncPersistEvent([event], callback)
+                | PersistAllAsync(events) -> ctx.AsyncPersistEvent(events, callback)
+                | Defer(events) -> ctx.DeferEvent(events, callback)
+                | AndThen(inner, next) ->
+                    let composed = if obj.ReferenceEquals(callback, Unchecked.defaultof<_>) then next else callback>>next
+                    apply ctx inner composed
+                    
             match context with
-            | :? ExtEventsourced<'Message> as persistentContext ->
-                match this with
-                | Persist(event) -> persistentContext.PersistEvent [event]
-                | PersistAll(events) -> persistentContext.PersistEvent events
-                | PersistAsync(event) -> persistentContext.AsyncPersistEvent [event]
-                | PersistAllAsync(events) -> persistentContext.AsyncPersistEvent events
-                | Defer(events) -> persistentContext.DeferEvent events
+            | :? ExtEventsourced<'Message> as pctx -> apply pctx this Unchecked.defaultof<_>
             | _ -> raise (Exception("Cannot use persistent effects in context of non-persistent actor"))
 
 and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'Message>>(context : IActorContext, actor : 'Actor) as this =
     let self = context.Self
     let mutable hasPersisted = false
     let mutable hasDeffered = false
-    member private this.Persisting =
-        Action<'Message>( fun e ->
-            hasPersisted <- true
-            actor.Handle e
-            hasPersisted <- false)
-    member private this.Deffering =
-        Action<'Message>( fun e ->
-            hasDeffered <- true
-            actor.Handle e
-            hasDeffered <- false)
+    let persisting callback = 
+        Action<'Message>(fun e ->
+            try
+                hasPersisted <- true
+                actor.Handle e
+                callback ()
+            finally
+                hasPersisted <- false)
+    let deferring callback = 
+        Action<'Message>(fun e ->
+            try
+                hasPersisted <- true
+                actor.Handle e
+                callback ()
+            finally
+                hasPersisted <- false)
+    member private this.Persisting = persisting id
+    member private this.Deferring = deferring id
     interface ExtEventsourced<'Message> with
         member __.UntypedContext = context
         member __.HasPersisted () = hasPersisted
@@ -150,12 +164,15 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
         member __.IsRecovering () = actor.IsRecovering
         member __.LastSequenceNr () = actor.LastSequenceNr
         member __.Pid = actor.PersistenceId
-        member this.PersistEvent(events) =
-            actor.PersistAll(events, this.Persisting)
-        member __.AsyncPersistEvent(events) =
-            actor.PersistAllAsync(events, this.Persisting)
-        member __.DeferEvent(events) =
-            events |> Seq.iter (fun e -> actor.DeferAsync(e, this.Deffering))
+        member this.PersistEvent(events, callback) =
+            let cb = if obj.ReferenceEquals(callback, Unchecked.defaultof<_>) then this.Persisting else persisting callback
+            actor.PersistAll(events, cb)
+        member __.AsyncPersistEvent(events, callback) =
+            let cb = if obj.ReferenceEquals(callback, Unchecked.defaultof<_>) then this.Persisting else persisting callback
+            actor.PersistAllAsync(events, cb)
+        member __.DeferEvent(events, callback) =
+            let cb = if obj.ReferenceEquals(callback, Unchecked.defaultof<_>) then this.Deferring else deferring callback
+            events |> Seq.iter (fun e -> actor.DeferAsync(e, cb))
 
 and PersistentLifecycleEvent =
     | ReplaySucceed
@@ -214,3 +231,7 @@ and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Effect<'Messa
     override this.PostRestart(cause) =
         base.PostRestart cause
         this.Handle(PostRestart cause)
+
+module Effects =
+    
+    let inline andThen (callback: unit->unit) (effect: PersistentEffect<'event>) = AndThen(effect, callback)
