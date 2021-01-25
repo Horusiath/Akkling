@@ -160,6 +160,8 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
 and PersistentLifecycleEvent =
     | ReplaySucceed
     | ReplayFailed of cause:exn * msg:obj
+    | PersistFailed of cause:exn * evt:obj * sequenceNr:int64
+    | PersistRejected of cause:exn * evt:obj * sequenceNr:int64
     interface IDeadLetterSuppression
 
 and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Effect<'Message>) as this =
@@ -198,6 +200,8 @@ and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Effect<'Messa
     override this.OnRecover msg = this.Handle msg
     override this.OnReplaySuccess() = this.Handle ReplaySucceed
     override this.OnRecoveryFailure(e, msg) = this.Handle (ReplayFailed(e, msg))
+    override this.OnPersistFailure(e, evt, sequenceNr) = this.Handle (PersistFailed(e, evt, sequenceNr))
+    override this.OnPersistRejected(e, evt, sequenceNr) = this.Handle (PersistRejected(e, evt, sequenceNr))
 
     override this.PostStop() =
         base.PostStop()
