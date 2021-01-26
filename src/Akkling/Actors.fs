@@ -219,12 +219,15 @@ and FunActor<'Message>(actor : Actor<'Message>->Effect<'Message>) as this =
         | :? AsyncEffect<'Message> as a ->
             Akka.Dispatch.ActorTaskScheduler.RunTask(System.Func<System.Threading.Tasks.Task>(fun () -> 
                 let task = 
-                    async {
-                        let! eff = a.Effect
+                    let rec runAsync (eff : Effect<'Message>) = async {
                         match eff with
                         | :? Become<'Message> -> behavior <- eff
+                        | :? AsyncEffect<'Message> as e ->
+                            let! eff = e.Effect
+                            return! runAsync eff
                         | effect -> effect.OnApplied(ctx, msg :?> 'Message)
-                        () } |> Async.StartAsTask
+                    }
+                    runAsync a |> Async.StartAsTask
                 upcast task ))
         | effect -> effect.OnApplied(ctx, msg :?> 'Message)
     
