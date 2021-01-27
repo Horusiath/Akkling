@@ -173,7 +173,19 @@ and [<Struct>]AsyncEffect<'Message>(asyncEffect: Async<Effect<'Message>>) =
     member __.Effect = asyncEffect
     interface Effect<'Message> with
         member __.WasHandled () = true
-        member __.OnApplied(_ : ExtActor<'Message>, _: 'Message) = ()    
+        member this.OnApplied(ctx : ExtActor<'Message>, msg: 'Message) =
+            let effect = this
+            Akka.Dispatch.ActorTaskScheduler.RunTask(System.Func<System.Threading.Tasks.Task>(fun () -> 
+                let task = 
+                    let rec runAsync (eff : Effect<'Message>) = async {
+                        match eff with
+                        | :? AsyncEffect<'Message> as e ->
+                            let! eff = e.Effect
+                            return! runAsync eff
+                        | effect -> effect.OnApplied(ctx, msg)
+                    }
+                    runAsync effect |> Async.StartAsTask
+                upcast task ))
 
 and ActorEffect<'Message> = 
     | Unhandled
@@ -216,19 +228,6 @@ and FunActor<'Message>(actor : Actor<'Message>->Effect<'Message>) as this =
         let nextBehavior = this.Next behavior ctx msg
         match nextBehavior with
         | :? Become<'Message> -> behavior <- nextBehavior
-        | :? AsyncEffect<'Message> as a ->
-            Akka.Dispatch.ActorTaskScheduler.RunTask(System.Func<System.Threading.Tasks.Task>(fun () -> 
-                let task = 
-                    let rec runAsync (eff : Effect<'Message>) = async {
-                        match eff with
-                        | :? Become<'Message> -> behavior <- eff
-                        | :? AsyncEffect<'Message> as e ->
-                            let! eff = e.Effect
-                            return! runAsync eff
-                        | effect -> effect.OnApplied(ctx, msg :?> 'Message)
-                    }
-                    runAsync a |> Async.StartAsTask
-                upcast task ))
         | effect -> effect.OnApplied(ctx, msg :?> 'Message)
     
     member __.Sender() : IActorRef = base.Sender
