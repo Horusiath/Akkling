@@ -33,17 +33,28 @@ type ActorBuilder() =
     member __.Zero () : Effect<'Message> = upcast Ignore
     member __.Yield value = value
 
-    member this.TryWith(tryExpr : unit -> Effect<'In>, catchExpr : exn -> Effect<'In>) : Effect<'In> = 
-        try 
+    member __.TryWith(tryExpr : unit -> Effect<'In>, catchExpr : exn -> Effect<'In>) : Effect<'In> = 
+        try
             match tryExpr() with
-            | Become next -> upcast Become(fun message -> this.TryWith((fun () -> next message), catchExpr))
+            | Become next ->
+                upcast Become(fun message ->
+                    try
+                        next message
+                    with error -> catchExpr error
+                )
             | behavior -> behavior
         with error -> catchExpr error
 
-    member this.TryFinally(tryExpr : unit -> Effect<'In>, finallyExpr : unit -> unit) : Effect<'In> = 
-        try 
+    member __.TryFinally(tryExpr : unit -> Effect<'In>, finallyExpr : unit -> unit) : Effect<'In> = 
+        try
             match tryExpr() with
-            | Become next -> upcast Become(fun message -> this.TryFinally((fun () -> next message), finallyExpr))
+            | Become next ->
+                upcast Become(fun message ->
+                    try
+                        next message
+                    finally
+                        finallyExpr()
+                )
             | behavior -> 
                 finallyExpr()
                 behavior
