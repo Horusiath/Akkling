@@ -155,10 +155,7 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
             context.System.Scheduler.ScheduleTellOnceCancelable(delay, untyped target, message, self)
         member __.Incarnation() = actor :> ActorBase
         member __.Stop(ref : IActorRef<'T>) = context.Stop(untyped ref)
-        member __.Unhandled(msg) =
-            match box actor with
-            | :? FunPersistentActor<'Message> as act -> act.InternalUnhandled(msg)
-            | _ -> raise (Exception("Couldn't use actor in typed context"))
+        member __.Unhandled(msg) = actor.InternalUnhandled(msg)
         member __.Journal = actor.Journal
         member __.SnapshotStore = actor.SnapshotStore
         member __.IsRecovering () = actor.IsRecovering
