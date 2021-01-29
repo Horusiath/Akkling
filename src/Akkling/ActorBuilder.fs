@@ -96,22 +96,22 @@ type ActorBuilder() =
     member this.Combine(first : unit -> Effect<'In>, second : unit -> Effect<'In>) : Effect<'In> = 
         match first () with
         | Become next -> upcast Become(fun message -> this.Combine((fun () -> next message), second))
-        | _ -> second ()
+        | first -> upcast CombinedEffect(first, second ())
     
     member this.Combine(first : Effect<'In>, second : unit -> Effect<'In>) : Effect<'In> = 
         match first with
         | Become next -> upcast Become(fun message -> this.Combine(next message, second)) 
-        | _ -> second ()
+        | first -> upcast CombinedEffect(first, second ())
     
     member this.Combine(first : unit -> Effect<'In>, second : Effect<'In>) : Effect<'In> = 
         match first () with
         | Become next -> upcast Become(fun message -> this.Combine((fun () -> next message), second))
-        | _ -> second
+        | first -> upcast CombinedEffect(first, second)
     
     member this.Combine(first : Effect<'In>, second : Effect<'In>) : Effect<'In> = 
         match first with
         | Become next -> upcast Become(fun message -> this.Combine(next message, second))
-        | _ -> second
+        | first -> upcast CombinedEffect(first, second)
         
 /// Builds an actor message handler using an actor expression syntax.
 let actor = ActorBuilder()
