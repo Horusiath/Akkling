@@ -155,10 +155,7 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
             context.System.Scheduler.ScheduleTellOnceCancelable(delay, untyped target, message, self)
         member __.Incarnation() = actor :> ActorBase
         member __.Stop(ref : IActorRef<'T>) = context.Stop(untyped ref)
-        member __.Unhandled(msg) =
-            match box actor with
-            | :? FunPersistentActor<'Message> as act -> act.InternalUnhandled(msg)
-            | _ -> raise (Exception("Couldn't use actor in typed context"))
+        member __.Unhandled(msg) = actor.InternalUnhandled(msg)
         member __.Journal = actor.Journal
         member __.SnapshotStore = actor.SnapshotStore
         member __.IsRecovering () = actor.IsRecovering
@@ -173,6 +170,7 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
         member __.DeferEvent(events, callback) =
             let cb = if obj.ReferenceEquals(callback, Unchecked.defaultof<_>) then this.Deferring else deferring callback
             events |> Seq.iter (fun e -> actor.DeferAsync(e, cb))
+        member __.Become(effect) = actor.Become(effect)
 
 and PersistentLifecycleEvent =
     | ReplaySucceed
@@ -180,35 +178,24 @@ and PersistentLifecycleEvent =
     | PersistFailed of cause:exn * evt:obj * sequenceNr:int64
     | PersistRejected of cause:exn * evt:obj * sequenceNr:int64
     interface IDeadLetterSuppression
+    interface UnhandledSuppression
 
 and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Effect<'Message>) as this =
     inherit UntypedPersistentActor()
     let untypedContext = UntypedActor.Context
     let ctx = TypedPersistentContext<'Message, FunPersistentActor<'Message>>(untypedContext, this)
-    let mutable behavior = actor ctx
+    let mutable behavior =
+        match actor ctx with
+        | :? Become<'Message> as effect -> effect.Effect
+        | effect -> effect
+    
+    member __.Become (effect : Effect<'Message>) = behavior <- effect
 
-    member __.Next (current : Effect<'Message>) (context : Actor<'Message>) (message : obj) : Effect<'Message> =
-        match message with
-        | :? 'Message as msg ->
-            match current with
-            | Become(fn) -> fn msg
-            | _ -> current
-        | :? LifecycleEvent | :? PersistentLifecycleEvent ->
-            // we don't treat unhandled lifecycle events as casual unhandled messages
-            current
-        | :? JObject as jobj ->
-            match current with
-            | Become(fn) -> fn <| jobj.ToObject<'Message>()
-            | _ -> current
-        | other ->
-            base.Unhandled other
-            current
-
-    member __.Handle (msg: obj) : unit =
-        let nextBehavior = this.Next behavior ctx msg
-        match nextBehavior with
-        | :? Become<'Message> -> behavior <- nextBehavior
-        | effect -> effect.OnApplied(ctx, msg :?> 'Message)
+    member __.Handle (msg: obj) =
+        match msg with
+        | Message msg -> behavior.OnApplied(ctx, msg)
+        | :? UnhandledSuppression -> ()
+        | msg -> base.Unhandled msg
 
     member __.Sender() : IActorRef = base.Sender
     member __.InternalUnhandled(message: obj) : unit = base.Unhandled message

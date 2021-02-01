@@ -10,6 +10,7 @@ module Akkling.Tests.Actors
 
 open Akkling
 open Akkling.TestKit
+open Akkling.Extensions
 open Akka.Actor
 open System
 open Xunit
@@ -141,3 +142,102 @@ let ``Slash operator works for ActorPath concatenation`` () =
     let path = ActorPath.Parse("akka.tcp://system@localhost:9000/user")
     let sub = path / "child" / "grandchild"
     Assert.Equal(ActorPath.Parse("akka.tcp://system@localhost:9000/user/child/grandchild"), sub)
+    
+[<Fact>]
+let ``LifecycleEvent should be fired``() = testDefault <| fun tck ->
+    let aref = 
+        spawn tck "actor"
+        <| props (fun mailbox ->
+            let rec loop () =
+                actor {
+                    let! (msg : obj) = mailbox.Receive ()
+                    match msg with
+                    | String "stop" -> return Stop
+                    | PreStart -> ()
+                    | PostStop -> mailbox.Sender() <! "poststop"
+                    | x -> mailbox.Sender() <! x
+                }
+            loop ())
+
+    let subscriber = tck.CreateTestProbe()
+    tck.Sys.EventStream.Subscribe(subscriber.Ref, typeof<Akka.Event.UnhandledMessage>) |> ignore
+    aref <! box "a"
+    aref <! box "b"
+    aref <! box "stop"
+    
+    expectMsg tck "a" |> ignore
+    expectMsg tck "b" |> ignore
+    expectMsg tck "poststop" |> ignore
+    expectNoMsg tck
+    
+[<Fact>]
+let ``LifecycleEvent should be fired with become``() = testDefault <| fun tck ->
+    let aref = 
+        spawn tck "actor"
+        <| props (fun mailbox ->
+            let rec loop () =
+                actor {
+                    let! (msg : obj) = mailbox.Receive ()
+                    match msg with
+                    | PreStart -> ()
+                    | x -> 
+                        mailbox.Sender() <! x
+                        let rec loop () =
+                            actor {
+                                let! (msg : obj) = mailbox.Receive ()
+                                match msg with
+                                | String "unhandled" -> return Unhandled
+                                | String "stop" -> return Stop
+                                | PostStop ->
+                                    mailbox.Sender() <! "poststop"
+                                    return! loop ()
+                                | x ->
+                                    mailbox.Sender() <! x
+                                    return! loop ()
+                            }
+                        return! loop ()
+                }
+            loop ())
+
+    let subscriber = tck.CreateTestProbe()
+    tck.Sys.EventStream.Subscribe(subscriber.Ref, typeof<Akka.Event.UnhandledMessage>) |> ignore
+    aref <! box "a"
+    aref <! box "b"
+    aref <! box "unhandled"
+    aref <! box "stop"
+    
+    expectMsg tck "a" |> ignore
+    expectMsg tck "b" |> ignore
+    subscriber.ExpectMsg<Akka.Event.UnhandledMessage>() |> ignore
+    expectMsg tck "poststop" |> ignore
+    subscriber.ExpectNoMsg()
+    expectNoMsg tck
+
+[<Fact>]
+let ``LifecycleEvent should be suppressed``() = testDefault <| fun tck ->
+    let aref = 
+        spawn tck "actor"
+        <| props (fun mailbox ->
+            let rec loop () =
+                actor {
+                    match! mailbox.Receive () with
+                    | "unhandled" -> return Unhandled
+                    | "stop" -> return Stop
+                    | x -> 
+                        mailbox.Sender() <! x
+                        return! loop ()
+                }
+            loop ())
+
+    let subscriber = tck.CreateTestProbe()
+    tck.Sys.EventStream.Subscribe(subscriber.Ref, typeof<Akka.Event.UnhandledMessage>) |> ignore
+    aref <! "a"
+    aref <! "b"
+    aref <! "unhandled"
+    aref <! "stop"
+    
+    expectMsg tck "a" |> ignore
+    expectMsg tck "b" |> ignore
+    subscriber.ExpectMsg<Akka.Event.UnhandledMessage>() |> ignore
+    expectNoMsg tck
+    subscriber.ExpectNoMsg()
