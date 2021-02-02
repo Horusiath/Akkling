@@ -100,7 +100,7 @@ and PersistentEffect<'Message> =
                 | PersistAllAsync(events) -> ctx.AsyncPersistEvent(events, callback)
                 | Defer(events) -> ctx.DeferEvent(events, callback)
                 | AndThen(inner, next) ->
-                    let composed = if obj.ReferenceEquals(callback, Unchecked.defaultof<_>) then next else callback>>next
+                    let composed = if obj.ReferenceEquals(callback, Unchecked.defaultof<_>) then next else next>>callback
                     apply ctx inner composed
                     
             match context with

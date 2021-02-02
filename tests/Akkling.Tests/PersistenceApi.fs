@@ -104,4 +104,24 @@ let ``PersistenceLifecycleEvent should be fired``() = testDefault <| fun tck ->
         loop ())
     expectMsg tck ReplaySucceed |> ignore
 
+[<Fact>]
+let ``Effects.andThen should be called after event was persisted``() = testDefault <| fun tck ->
+    let q = typed tck.TestActor
+    let pref = spawn tck "p-1" <| propsPersist (fun ctx -> 
+        let rec loop () = actor {
+            let! (msg: string) = ctx.Receive()
+            match msg with
+            | "cmd" ->
+                return Persist "evt"
+                       |> Effects.andThen (fun _ -> q <! "andThen1" )
+                       |> Effects.andThen (fun _ -> q <! "andThen2" )
+            | "evt" ->
+                q <! "evt"
+                return Ignore
+            | _ -> return Unhandled }
+        loop ())
+    pref <! "cmd"
+    expectMsg tck "evt" |> ignore
+    expectMsg tck "andThen1" |> ignore
+    expectMsg tck "andThen2" |> ignore
     
