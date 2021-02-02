@@ -1,5 +1,7 @@
 ﻿namespace Akkling.Hocon
 
+open System
+
 [<AutoOpen>]
 module Dispatcher =
     open MarkerClasses

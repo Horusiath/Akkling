@@ -1,5 +1,8 @@
 ﻿namespace Akkling.Hocon
 
+open System
+open Akka.Dispatch
+
 [<AutoOpen>]
 module DefaultMailbox =
     open MarkerClasses
@@ -14,8 +17,10 @@ module DefaultMailbox =
         /// constructor with
         /// (akka.actor.ActorSystem.Settings, com.typesafe.config.Config) parameters.
         [<CustomOperation("mailbox_type");EditorBrowsable(EditorBrowsableState.Never)>]
-        member _.MailboxType (state: string list, x: string) =
-            quotedField "mailbox-type" x::state
+        member _.MailboxType (state: string list, x: Type) =
+            if not (typeof<MailboxType>.IsAssignableFrom x) then
+                failwithf "mailbox_type must inherit from '%s'" (fqcn typeof<MailboxType>) 
+            quotedField "mailbox-type" (fqcn x)::state
         /// FQCN of the MailboxType. The Class of the FQCN must have a public
         /// constructor with
         /// (akka.actor.ActorSystem.Settings, com.typesafe.config.Config) parameters.

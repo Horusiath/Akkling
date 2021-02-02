@@ -1,5 +1,7 @@
 ﻿namespace Akkling.Hocon
 
+open System
+
 [<AutoOpen>]
 module WatchFailureDetector =
     open MarkerClasses
@@ -15,8 +17,8 @@ module WatchFailureDetector =
         /// a public constructor with a com.typesafe.config.Config and
         /// akka.actor.EventStream parameter.
         [<CustomOperation("implementation_class");EditorBrowsable(EditorBrowsableState.Never)>]
-        member _.ImplementationClass (state: string list, x: string) = 
-            quotedField "implementation-class" x::state
+        member _.ImplementationClass (state: string list, x: Type) = 
+            quotedField "implementation-class" (fqcn x)::state
         /// FQCN of the failure detector implementation.
         /// It must implement akka.remote.FailureDetector and have
         /// a public constructor with a com.typesafe.config.Config and

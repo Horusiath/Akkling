@@ -7,6 +7,7 @@
 //-----------------------------------------------------------------------
 module Akkling.Tests.Api
 
+open Akka.Remote
 open Akkling
 open Akkling.Hocon
 open Akkling.TestKit
@@ -143,7 +144,7 @@ let ``can serialize and deserialize discriminated unions over remote nodes`` () 
         akka {
             actor {
                 ask_timeout 10<s>
-                provider "remote"
+                provider typeof<RemoteActorRefProvider>
             }
             remote.dot_netty.tcp {
                 port remotePort

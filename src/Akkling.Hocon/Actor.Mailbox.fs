@@ -1,5 +1,7 @@
 ﻿namespace Akkling.Hocon
 
+open System
+
 [<AutoOpen>]
 module Mailbox =
     open MarkerClasses
@@ -14,8 +16,8 @@ module Mailbox =
         /// constructor with
         /// (akka.actor.ActorSystem.Settings, com.typesafe.config.Config) parameters.
         [<CustomOperation("mailbox_type");EditorBrowsable(EditorBrowsableState.Never)>]
-        member _.MailboxType (state: string list, x: string) =
-            quotedField "mailbox-type" x::state
+        member _.MailboxType (state: string list, x: Type) =
+            quotedField "mailbox-type" (fqcn x)::state
         /// FQCN of the MailboxType. The Class of the FQCN must have a public
         /// constructor with
         /// (akka.actor.ActorSystem.Settings, com.typesafe.config.Config) parameters.

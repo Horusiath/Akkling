@@ -175,6 +175,9 @@ module InternalHocon =
         List.distinct body
         |> List.map (fun (n,v) -> quotedNameField n v)
         |> objExpr name indentLevel
+       
+    /// Fully qualified type name string. 
+    let fqcn (t: Type) = String.Format("{0}, {1}", t.FullName, t.Assembly.GetName().Name)
 
     [<AbstractClass;NoEquality;NoComparison>]
     type BaseBuilder<'T when 'T :> MarkerClasses.IField> () =

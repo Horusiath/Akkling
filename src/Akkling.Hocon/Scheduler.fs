@@ -1,5 +1,7 @@
 ﻿namespace Akkling.Hocon
 
+open System
+
 [<AutoOpen>]
 module Scheduler =
     open MarkerClasses
@@ -71,8 +73,10 @@ module Scheduler =
         ///
         ///  3) java.util.concurrent.ThreadFactory
         [<CustomOperation("implementation");EditorBrowsable(EditorBrowsableState.Never)>]
-        member _.Implementation (state: string list, value: string) =
-            quotedField "implementation" value::state
+        member _.Implementation (state: string list, value: Type) =
+            if not (typeof<Akka.Actor.SchedulerBase>.IsAssignableFrom value) then
+                failwithf "schedulers.implementation must inherit from '%s'" (fqcn typeof<Akka.Actor.SchedulerBase>)
+            quotedField "implementation" (fqcn value)::state
         /// This setting selects the timer implementation which shall be loaded at
         /// system start-up.
         /// The class given here must implement the akka.actor.Scheduler interface

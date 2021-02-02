@@ -201,8 +201,8 @@ let akkaDefaultConfig () =
         daemonic false
 
         actor {
-            provider "Akka.Actor.LocalActorRefProvider"
-            guardian_supervisor_strategy "Akka.Actor.DefaultSupervisorStrategy"
+            provider typeof<Akka.Actor.LocalActorRefProvider>
+            guardian_supervisor_strategy typeof<Akka.Actor.DefaultSupervisorStrategy>
             creation_timeout 20<s>
             reaper_interval 5
             serialize_messages false
@@ -321,7 +321,7 @@ let akkaDefaultConfig () =
             }
 
             default_mailbox {
-                mailbox_type "Akka.Dispatch.UnboundedMailbox"
+                mailbox_type typeof<Akka.Dispatch.UnboundedMailbox>
                 mailbox_capacity 1000
                 mailbox_push_timeout_time 10<s>
                 stash_capacity -1
@@ -338,11 +338,11 @@ let akkaDefaultConfig () =
                     "Akka.Event.ILoggerMessageQueueSemantics" ,"akka.actor.mailbox.logger-queue"
                 ]
 
-                unbounded_queue_based.mailbox_type "Akka.Dispatch.UnboundedMailbox"
-                bounded_queue_based.mailbox_type "Akka.Dispatch.BoundedMailbox"
-                unbounded_deque_based.mailbox_type "Akka.Dispatch.UnboundedDequeBasedMailbox"
-                bounded_deque_based.mailbox_type "Akka.Dispatch.BoundedDequeBasedMailbox"
-                logger_queue.mailbox_type "Akka.Event.LoggerMailboxType"
+                unbounded_queue_based.mailbox_type typeof<Akka.Dispatch.UnboundedMailbox>
+                bounded_queue_based.mailbox_type typeof<Akka.Dispatch.BoundedMailbox>
+                unbounded_deque_based.mailbox_type typeof<Akka.Dispatch.UnboundedDequeBasedMailbox>
+                bounded_deque_based.mailbox_type typeof<Akka.Dispatch.BoundedDequeBasedMailbox>
+                logger_queue.mailbox_type (Type.GetType "Akka.Event.LoggerMailboxType, Akka")
             }
 
             debug {
@@ -365,8 +365,8 @@ let akkaDefaultConfig () =
             ]
 
             serialization_identifiers [
-                "Akka.Serialization.ByteArraySerializer, Akka", 4
-                "Akka.Serialization.NewtonSoftJsonSerializer, Akka", 1
+                typeof<Akka.Serialization.ByteArraySerializer>, 4
+                typeof<Akka.Serialization.NewtonSoftJsonSerializer>, 1
             ]
 
             serialization_settings { "" }
@@ -375,7 +375,7 @@ let akkaDefaultConfig () =
         scheduler {
             tick_duration 10<ms>
             ticks_per_wheel 512
-            implementation "Akka.Actor.HashedWheelTimerScheduler"
+            implementation typeof<Akka.Actor.HashedWheelTimerScheduler>
             shutdown_timeout 5<s>
         }
 

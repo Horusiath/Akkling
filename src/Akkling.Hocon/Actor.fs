@@ -1,5 +1,9 @@
 ﻿namespace Akkling.Hocon
 
+open System
+open Akka.Actor
+open Akka.Actor
+
 [<AutoOpen>]
 module Actor =
     open MarkerClasses
@@ -50,8 +54,10 @@ module Actor =
         /// FQCN of the ActorRefProvider to be used; the below is the built-in default,
         /// another one is akka.remote.RemoteActorRefProvider in the akka-remote bundle.
         [<CustomOperation("guardian_supervisor_strategy");EditorBrowsable(EditorBrowsableState.Never)>]
-        member _.GuardianSupervisorStrategy (state: string list, x: string) =
-            quotedField "guardian-supervisor-strategy" x::state
+        member _.GuardianSupervisorStrategy (state: string list, x: Type) =
+            if not (typeof<SupervisorStrategyConfigurator>.IsAssignableFrom x) then
+                failwithf "guardian_supervisor_strategy class must inherit from '%s'" (fqcn typeof<SupervisorStrategyConfigurator>)
+            quotedField "guardian-supervisor-strategy" (fqcn x)::state
         /// FQCN of the ActorRefProvider to be used; the below is the built-in default,
         /// another one is akka.remote.RemoteActorRefProvider in the akka-remote bundle.
         member this.guardian_supervisor_strategy value =
@@ -61,8 +67,10 @@ module Actor =
         /// FQCN of the ActorRefProvider to be used; the below is the built-in default,
         /// another one is akka.remote.RemoteActorRefProvider in the akka-remote bundle.
         [<CustomOperation("provider");EditorBrowsable(EditorBrowsableState.Never)>]
-        member _.Provider (state: string list, x: string) =
-            quotedField "provider" x::state
+        member _.Provider (state: string list, x: Type) =
+            if not (typeof<IActorRefProvider>.IsAssignableFrom x) then
+                failwithf "actor.provider type must implement '%s'" (fqcn typeof<IActorRefProvider>)
+            quotedField "provider" (fqcn x)::state
         /// FQCN of the ActorRefProvider to be used; the below is the built-in default,
         /// another one is akka.remote.RemoteActorRefProvider in the akka-remote bundle.
         member this.provider value =
@@ -146,8 +154,8 @@ module Actor =
         ///
         /// Identifier values from 0 to 40 are reserved for Akka internal usage.
         [<CustomOperation("serialization_identifiers");EditorBrowsable(EditorBrowsableState.Never)>]
-        member _.SerializationIdentifiers (state: string list, xs: (string * int) list) =
-            stringyObjExpr "serialization-identifiers" 4 (xs |> List.map (fun (t,v) -> t,string v))::state
+        member _.SerializationIdentifiers (state: string list, xs: (Type * int) list) =
+            stringyObjExpr "serialization-identifiers" 4 (xs |> List.map (fun (t,v) -> fqcn t,string v))::state
         [<EditorBrowsable(EditorBrowsableState.Never)>]
         member _.SerializationIdentifiers (state: string list, xs: (string * string) list) =
             stringyObjExpr "serialization-identifiers" 4 xs::state
@@ -158,7 +166,7 @@ module Actor =
         /// and `ID` is globally unique serializer identifier number.
         ///
         /// Identifier values from 0 to 40 are reserved for Akka internal usage.
-        member this.serialization_identifiers (xs: (string * int) list) =
+        member this.serialization_identifiers (xs: (Type * int) list) =
             this.SerializationIdentifiers([], xs)
             |> this.Run
         /// Configuration namespace of serialization identifiers.

@@ -1,5 +1,7 @@
 ﻿namespace Akkling.Hocon
 
+open System
+
 [<AutoOpen>]
 module Metrics =
     open MarkerClasses
@@ -57,8 +59,8 @@ module Metrics =
         /// Must have a constructor with signature `<init>(com.typesafe.config.Config)`.
         /// Default metrics strategy provider is a configurable extension of `OneForOneStrategy`.
         [<CustomOperation("provider");EditorBrowsable(EditorBrowsableState.Never)>]
-        member _.Provider (state: string list, x: string) = 
-            quotedField "provider" x::state
+        member _.Provider (state: string list, x: Type) = 
+            quotedField "provider" (fqcn x)::state
         /// FQCN of class providing `akka.actor.SupervisorStrategy`.
         /// Must have a constructor with signature `<init>(com.typesafe.config.Config)`.
         /// Default metrics strategy provider is a configurable extension of `OneForOneStrategy`.
