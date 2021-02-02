@@ -209,6 +209,13 @@ and [<Struct>]AsyncEffect<'Message>(asyncEffect: Async<Effect<'Message>>) =
                     runAsync effect |> Async.StartAsTask
                 upcast task ))
 
+and [<Struct>]CombinedEffect<'Message> (x: Effect<'Message>, y: Effect<'Message>) =
+    interface Effect<'Message> with
+        member this.WasHandled() = x.WasHandled() && y.WasHandled()
+        member this.OnApplied(context : ExtActor<'Message>, message : 'Message) = 
+            x.OnApplied(context, message)
+            y.OnApplied(context, message)
+
 and ActorEffect<'Message> = 
     | Unhandled
     | Stop
