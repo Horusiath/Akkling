@@ -25,7 +25,8 @@ type SenderMsg =
 
 let config = Configuration.parse """
 akka.loglevel = DEBUG
-akka.persistence.at-least-once-delivery.redeliver-interval = 5s
+akka.persistence.at-least-once-delivery.redeliver-interval = 1s
+akka.scheduler.implementation = "Akka.Actor.HashedWheelTimerScheduler, Akka"
 """
 let unreliable dropMod target (ctx: Actor<_>) =
     let rec loop count = actor {
@@ -64,7 +65,7 @@ let sender destinations (ctx: Actor<obj>) =
         return! loop () }
     loop ()
 
-[<Fact(Skip = "FIXME")>]
+[<Fact>]
 let ``at-least-once delivery semantics should redeliver messages`` () = test config <| fun tck ->
     Akka.Persistence.Persistence.Instance.Apply(tck.Sys) |> ignore
     let probe = tck.CreateTestProbe()
