@@ -62,29 +62,35 @@ let clusterStatus = fun (ctx : Actor<_>) ->
             | PreStart ->
                 cluster.Subscribe(untyped ctx.Self, ClusterEvent.InitialStateAsEvents,
                     [| typedefof<ClusterEvent.IMemberEvent> |])
-                log.Info (sprintf "Actor subscribed to Cluster status updates: %A" ctx.Self)
+                log.Info $"Actor subscribed to Cluster status updates: {ctx.Self}"
             | PostStop ->
                 cluster.Unsubscribe(untyped ctx.Self)
-                log.Info (sprintf "Actor unsubscribed from Cluster status updates: %A" ctx.Self)
+                log.Info $"Actor unsubscribed from Cluster status updates: {ctx.Self}"
 
             | _ -> return Unhandled
             return! loop nodes
         | IMemberEvent e ->
             match e with
             | MemberJoined m ->
-                log.Info (sprintf "Node joined: %A" m)
+                log.Info $"Node joined: {m}"
                 return! loop (nodes |> Map.add (m.Address.ToString(), m.UniqueAddress.ToString()) m.Status)
             | MemberUp m ->
-                log.Info (sprintf "Node up: %A" m)
+                log.Info $"Node up: {m}"
+                return! loop (nodes |> Map.add (m.Address.ToString(), m.UniqueAddress.ToString()) m.Status)
+            | MemberWeaklyUp m ->
+                log.Info $"Node weakly up: {m}"
                 return! loop (nodes |> Map.add (m.Address.ToString(), m.UniqueAddress.ToString()) m.Status)
             | MemberLeft m ->
-                log.Info (sprintf "Node left: %A" m)
+                log.Info $"Node left: {m}"
+                return! loop (nodes |> Map.add (m.Address.ToString(), m.UniqueAddress.ToString()) m.Status)
+            | MemberDowned m ->
+                log.Info $"Node downed: {m}"
                 return! loop (nodes |> Map.add (m.Address.ToString(), m.UniqueAddress.ToString()) m.Status)
             | MemberExited m ->
-                log.Info (sprintf "Node exited: %A" m)
+                log.Info $"Node exited: {m}"
                 return! loop (nodes |> Map.add (m.Address.ToString(), m.UniqueAddress.ToString()) m.Status)
             | MemberRemoved m ->
-                log.Info (sprintf "Node removed: %A" m)
+                log.Info $"Node removed: {m}"
                 return! loop (nodes |> Map.remove (m.Address.ToString(), m.UniqueAddress.ToString()))
             return! loop nodes
         | :? ClusterStatus as cs ->
@@ -109,7 +115,7 @@ let printNodes clusterStatus =
         for kv in stats do
             let (a, ua) = kv.Key
             let ms = kv.Value
-            printfn "\tNode '%s':'%s' status: '%A'" a ua ms
+            printfn $"\tNode '%s{a}':'%s{ua}' status: '%A{ms}'"
     } |> Async.RunSynchronously
 
 printNodes node1

@@ -24,11 +24,14 @@ let (|IMemberEvent|_|) (msg: obj) : ClusterEvent.IMemberEvent option =
     | :? ClusterEvent.IMemberEvent as e -> Some e
     | _ -> None
 
-let (|MemberJoined|MemberUp|MemberLeft|MemberExited|MemberRemoved|) (msg: ClusterEvent.IMemberEvent): Choice<Member, Member, Member, Member, Member> =
+let (|MemberJoined|MemberUp|MemberLeft|MemberExited|MemberRemoved|MemberDowned|MemberWeaklyUp|) (msg: ClusterEvent.IMemberEvent): Choice<Member, Member, Member, Member, Member, Member, Member> =
     match msg with
-    | :? ClusterEvent.MemberUp as up -> Choice1Of5 (up.Member)
-    | :? ClusterEvent.MemberJoined as joined -> Choice2Of5 (joined.Member)
-    | :? ClusterEvent.MemberLeft as left -> Choice3Of5 (left.Member)
-    | :? ClusterEvent.MemberExited as exited -> Choice4Of5 (exited.Member)  
-    | :? ClusterEvent.MemberRemoved as removed -> Choice5Of5 (removed.Member)
+    | :? ClusterEvent.MemberUp as up -> Choice1Of7(up.Member)
+    | :? ClusterEvent.MemberJoined as joined -> Choice2Of7(joined.Member)
+    | :? ClusterEvent.MemberLeft as left -> Choice3Of7(left.Member)
+    | :? ClusterEvent.MemberExited as exited -> Choice4Of7(exited.Member)
+    | :? ClusterEvent.MemberRemoved as removed -> Choice5Of7(removed.Member)
+    | :? ClusterEvent.MemberDowned as downed -> Choice6Of7(downed.Member)
+    | :? ClusterEvent.MemberWeaklyUp as up -> Choice7Of7(up.Member)
     | _ -> failwith ("unknown cluster event type " + msg.GetType().ToString())
+ 
