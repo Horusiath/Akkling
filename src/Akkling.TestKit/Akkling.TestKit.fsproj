@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageTags>akka.net fsharp testing fscheck</PackageTags>
     <Authors>Bartosz Sypytkowski</Authors>
-    <Version>0.11.0</Version>
+    <Version>0.12.0</Version>
     <Description>F# wrapper library for Akka.NET TestKit library using FsCheck and xUnit.</Description>
     <PackageLicenseUrl>https://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Horusiath/Akkling</PackageProjectUrl>

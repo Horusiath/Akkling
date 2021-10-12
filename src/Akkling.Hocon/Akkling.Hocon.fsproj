@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.11.0</Version>
+    <Version>0.12.0</Version>
     <Authors>Bartosz Sypytkowski</Authors>
     <Description>Akka.NET HOCON computation expressions</Description>
     <PackageProjectUrl>https://github.com/Horusiath/Akkling</PackageProjectUrl>
