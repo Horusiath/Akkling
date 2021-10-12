@@ -93,15 +93,41 @@ and [<Interface>]ExtEventsourced<'Message> =
     inherit ExtActor<'Message>
 
 and PersistentEffect<'Message> =
+    /// Persist an event inside of event journal. This effect will result in calling
+    /// current actor's handler function upon persistent event before handling the next
+    /// incoming request.
     | Persist of 'Message
+    /// Persist multiple events inside of event journal. This effect will result in calling
+    /// current actor's handler function upon each persistent event before handling the next
+    /// incoming request.
     | PersistAll of 'Message seq
+    /// Persist an event inside of event journal. This effect will result in calling
+    /// current actor's handler function upon persistent event, but unlike `Persist` it will
+    /// not await for persistence process - if other request will arrive while event persist is
+    /// in progress, they will may be handled before persisted event handler.
     | PersistAsync of 'Message
+    /// Persist multiple events inside of event journal. This effect will result in calling
+    /// current actor's handler function upon each persistent event, but unlike `PersistAll` it will
+    /// not await for persistence process - if other request will arrive while event persist is
+    /// in progress, they will may be handled before persisted event handler.
     | PersistAllAsync of 'Message seq
     | Defer of 'Message seq
+    /// This effect will trigger current actor to load snapshot. It can be used ie. in response
+    /// to a `LifecycleEvent PreStart`. If a matching snapshot existed it can be retrieved back
+    /// using `SnapshotOffer(state)` active pattern in current actor's message handler.
     | LoadSnapshot of pid:string * SnapshotSelectionCriteria * upto:int64
+    /// Triggers a snapshot save over specified state. This action always happens asynchronously:
+    /// actor will not await for its completion and it's free to handle other incoming messages
+    /// while snapshot persistence is in progress.
+    ///
+    /// Snapshot persistence will cause either `SaveSnapshotSuccess` or `SaveSnapshotFailure`
+    /// events to trigger into a current actor's message handler.
     | SaveSnapshot of obj
+    /// Request effect to delete snapshot identified by a specified sequence number.
     | DeleteSnapshot of int64
+    /// Request effect to delete all snapshots matching specified criteria.
     | DeleteSnapshots of SnapshotSelectionCriteria
+    /// Request effect to delete all events up to a specified sequence number.
     | DeleteMessages of int64
     | AndThen of PersistentEffect<'Message> * (unit -> unit)
     interface Effect<'Message> with
