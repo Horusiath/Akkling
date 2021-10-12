@@ -75,6 +75,16 @@ and [<Interface>]PersistentContext<'Event> =
     /// event will be confirmed.
     /// </summary>
     abstract DeferEvent : 'Event seq * (unit->unit) -> unit
+    
+    abstract LoadSnapshot : string * SnapshotSelectionCriteria * int64 -> unit
+    
+    abstract SaveSnapshot : obj -> unit
+    
+    abstract DeleteSnapshot : from:int64 -> unit
+    
+    abstract DeleteSnapshots : SnapshotSelectionCriteria -> unit
+    
+    abstract DeleteMessages : upto:int64 -> unit
 
 
 and [<Interface>]ExtEventsourced<'Message> =
@@ -88,6 +98,11 @@ and PersistentEffect<'Message> =
     | PersistAsync of 'Message
     | PersistAllAsync of 'Message seq
     | Defer of 'Message seq
+    | LoadSnapshot of pid:string * SnapshotSelectionCriteria * upto:int64
+    | SaveSnapshot of obj
+    | DeleteSnapshot of int64
+    | DeleteSnapshots of SnapshotSelectionCriteria
+    | DeleteMessages of int64
     | AndThen of PersistentEffect<'Message> * (unit -> unit)
     interface Effect<'Message> with
         member __.WasHandled() = true
@@ -99,6 +114,11 @@ and PersistentEffect<'Message> =
                 | PersistAsync(event) -> ctx.AsyncPersistEvent([event], callback)
                 | PersistAllAsync(events) -> ctx.AsyncPersistEvent(events, callback)
                 | Defer(events) -> ctx.DeferEvent(events, callback)
+                | LoadSnapshot(pid, criteria, toSeqNr) -> ctx.LoadSnapshot(pid, criteria, toSeqNr)
+                | SaveSnapshot(state) -> ctx.SaveSnapshot(state)
+                | DeleteSnapshot(seqNr) -> ctx.DeleteSnapshot(seqNr)
+                | DeleteSnapshots(criteria) -> ctx.DeleteSnapshots(criteria)
+                | DeleteMessages(toSeqNr) -> ctx.DeleteMessages(toSeqNr)
                 | AndThen(inner, next) ->
                     let composed = if obj.ReferenceEquals(callback, Unchecked.defaultof<_>) then next else next>>callback
                     apply ctx inner composed
@@ -171,6 +191,11 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
             let cb = if obj.ReferenceEquals(callback, Unchecked.defaultof<_>) then this.Deferring else deferring callback
             events |> Seq.iter (fun e -> actor.DeferAsync(e, cb))
         member __.Become(effect) = actor.Become(effect)
+        member this.DeleteSnapshot(from) = actor.DeleteSnapshot(from)
+        member this.DeleteSnapshots(criteria) = actor.DeleteSnapshots(criteria)
+        member this.LoadSnapshot(pid, criteria, upto) = actor.LoadSnapshot(pid, criteria, upto)
+        member this.DeleteMessages(upto) = actor.DeleteMessages(upto)
+        member this.SaveSnapshot(state) = actor.SaveSnapshot(state)
 
 and PersistentLifecycleEvent =
     | ReplaySucceed

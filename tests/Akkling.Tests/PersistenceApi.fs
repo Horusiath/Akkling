@@ -94,7 +94,7 @@ let ``at-least-once delivery semantics should redeliver messages`` () = test con
 
 [<Fact>]
 let ``PersistenceLifecycleEvent should be fired``() = testDefault <| fun tck ->
-    let pref = spawn tck "p-1" <| propsPersist (fun ctx -> 
+    let pref = spawn tck "p-1" <| propsPersist (fun ctx ->
         let rec loop () = actor {
             let! (msg: obj) = ctx.Receive()
             match msg with
