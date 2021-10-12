@@ -4,16 +4,14 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageTags>akka.net fsharp testing fscheck</PackageTags>
     <Authors>Bartosz Sypytkowski</Authors>
-    <Version>0.10.0</Version>
+    <Version>0.11.0</Version>
     <Description>F# wrapper library for Akka.NET TestKit library using FsCheck and xUnit.</Description>
     <PackageLicenseUrl>https://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Horusiath/Akkling</PackageProjectUrl>
     <PackageReleaseNotes>
-      * Upgraded Akka.NET dependencies to 1.4.2
-      * Consolidated supported .NET version to .NET Standard 2.0
-      * Removed PersistentView (as its no longer supported)
-      * Akkling.Streams: added support to stream refs, observables, cancellation tokens and withContext variants.
-      * Akkling.Streams: switched tuple args to value tuples to match Akka.Streams API.
+      * Upgraded Akka.NET dependencies to 1.4.27
+      * Exposed Akkling.Persistence API for snapshots.
+      * Exposed WeaklyUp and Downed cluster node events.
     </PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

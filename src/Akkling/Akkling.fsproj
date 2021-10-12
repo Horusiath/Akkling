@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.10.0</Version>
+    <Version>0.11.0</Version>
     <Authors>Bartosz Sypytkowski</Authors>
     <Company />
     <Description>Library used for working with Akka.NET using F# in type safe manner with functional principles in mind</Description>
@@ -11,11 +11,9 @@
     <PackageProjectUrl>https://github.com/Horusiath/Akkling</PackageProjectUrl>
     <PackageTags>akka.net fsharp</PackageTags>
     <PackageReleaseNotes>
-      * Upgraded Akka.NET dependencies to 1.4.2
-      * Consolidated supported .NET version to .NET Standard 2.0
-      * Removed PersistentView (as its no longer supported)
-      * Akkling.Streams: added support to stream refs, observables, cancellation tokens and withContext variants.
-      * Akkling.Streams: switched tuple args to value tuples to match Akka.Streams API.
+      * Upgraded Akka.NET dependencies to 1.4.27
+      * Exposed Akkling.Persistence API for snapshots.
+      * Exposed WeaklyUp and Downed cluster node events.
     </PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RepositoryUrl>https://github.com/Horusiath/Akkling</RepositoryUrl>
