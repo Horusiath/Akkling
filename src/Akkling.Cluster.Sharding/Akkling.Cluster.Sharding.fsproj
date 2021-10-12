@@ -34,6 +34,6 @@
     <ProjectReference Include="..\Akkling\Akkling.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Akka.Cluster.Sharding" Version="1.4.26" />
+    <PackageReference Include="Akka.Cluster.Sharding" Version="1.4.27" />
   </ItemGroup>
 </Project>

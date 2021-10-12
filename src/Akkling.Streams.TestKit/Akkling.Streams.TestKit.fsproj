@@ -26,6 +26,6 @@
     <ProjectReference Include="..\Akkling\Akkling.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Akka.Streams.TestKit" Version="1.4.26" />
+    <PackageReference Include="Akka.Streams.TestKit" Version="1.4.27" />
   </ItemGroup>
 </Project>

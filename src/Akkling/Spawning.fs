@@ -26,7 +26,7 @@ module Spawn =
     /// </summary>
     /// <param name="actorFactory">Either actor system or parent actor</param>
     /// <param name="name">Name of spawned child actor</param>
-    /// <param name="f">Used by actor for handling response for incoming request</param>
+    /// <param name="p">Used by actor for handling response for incoming request</param>
     let spawn (actorFactory : IActorRefFactory) (name : string) (p: Props<'Message>) : IActorRef<'Message> = 
         typed (actorFactory.ActorOf(p.ToProps(), name)) :> IActorRef<'Message>
 
@@ -34,8 +34,7 @@ module Spawn =
     /// Spawns an anonymous actor with automatically generated name using specified actor <see cref="Props{Message}"/>.
     /// </summary>
     /// <param name="actorFactory">Either actor system or parent actor</param>
-    /// <param name="name">Name of spawned child actor</param>
-    /// <param name="f">Used by actor for handling response for incoming request</param>
+    /// <param name="p">Used by actor for handling response for incoming request</param>
     let inline spawnAnonymous (actorFactory : IActorRefFactory) (p: Props<'Message>) : IActorRef<'Message> = 
         spawn actorFactory null p
 
