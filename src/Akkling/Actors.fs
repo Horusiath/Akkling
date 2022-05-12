@@ -197,15 +197,19 @@ and [<Struct>]Become<'Message>(next: 'Message -> Effect<'Message>) =
         member this.OnApplied(ctx : ExtActor<'Message>, _: 'Message) =
             ctx.Become this.Effect
 
-and [<Struct>]AsyncEffect<'Message>(asyncEffect: Async<Effect<'Message>>) =
-    member __.Effect = asyncEffect
+and AsyncEffect<'Message> =
+    | AsyncEffect of Async<Effect<'Message>>
+    | TaskEffect of Task<Effect<'Message>>
     interface Effect<'Message> with
         member __.WasHandled () = true
         member this.OnApplied(ctx : ExtActor<'Message>, msg: 'Message) =
             let rec runAsync (eff : Effect<'Message>) = task {
                 match eff with
                 | :? AsyncEffect<'Message> as e ->
-                    let! eff = e.Effect
+                    let! eff =
+                        match e with
+                        | AsyncEffect x -> task { return! x }
+                        | TaskEffect x -> x
                     return! runAsync eff
                 | effect -> effect.OnApplied(ctx, msg)
             }
