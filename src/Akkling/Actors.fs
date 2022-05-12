@@ -11,6 +11,7 @@ module Akkling.Actors
 open System
 open Akka.Actor
 open Newtonsoft.Json.Linq
+open System.Threading.Tasks
 
 type IO<'T> = 
     | Input
@@ -122,6 +123,7 @@ type ExtActor<'Message> =
     inherit ExtContext
 
     abstract Become : Effect<'Message> -> unit
+    abstract RunTask : Func<Task> -> unit
 
 and [<Interface>]Effect<'Message> = 
     abstract WasHandled : unit -> bool
@@ -162,6 +164,10 @@ and TypedContext<'Message, 'Actor when 'Actor :> ActorBase and 'Actor :> IWithUn
             match box actor with
             | :? FunActor<'Message> as act -> act.Become effect
             | _ -> raise (Exception("Couldn't use actor in typed context"))
+        member __.RunTask (task : Func<Task>) =
+            match box actor with
+            | :? FunActor<'Message> as act -> act.InternalRunTask(task)
+            | _ -> raise (Exception("Couldn't use actor in typed context"))
             
 and [<AbstractClass>]Actor() = 
     inherit UntypedActor()
@@ -196,18 +202,15 @@ and [<Struct>]AsyncEffect<'Message>(asyncEffect: Async<Effect<'Message>>) =
     interface Effect<'Message> with
         member __.WasHandled () = true
         member this.OnApplied(ctx : ExtActor<'Message>, msg: 'Message) =
+            let rec runAsync (eff : Effect<'Message>) = task {
+                match eff with
+                | :? AsyncEffect<'Message> as e ->
+                    let! eff = e.Effect
+                    return! runAsync eff
+                | effect -> effect.OnApplied(ctx, msg)
+            }
             let effect = this
-            Akka.Dispatch.ActorTaskScheduler.RunTask(System.Func<System.Threading.Tasks.Task>(fun () -> 
-                let task = 
-                    let rec runAsync (eff : Effect<'Message>) = async {
-                        match eff with
-                        | :? AsyncEffect<'Message> as e ->
-                            let! eff = e.Effect
-                            return! runAsync eff
-                        | effect -> effect.OnApplied(ctx, msg)
-                    }
-                    runAsync effect |> Async.StartAsTask
-                upcast task ))
+            ctx.RunTask(fun () -> runAsync effect :> Task)
 
 and [<Struct>]CombinedEffect<'Message> (x: Effect<'Message>, y: Effect<'Message>) =
     interface Effect<'Message> with
@@ -249,6 +252,7 @@ and FunActor<'Message>(actor : Actor<'Message>->Effect<'Message>) as this =
         | msg -> base.Unhandled msg
     
     member __.Sender() : IActorRef = base.Sender
+    member this.InternalRunTask (task: Func<Task>) : unit = this.RunTask task
     member this.InternalUnhandled(message: obj) : unit = this.Unhandled message
     override this.OnReceive msg = this.Handle msg
     

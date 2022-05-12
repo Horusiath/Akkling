@@ -111,3 +111,48 @@ let ``persistentActor supports multiple async computations`` () : unit = testDef
     expectMsg tck 2 |> ignore
     expectMsg tck 3 |> ignore    
     expectNoMsgWithin tck (TimeSpan.FromSeconds 1.)
+    
+[<Fact>]
+let ``persistentActor async continuation can access actor properties`` () : unit = testDefault <| fun tck ->
+    let ref = 
+        spawn tck "actor"
+        <| propsPersist (fun ctx ->
+            let rec loop () =
+                actor {
+                    let! _ = ctx.Receive()
+                    do! Async.Sleep 1
+                    ctx.Sender() <! ctx.Pid
+                    return! loop ()
+                }
+            loop ())
+                
+    ref <! ""
+    expectMsg tck "actor" |> ignore
+    expectNoMsgWithin tck (TimeSpan.FromSeconds 1.)
+
+[<Fact>]
+let ``persistentActor supports persist after async computations`` () : unit = testDefault <| fun tck ->
+    let ref = 
+        spawn tck "actor"
+        <| propsPersist (fun ctx ->
+            let rec loop () =
+                actor {
+                    let! msg = ctx.Receive()
+                    if ctx.HasPersisted() then
+                        return! loop ()
+                    else
+                        ctx.Sender() <! 0
+                        do! Async.Sleep 1
+                        ctx.Sender() <! 1
+                        do! Async.Sleep 1000
+                        ctx.Sender() <! 2
+                        return PersistAsync msg |> Effects.andThen (fun () -> ctx.Sender() <! 3)
+                }
+            loop ())
+                
+    ref <! ""
+    expectMsg tck 0 |> ignore
+    expectMsg tck 1 |> ignore
+    expectMsg tck 2 |> ignore
+    expectMsg tck 3 |> ignore
+    expectNoMsgWithin tck (TimeSpan.FromSeconds 1.)

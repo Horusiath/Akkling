@@ -25,5 +25,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Akka.Streams.TestKit" Version="1.4.27" />
+    <PackageReference Update="FSharp.Core" Version="6.0.4" />
   </ItemGroup>
 </Project>
