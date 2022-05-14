@@ -10,6 +10,7 @@
 module Akkling.ComputationExpressions
 
 open System
+open System.Threading.Tasks
 
 /// Gives access to the next message throu let! binding in actor computation expression.
 //type Behavior<'In, 'Out> = 
@@ -27,6 +28,16 @@ type ActorBuilder() =
         upcast AsyncEffect (async {
             let! returned = asyncInput 
             return continuation returned 
+        })
+    member __.Bind(taskInput: Task<'In>, continuation: 'In -> Effect<'Out>) : Effect<'Out> =
+        upcast TaskEffect (task {
+            let! returned = taskInput
+            return continuation returned
+        })
+    member __.Bind(taskInput: Task, continuation: unit -> Effect<'Out>) : Effect<'Out> =
+        upcast TaskEffect (task {
+            do! taskInput
+            return continuation ()
         })
     member __.ReturnFrom (effect: Effect<'Message>) = effect
     member __.Return (value: Effect<'Message>) : Effect<'Message> = value

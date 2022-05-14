@@ -14,6 +14,7 @@ open Akka.Persistence
 open Akkling
 open Akka.Event
 open Newtonsoft.Json.Linq
+open System.Threading.Tasks
 
 type PID = string
 
@@ -222,6 +223,7 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
         member this.LoadSnapshot(pid, criteria, upto) = actor.LoadSnapshot(pid, criteria, upto)
         member this.DeleteMessages(upto) = actor.DeleteMessages(upto)
         member this.SaveSnapshot(state) = actor.SaveSnapshot(state)
+        member _.RunTask (task: Func<Task>) : unit = actor.InternalRunTask(task)
 
 and PersistentLifecycleEvent =
     | ReplaySucceed
@@ -234,6 +236,7 @@ and PersistentLifecycleEvent =
 and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Effect<'Message>) as this =
     inherit UntypedPersistentActor()
     let untypedContext = UntypedActor.Context
+    let persistentId = this.Self.Path.Name
     let ctx = TypedPersistentContext<'Message, FunPersistentActor<'Message>>(untypedContext, this)
     let mutable behavior =
         match actor ctx with
@@ -249,8 +252,9 @@ and FunPersistentActor<'Message>(actor : Eventsourced<'Message> -> Effect<'Messa
         | msg -> base.Unhandled msg
 
     member __.Sender() : IActorRef = base.Sender
+    member _.InternalRunTask (task: Func<Task>) : unit = this.RunTask task
     member __.InternalUnhandled(message: obj) : unit = base.Unhandled message
-    override this.PersistenceId = this.Self.Path.Name
+    override this.PersistenceId = persistentId
     override this.OnCommand msg = this.Handle msg
     override this.OnRecover msg = this.Handle msg
     override this.OnReplaySuccess() = this.Handle ReplaySucceed
