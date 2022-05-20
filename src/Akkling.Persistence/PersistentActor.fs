@@ -169,11 +169,11 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
     let deferring callback = 
         Action<'Message>(fun e ->
             try
-                hasPersisted <- true
+                hasDeffered <- true
                 actor.Handle e
                 callback ()
             finally
-                hasPersisted <- false)
+                hasDeffered <- false)
     member private this.Persisting = persisting id
     member private this.Deferring = deferring id
     interface ExtEventsourced<'Message> with
