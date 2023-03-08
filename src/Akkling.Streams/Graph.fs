@@ -38,7 +38,7 @@ module Graph =
         GraphDsl.Create(shape1, shape2, shape3, shape4, shape5, Func<_,_,_,_,_,_>(combineFn), Func<_,_,_,_,_,_,_>(builder))
 
     /// Executes provided graph using provided materializer.
-    let run (mat: #IMaterializer) (graph: #IRunnableGraph<'mat>) =
+    let run (mat: IMaterializer) (graph: #IRunnableGraph<'mat>) =
         graph.Run mat
 
     /// Transform only the materialized value of this RunnableGraph, leaving all other properties as they were.

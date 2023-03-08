@@ -110,7 +110,7 @@ module Source =
     let unfold (fn: 's -> struct('s * 'e) option) (state: 's) : Source<'e, unit> =
         Source.Unfold(state, Func<_,_>(fun x -> 
             match fn x with
-            | Some tuple -> Akka.Util.Option<_> tuple
+            | Some tuple -> Akka.Util.Option.Create tuple
             | None -> Akka.Util.Option<_>.None
             )).MapMaterializedValue(Func<_,_>(ignore))
 
@@ -120,7 +120,7 @@ module Source =
             async { 
                 let! r = fn x 
                 match r with
-                | Some tuple -> return Akka.Util.Option<_> tuple
+                | Some tuple -> return Akka.Util.Option.Create tuple
                 | None -> return Akka.Util.Option<_>.None } 
                 |> Async.StartAsTask<_>)).MapMaterializedValue(Func<_,_>(ignore))
 
@@ -563,7 +563,7 @@ module Source =
     /// The task completes with success when received complete message from upstream or cancel
     /// from downstream. It fails with the same error when received error message from
     /// downstream.
-    let inline watchTermination (matFn: 'mat -> Async<unit> -> 'mat2) (source) : Source<'t, 'mat2> =
+    let inline watchTermination (matFn: 'mat -> Async<Done> -> 'mat2) (source) : Source<'t, 'mat2> =
         SourceOperations.WatchTermination(source, Func<_,_,_>(fun m t -> matFn m (t |> Async.AwaitTask)))
       
     /// Materializes to IFlowMonitor that allows monitoring of the the current flow. All events are propagated
@@ -691,7 +691,7 @@ module Source =
 
     /// Connect this source to a sink and run it. The returned value is the materialized value of the sink
     let inline runWith (mat: #IMaterializer) (sink: #IGraph<SinkShape<'t>, 'mat2>) (source: Source<'t, 'mat>) : 'mat2 =
-        source.RunWith(sink, mat)
+        source.RunWith(sink, mat :> IMaterializer)
 
     /// Shortcut for running this source with a fold function.
     /// The given function is invoked for every received element, giving it its previous
@@ -700,7 +700,7 @@ module Source =
     /// function evaluation when the input stream ends, or completed with Failure
     /// if there is a failure signaled in the stream.
     let inline runFold (mat: #IMaterializer) (folder: 'state -> 't -> 'state) (zero: 'state) (source: Source<'t, 'mat>) : Async<'state> =
-        source.RunAggregate(zero, Func<_,_,_>(folder), mat) |> Async.AwaitTask
+        source.RunAggregate(zero, Func<_,_,_>(folder), mat :> IMaterializer) |> Async.AwaitTask
 
     /// Shortcut for running this surce with a reduce function.
     /// The given function is invoked for every received element, giving it its previous
@@ -709,7 +709,7 @@ module Source =
     /// function evaluation when the input stream ends, or completed with Failure
     /// if there is a failure signaled in the stream.
     let inline runReduce (mat: #IMaterializer) (folder: 't -> 't -> 't) (source: Source<'t, 'mat>) : Async<'t> =
-        source.RunSum(Func<_,_,_>(folder), mat) |> Async.AwaitTask
+        source.RunSum(Func<_,_,_>(folder), mat :> IMaterializer) |> Async.AwaitTask
 
     /// Shortcut for running this source with a foreach procedure. The given procedure is invoked
     /// for each received element.
@@ -717,7 +717,7 @@ module Source =
     /// normal end of the stream, or completed with Failure if there is a failure signaled in
     /// the stream.
     let inline runForEach (mat: #IMaterializer) (fn: 't -> unit) (source: Source<'t, 'mat>) : Async<unit> =
-        source.RunForeach(Action<_>(fn), mat) |> Async.AwaitTask
+        source.RunForeach(Action<_>(fn), mat :> IMaterializer) |> Async.AwaitTask
 
     /// A MergeHub is a special streaming hub that is able to collect streamed elements from a 
     /// dynamic set of producers

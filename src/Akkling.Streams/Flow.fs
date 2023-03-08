@@ -420,7 +420,7 @@ module Flow =
     /// The task completes with success when received complete message from upstream or cancel
     /// from downstream. It fails with the same error when received error message from
     /// downstream.
-    let inline watchTermination (matFn: 'mat -> Async<unit> -> 'mat2) (flow) : Flow<_, _, 'mat2> =
+    let inline watchTermination (matFn: 'mat -> Async<Done> -> 'mat2) (flow) : Flow<_, _, 'mat2> =
         FlowOperations.WatchTermination(flow, Func<_,_,_>(fun m t -> matFn m (t |> Async.AwaitTask)))
 
     /// Materializes to IFlowMonitor that allows monitoring of the the current flow. All events are propagated
@@ -593,7 +593,7 @@ module Flow =
                 
         Retry.Create(flow, fun s -> 
             match retryWith s with
-            | Some (i,s) -> Akka.Util.Option<_>(struct(i,s))
+            | Some (i,s) -> Akka.Util.Option.Create(struct(i,s))
             | None -> Unchecked.defaultof<_>)
         |> Flow.FromGraph // I convert IGraph to Flow here in order to map it below. Should I?
         |> map (fun (struct(x, s)) ->
@@ -656,7 +656,7 @@ module Flow =
         let retryFlow =        
             Retry.Create(flow, fun ((i, _) as state) -> 
                 match retryWith state with
-                | Some newState -> Akka.Util.Option<_> (struct (i, (i, newState)))
+                | Some newState -> Akka.Util.Option.Create (struct (i, (i, newState)))
                 | None -> Akka.Util.Option<_>.None)
             |> Flow.FromGraph
             |> map (fun (struct(x, _)) ->

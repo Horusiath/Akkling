@@ -38,8 +38,8 @@
     <Compile Include="IO.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Akka" Version="1.4.46" />
-    <PackageReference Include="Akka.Serialization.Hyperion" Version="1.4.27" />
+    <PackageReference Include="Akka" Version="1.5.0" />
+    <PackageReference Include="Akka.Serialization.Hyperion" Version="1.5.0" />
     <PackageReference Update="FSharp.Core" Version="6.0.4" />
   </ItemGroup>
 </Project>

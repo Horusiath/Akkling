@@ -24,7 +24,7 @@ module Prolog =
     
     let inline toCsOption (o: 'v option) : Akka.Util.Option<'v> =
         match o with
-        | Some v -> Akka.Util.Option<'v>(v)
+        | Some v -> Akka.Util.Option.Create(v)
         | None -> Akka.Util.Option<'v>.None
             
     let inline ofCsOption (o: Akka.Util.Option<'v>) = if o.HasValue then Some o.Value else None
