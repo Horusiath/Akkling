@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.12.0</Version>
+    <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+    <Version>0.13.0</Version>
     <Authors>Bartosz Sypytkowski</Authors>
     <Company />
     <Description>Library used for working with Akka.NET using F# in type safe manner with functional principles in mind</Description>
@@ -11,9 +11,7 @@
     <PackageProjectUrl>https://github.com/Horusiath/Akkling</PackageProjectUrl>
     <PackageTags>akka.net fsharp</PackageTags>
     <PackageReleaseNotes>
-      * Upgraded Akka.NET dependencies to 1.4.27
-      * Exposed Akkling.Persistence API for snapshots.
-      * Exposed WeaklyUp and Downed cluster node events.
+      * Upgraded Akka.NET dependencies to 1.5
     </PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RepositoryUrl>https://github.com/Horusiath/Akkling</RepositoryUrl>

@@ -1,3 +1,6 @@
+## New in 0.13 (Released 2023/03/11)
+* Upgraded Akka.NET dependencies to 1.5
+
 ## New in 0.10 (Released 2020/03/14)
 * Upgraded Akka.NET dependencies to 1.4.2
 * Consolidated supported .NET version to .NET Standard 2.0
