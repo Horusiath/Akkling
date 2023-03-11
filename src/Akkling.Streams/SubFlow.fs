@@ -366,7 +366,7 @@ module SubFlow =
     /// The task completes with success when received complete message from upstream or cancel
     /// from downstream. It fails with the same error when received error message from
     /// downstream.
-    let inline watchTermination (matFn: 'mat -> Async<unit> -> 'mat2) (subFlow) : SubFlow<_, _, 'mat2> =
+    let inline watchTermination (matFn: 'mat -> Async<Akka.Done> -> 'mat2) (subFlow) : SubFlow<_, _, 'mat2> =
         SubFlowOperations.WatchTermination(subFlow, Func<_,_,_>(fun m t -> matFn m (t |> Async.AwaitTask)))
 
     /// Detaches upstream demand from downstream demand without detaching the

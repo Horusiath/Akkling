@@ -18,7 +18,7 @@ open Akkling
 /// Spawns an actor in cluster singleton mode.
 /// </summary>
 /// <param name="stopMessage">Message used to stop an actor</param>
-/// <param name="factory">Actor system used to spawn an actor</param>
+/// <param name="system">Actor system used to spawn an actor</param>
 /// <param name="name">Actor singleton name.</param>
 /// <param name="props">Props used to build an actor.</param>
 let spawnSingleton (stopMessage: obj) (system: ActorSystem) (name: string) (props: Props<'Message>) : IActorRef<'Message> =

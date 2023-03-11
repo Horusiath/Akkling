@@ -48,18 +48,18 @@ module Sink =
     let inline fanoutPublisher<'t> : Sink<'t, IPublisher<'t>> = Sink.FanoutPublisher<'t>()
 
     /// A sink that will consume the stream and discard the elements.
-    let inline ignore<'t> : Sink<'t, Async<unit>> = Sink.Ignore<'t>().MapMaterializedValue(Func<_,_>(Async.AwaitTask))
+    let inline ignore<'t> : Sink<'t, Async<Akka.Done>> = Sink.Ignore<'t>().MapMaterializedValue(Func<_,_>(Async.AwaitTask))
 
     /// A sink that will invoke the given function for each received element. 
     /// The sink is materialized into an Async computation will be completed with success when reaching the
     /// normal end of the stream, or completed with a failure if there is a failure signaled in
     /// the stream.
-    let inline forEach (fn: 't -> unit) : Sink<'t, Async<unit>> = Sink.ForEach(Action<_>(fn)).MapMaterializedValue(Func<_,_>(Async.AwaitTask))
+    let inline forEach (fn: 't -> unit) : Sink<'t, Async<Akka.Done>> = Sink.ForEach(Action<_>(fn)).MapMaterializedValue(Func<_,_>(Async.AwaitTask))
 
     /// A sink that will invoke the given function 
     /// to each of the elements as they pass in. 
     /// The sink is materialized into an Async computation.
-    let inline forEachParallel (parallelism: int) (fn: 't -> unit) : Sink<'t, Async<unit>> = Sink.ForEachParallel(parallelism, Action<_>(fn)).MapMaterializedValue(Func<_,_>(Async.AwaitTask))
+    let inline forEachParallel (parallelism: int) (fn: 't -> unit) : Sink<'t, Async<Akka.Done>> = Sink.ForEachParallel(parallelism, Action<_>(fn)).MapMaterializedValue(Func<_,_>(Async.AwaitTask))
 
     /// A sink that will invoke the given folder function for every received element, 
     /// giving it its previous output (or the given zero value) and the element as input.

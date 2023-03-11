@@ -78,17 +78,17 @@ type Actor<'Message> =
     abstract UnstashAll : unit -> unit
     
     /// <summary>
-    /// Sets or clears a timeout before <see="ReceiveTimeout"/> message will be send to an actor.
+    /// Sets or clears a timeout before <see cref="ReceiveTimeout"/> message will be send to an actor.
     /// </summary>
     abstract SetReceiveTimeout : TimeSpan option -> unit
     
     /// <summary>
-    /// Schedules a message to be transmited in specified delay.
+    /// Schedules a message to be transmitted in specified delay.
     /// </summary>
     abstract Schedule<'Scheduled> : TimeSpan -> IActorRef<'Scheduled> -> 'Scheduled -> ICancelable
     
     /// <summary>
-    /// Schedules a message to be repeatedly transmited, starting at specified delay with provided intervals.
+    /// Schedules a message to be repeatedly transmitted, starting at specified delay with provided intervals.
     /// </summary>
     abstract ScheduleRepeatedly<'Scheduled> : TimeSpan -> TimeSpan -> IActorRef<'Scheduled> -> 'Scheduled -> ICancelable
 
