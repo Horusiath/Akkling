@@ -195,6 +195,11 @@ let ``Actor computation use disposes objects`` () =  testDefault <| fun tck ->
                 use x = { new IDisposable with
                     member _.Dispose () = sender <! (sprintf "disposed-%d" msg)
                 }
+
+                // async awaits should not trigger x to dispose
+                // but it does!
+                do! Async.Sleep(1)
+
                 ctx.Sender() <! msg
                 if msg = 2 then failwithf "exception-%d" msg
                 return! loop ()
