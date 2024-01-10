@@ -11,31 +11,26 @@ module Akkling.Cluster.Sharding.ClusterSharding
 
 open System
 open Akka.Actor
-open Akka.Cluster
 open Akka.Cluster.Sharding
 open Akkling
 
-// With the addition of ShardId overload computed from entityId TypedMessageExtractor no longer provides
-// the best fit for IMessageExtractor implementation but can still be used in with the new version of
-// IMessageExtractor - the new ShardId overload uses messageHint to compute ShardId.
-// To take full advantage of the new version of IMessageExtractor TypedMessageExtractor constructor should
-// be changed to accept extractor argument with a different function signature.
-// Such change will break backward compatibility of spawnSharded method, so there should be considered
-// a new function (with a different name) to spawn sharded actors.
-type internal TypedMessageExtractor<'Envelope, 'Message>(extractor: 'Envelope -> string*string*'Message) =
+type internal TypedMessageExtractor<'Envelope, 'Message>(extractor: 'Envelope -> string*string*'Message, ?shardExtractor: string -> string) =
     interface IMessageExtractor with
         member this.ShardId message =
             match message with
             | :? 'Envelope as env -> 
-                let shardId, _, _ = extractor(env)
+                let shardId, _, _ = extractor env
                 shardId
             | _ -> null
-        member this.ShardId (_entityId, messageHint) =
-            match messageHint with
-            | :? 'Envelope as env -> 
-                let shardId, _, _ = extractor(env)
-                shardId
-            | _ -> null
+        member this.ShardId (entityId, messageHint) =
+            match shardExtractor with
+            | Some shardExtractor -> shardExtractor entityId
+            | None ->
+                match messageHint with
+                | :? 'Envelope as env -> 
+                    let shardId, _, _ = extractor env
+                    shardId
+                | _ -> null
         member this.EntityId message =
             match message with
             | :? 'Envelope as env -> 
@@ -67,22 +62,24 @@ let internal adjustPersistentProps (props: Props<'Message>) : Props<'Message> =
 /// <summary>
 /// Creates a shard region responsible for managing shards located on the current cluster node as well as routing messages to shards on external nodes.
 /// Extractor is a function returning tuple of ShardId*EntityId*Message used to determine routing path of message to the destination actor.
+/// ShardExtractor is function returning ShardId from EntityId.
 /// </summary>
-let spawnSharded (extractor: 'Envelope -> string*string*'Message) (system: ActorSystem) (name: string) (props: Props<'Message>) : IActorRef<'Envelope> =
+let spawnSharded (extractor: 'Envelope -> string*string*'Message, shardExtractor: string -> string) (system: ActorSystem) (name: string) (props: Props<'Message>) : IActorRef<'Envelope> =
     let clusterSharding = ClusterSharding.Get(system)
     let adjustedProps = adjustPersistentProps props
-    let shardRegion = clusterSharding.Start(name, adjustedProps.ToProps(), ClusterShardingSettings.Create(system), new TypedMessageExtractor<'Envelope, 'Message>(extractor))
+    let shardRegion = clusterSharding.Start(name, adjustedProps.ToProps(), ClusterShardingSettings.Create(system), new TypedMessageExtractor<'Envelope, 'Message>(extractor, shardExtractor))
     typed shardRegion
     
 /// <summary>
 /// Creates an Async returning shard region responsible for managing shards located on the current cluster node as well as routing messages to shards on external nodes.
 /// Extractor is a function returning tuple of ShardId*EntityId*Message used to determine routing path of message to the destination actor.
+/// ShardExtractor is function returning ShardId from EntityId.
 /// </summary>
-let spawnShardedAsync (extractor: 'Envelope -> string*string*'Message) (system: ActorSystem) (name: string) (props: Props<'Message>) : Async<IActorRef<'Envelope>> =
+let spawnShardedAsync (extractor: 'Envelope -> string*string*'Message, shardExtractor: string -> string) (system: ActorSystem) (name: string) (props: Props<'Message>) : Async<IActorRef<'Envelope>> =
     let clusterSharding = ClusterSharding.Get(system)
     let adjustedProps = adjustPersistentProps props
     async {
-        let! shardRegion = clusterSharding.StartAsync(name, adjustedProps.ToProps(), ClusterShardingSettings.Create(system), new TypedMessageExtractor<'Envelope, 'Message>(extractor)) |> Async.AwaitTask
+        let! shardRegion = clusterSharding.StartAsync(name, adjustedProps.ToProps(), ClusterShardingSettings.Create(system), new TypedMessageExtractor<'Envelope, 'Message>(extractor, shardExtractor)) |> Async.AwaitTask
         return typed shardRegion
     }
     
@@ -97,42 +94,44 @@ let spawnShardedAsync (extractor: 'Envelope -> string*string*'Message) (system: 
 let entityFactoryFor (system: ActorSystem) (name: string) (props: Props<'Message>) : EntityFac<'Message> =
     let clusterSharding = ClusterSharding.Get(system)
     let adjustedProps = adjustPersistentProps props
-    let shardRegion = clusterSharding.Start(name, adjustedProps.ToProps(), ClusterShardingSettings.Create(system), new TypedMessageExtractor<_,_>(EntityRefs.entityRefExtractor))
+    let shardRegion = clusterSharding.Start(name, adjustedProps.ToProps(), ClusterShardingSettings.Create(system), TypedMessageExtractor<_,_>(EntityRefs.entityRefExtractor))
     { ShardRegion = shardRegion; TypeName = name }
 
 
 /// <summary>
 /// Creates a cluster shard proxy used for routing messages to shards on external nodes without hosting any shards by itself.
 /// Extractor is a function returning tuple of ShardId*EntityId*Message used to determine routing path of message to the destination actor.
+/// ShardExtractor is function returning ShardId from EntityId.
 /// </summary>
-let spawnShardedProxy (extractor: 'Envelope -> string*string*'Message) (system: ActorSystem) (name: string) (roleOption: string option) : IActorRef<'Envelope> =
+let spawnShardedProxy (extractor: 'Envelope -> string*string*'Message, shardExtractor: string -> string) (system: ActorSystem) (name: string) (roleOption: string option) : IActorRef<'Envelope> =
     let clusterSharding = ClusterSharding.Get(system)
     let role = 
         match roleOption with
         | Some r -> r
         | _ -> ""
-    let shardRegionProxy = clusterSharding.StartProxy(name, role, new TypedMessageExtractor<'Envelope, 'Message>(extractor))
+    let shardRegionProxy = clusterSharding.StartProxy(name, role, new TypedMessageExtractor<'Envelope, 'Message>(extractor, shardExtractor))
     typed shardRegionProxy
     
 /// <summary>
 /// Creates an Async returning cluster shard proxy used for routing messages to shards on external nodes without hosting any shards by itself.
 /// Extractor is a function returning tuple of ShardId*EntityId*Message used to determine routing path of message to the destination actor.
+/// ShardExtractor is function returning ShardId from EntityId.
 /// </summary>
-let spawnShardedProxyAsync (extractor: 'Envelope -> string*string*'Message) (system: ActorSystem) (name: string) (roleOption: string option) : Async<IActorRef<'Envelope>> =
+let spawnShardedProxyAsync (extractor: 'Envelope -> string*string*'Message, shardExtractor: string -> string) (system: ActorSystem) (name: string) (roleOption: string option) : Async<IActorRef<'Envelope>> =
     let clusterSharding = ClusterSharding.Get(system)
     let role = 
         match roleOption with
         | Some r -> r
         | _ -> ""
     async {
-        let! shardRegion = clusterSharding.StartProxyAsync(name, role, new TypedMessageExtractor<'Envelope, 'Message>(extractor)) |> Async.AwaitTask
+        let! shardRegion = clusterSharding.StartProxyAsync(name, role, new TypedMessageExtractor<'Envelope, 'Message>(extractor, shardExtractor)) |> Async.AwaitTask
         return typed shardRegion
     }
 
 type ClusterShardingEffect<'Message> =
     | Passivate of obj
     interface Effect<'Message> with
-        member __.WasHandled() = true
+        member _.WasHandled() = true
         member this.OnApplied(context : ExtActor<'Message>, message : 'Message) = 
             match this with
             | Passivate stopMessage -> context.Parent() <! Akka.Cluster.Sharding.Passivate(stopMessage)
