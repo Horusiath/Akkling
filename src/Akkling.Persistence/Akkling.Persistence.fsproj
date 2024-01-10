@@ -26,7 +26,7 @@
     <ProjectReference Include="..\Akkling\Akkling.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Akka.Persistence" Version="1.5.0" />
+    <PackageReference Include="Akka.Persistence" Version="1.5.15" />
     <PackageReference Update="FSharp.Core" Version="6.0.4" />
   </ItemGroup>
 </Project>

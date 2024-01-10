@@ -2,7 +2,7 @@
 // <copyright file="ClusterSharding.fs" company="Akka.NET Project">
 //     Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
 //     Copyright (C) 2013-2015 Akka.NET project <https://github.com/akkadotnet/akka.net>
-//     Copyright (C) 2016-2020 Bartosz Sypytkowski <gttps://github.com/Horusiath>
+//     Copyright (C) 2016-2024 Bartosz Sypytkowski <gttps://github.com/Horusiath>
 // </copyright>
 //-----------------------------------------------------------------------
 
@@ -15,24 +15,37 @@ open Akka.Cluster
 open Akka.Cluster.Sharding
 open Akkling
 
+// With the addition of ShardId overload computed from entityId TypedMessageExtractor no longer provides
+// the best fit for IMessageExtractor implementation but can still be used in with the new version of
+// IMessageExtractor - the new ShardId overload uses messageHint to compute ShardId.
+// To take full advantage of the new version of IMessageExtractor TypedMessageExtractor constructor should
+// be changed to accept extractor argument with a different function signature.
+// Such change will break backward compatibility of spawnSharded method, so there should be considered
+// a new function (with a different name) to spawn sharded actors.
 type internal TypedMessageExtractor<'Envelope, 'Message>(extractor: 'Envelope -> string*string*'Message) =
     interface IMessageExtractor with
         member this.ShardId message =
             match message with
             | :? 'Envelope as env -> 
-                let shardId, _, _ = (extractor(env))
+                let shardId, _, _ = extractor(env)
+                shardId
+            | _ -> null
+        member this.ShardId (_entityId, messageHint) =
+            match messageHint with
+            | :? 'Envelope as env -> 
+                let shardId, _, _ = extractor(env)
                 shardId
             | _ -> null
         member this.EntityId message =
             match message with
             | :? 'Envelope as env -> 
-                let _, entityId, _ = (extractor(env))
+                let _, entityId, _ = extractor(env)
                 entityId
             | _ -> null
         member this.EntityMessage message =
             match message with
             | :? 'Envelope as env -> 
-                let _, _, msg = (extractor(env))
+                let _, _, msg = extractor(env)
                 box msg
             | _ -> null
             
