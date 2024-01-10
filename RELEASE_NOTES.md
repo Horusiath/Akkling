@@ -1,3 +1,8 @@
+## New in 0.14 (Released 2024/01/11)
+* Upgraded Akka.NET dependencies to 1.5.15
+* Revised internal TypedMessageExtractor type to support new version of IMessageExtractor
+* Updated Xunit packages
+
 ## New in 0.13 (Released 2023/03/11)
 * Upgraded Akka.NET dependencies to 1.5
 

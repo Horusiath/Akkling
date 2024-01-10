@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
-    <Version>0.13.0</Version>
+    <Version>0.14.0</Version>
     <Authors>Bartosz Sypytkowski</Authors>
     <Company />
     <Description>Library used for working with Akka.NET using F# in type safe manner with functional principles in mind</Description>

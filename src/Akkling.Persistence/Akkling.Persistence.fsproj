@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
-    <Version>0.13.0</Version>
+    <Version>0.14.0</Version>
     <Authors>Bartosz Sypytkowski</Authors>
     <Description>F# wrapper library for Akka.NET with persistence support</Description>
     <PackageLicenseUrl>https://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>

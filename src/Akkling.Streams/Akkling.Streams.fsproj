@@ -5,7 +5,7 @@
     <PackageLicenseUrl>https://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Horusiath/Akkling</PackageProjectUrl>
     <Authors>Bartosz Sypytkowski</Authors>
-    <Version>0.13.0</Version>
+    <Version>0.14.0</Version>
     <Description>F# wrapper library for Akka.NET with reactive streams support</Description>
     <PackageTags>akka.net fsharp reactive streams</PackageTags>
     <PackageReleaseNotes>
