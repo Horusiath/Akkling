@@ -14,7 +14,7 @@ open Akka.Actor
 open Akka.Cluster.Sharding
 open Akkling
 
-type internal TypedMessageExtractor<'Envelope, 'Message>(extractor: 'Envelope -> string*string*'Message, ?shardExtractor: string -> string) =
+type internal TypedMessageExtractor<'Envelope, 'Message>(extractor: 'Envelope -> string*string*'Message, ?getShardId: string -> string) =
     interface IMessageExtractor with
         member this.ShardId message =
             match message with
@@ -23,8 +23,8 @@ type internal TypedMessageExtractor<'Envelope, 'Message>(extractor: 'Envelope ->
                 shardId
             | _ -> null
         member this.ShardId (entityId, messageHint) =
-            match shardExtractor with
-            | Some shardExtractor -> shardExtractor entityId
+            match getShardId with
+            | Some getShardId -> getShardId entityId
             | None ->
                 match messageHint with
                 | :? 'Envelope as env -> 
@@ -62,24 +62,24 @@ let internal adjustPersistentProps (props: Props<'Message>) : Props<'Message> =
 /// <summary>
 /// Creates a shard region responsible for managing shards located on the current cluster node as well as routing messages to shards on external nodes.
 /// Extractor is a function returning tuple of ShardId*EntityId*Message used to determine routing path of message to the destination actor.
-/// ShardExtractor is function returning ShardId from EntityId.
+/// getShardId is function returning ShardId from EntityId.
 /// </summary>
-let spawnSharded (extractor: 'Envelope -> string*string*'Message, shardExtractor: string -> string) (system: ActorSystem) (name: string) (props: Props<'Message>) : IActorRef<'Envelope> =
+let spawnSharded (extractor: 'Envelope -> string*string*'Message) (getShardId: string -> string) (system: ActorSystem) (name: string) (props: Props<'Message>) : IActorRef<'Envelope> =
     let clusterSharding = ClusterSharding.Get(system)
     let adjustedProps = adjustPersistentProps props
-    let shardRegion = clusterSharding.Start(name, adjustedProps.ToProps(), ClusterShardingSettings.Create(system), new TypedMessageExtractor<'Envelope, 'Message>(extractor, shardExtractor))
+    let shardRegion = clusterSharding.Start(name, adjustedProps.ToProps(), ClusterShardingSettings.Create(system), new TypedMessageExtractor<'Envelope, 'Message>(extractor, getShardId))
     typed shardRegion
     
 /// <summary>
 /// Creates an Async returning shard region responsible for managing shards located on the current cluster node as well as routing messages to shards on external nodes.
 /// Extractor is a function returning tuple of ShardId*EntityId*Message used to determine routing path of message to the destination actor.
-/// ShardExtractor is function returning ShardId from EntityId.
+/// getShardId is function returning ShardId from EntityId.
 /// </summary>
-let spawnShardedAsync (extractor: 'Envelope -> string*string*'Message, shardExtractor: string -> string) (system: ActorSystem) (name: string) (props: Props<'Message>) : Async<IActorRef<'Envelope>> =
+let spawnShardedAsync (extractor: 'Envelope -> string*string*'Message) (getShardId: string -> string) (system: ActorSystem) (name: string) (props: Props<'Message>) : Async<IActorRef<'Envelope>> =
     let clusterSharding = ClusterSharding.Get(system)
     let adjustedProps = adjustPersistentProps props
     async {
-        let! shardRegion = clusterSharding.StartAsync(name, adjustedProps.ToProps(), ClusterShardingSettings.Create(system), new TypedMessageExtractor<'Envelope, 'Message>(extractor, shardExtractor)) |> Async.AwaitTask
+        let! shardRegion = clusterSharding.StartAsync(name, adjustedProps.ToProps(), ClusterShardingSettings.Create(system), new TypedMessageExtractor<'Envelope, 'Message>(extractor, getShardId)) |> Async.AwaitTask
         return typed shardRegion
     }
     
@@ -101,30 +101,30 @@ let entityFactoryFor (system: ActorSystem) (name: string) (props: Props<'Message
 /// <summary>
 /// Creates a cluster shard proxy used for routing messages to shards on external nodes without hosting any shards by itself.
 /// Extractor is a function returning tuple of ShardId*EntityId*Message used to determine routing path of message to the destination actor.
-/// ShardExtractor is function returning ShardId from EntityId.
+/// getShardId is function returning ShardId from EntityId.
 /// </summary>
-let spawnShardedProxy (extractor: 'Envelope -> string*string*'Message, shardExtractor: string -> string) (system: ActorSystem) (name: string) (roleOption: string option) : IActorRef<'Envelope> =
+let spawnShardedProxy (extractor: 'Envelope -> string*string*'Message) (getShardId: string -> string) (system: ActorSystem) (name: string) (roleOption: string option) : IActorRef<'Envelope> =
     let clusterSharding = ClusterSharding.Get(system)
     let role = 
         match roleOption with
         | Some r -> r
         | _ -> ""
-    let shardRegionProxy = clusterSharding.StartProxy(name, role, new TypedMessageExtractor<'Envelope, 'Message>(extractor, shardExtractor))
+    let shardRegionProxy = clusterSharding.StartProxy(name, role, new TypedMessageExtractor<'Envelope, 'Message>(extractor, getShardId))
     typed shardRegionProxy
     
 /// <summary>
 /// Creates an Async returning cluster shard proxy used for routing messages to shards on external nodes without hosting any shards by itself.
 /// Extractor is a function returning tuple of ShardId*EntityId*Message used to determine routing path of message to the destination actor.
-/// ShardExtractor is function returning ShardId from EntityId.
+/// getShardId is function returning ShardId from EntityId.
 /// </summary>
-let spawnShardedProxyAsync (extractor: 'Envelope -> string*string*'Message, shardExtractor: string -> string) (system: ActorSystem) (name: string) (roleOption: string option) : Async<IActorRef<'Envelope>> =
+let spawnShardedProxyAsync (extractor: 'Envelope -> string*string*'Message) (getShardId: string -> string) (system: ActorSystem) (name: string) (roleOption: string option) : Async<IActorRef<'Envelope>> =
     let clusterSharding = ClusterSharding.Get(system)
     let role = 
         match roleOption with
         | Some r -> r
         | _ -> ""
     async {
-        let! shardRegion = clusterSharding.StartProxyAsync(name, role, new TypedMessageExtractor<'Envelope, 'Message>(extractor, shardExtractor)) |> Async.AwaitTask
+        let! shardRegion = clusterSharding.StartProxyAsync(name, role, new TypedMessageExtractor<'Envelope, 'Message>(extractor, getShardId)) |> Async.AwaitTask
         return typed shardRegion
     }
 
