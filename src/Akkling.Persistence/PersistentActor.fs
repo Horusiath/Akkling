@@ -48,12 +48,12 @@ type Eventsourced<'Message> =
     abstract Pid : PID
 
     /// <summary>
-    /// Flag which informs if current actor is acutally during execution of persisting handler.
+    /// Flag which informs if current actor is actually during execution of persisting handler.
     /// </summary>
     abstract HasPersisted: unit -> bool
 
     /// <summary>
-    /// Flag which informs if current actor is acutally during execution of deffered handler.
+    /// Flag which informs if current actor is actually during execution of deferred handler.
     /// </summary>
     abstract HasDeffered : unit -> bool
 
@@ -157,7 +157,7 @@ and PersistentEffect<'Message> =
 and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'Message>>(context : IActorContext, actor : 'Actor) as this =
     let self = context.Self
     let mutable hasPersisted = false
-    let mutable hasDeffered = false
+    let mutable hasDeferred = false
     let persisting callback = 
         Action<'Message>(fun e ->
             try
@@ -169,17 +169,17 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
     let deferring callback = 
         Action<'Message>(fun e ->
             try
-                hasPersisted <- true
+                hasDeferred <- true
                 actor.Handle e
                 callback ()
             finally
-                hasPersisted <- false)
+                hasDeferred <- false)
     member private this.Persisting = persisting id
     member private this.Deferring = deferring id
     interface ExtEventsourced<'Message> with
         member __.UntypedContext = context
         member __.HasPersisted () = hasPersisted
-        member __.HasDeffered () = hasDeffered
+        member __.HasDeffered () = hasDeferred
         member __.Receive() = Input
         member __.Self = typed self
         member __.Sender<'Response>() = typed (context.Sender) :> IActorRef<'Response>

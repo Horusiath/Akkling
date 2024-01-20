@@ -125,4 +125,19 @@ let ``Effects.andThen should be called after event was persisted``() = testDefau
     expectMsg tck "evt" |> ignore
     expectMsg tck "andThen1" |> ignore
     expectMsg tck "andThen2" |> ignore
-    
+
+[<Fact>]
+let ``HasDeffered should be true when deferred``() = testDefault <| fun tck ->
+    let q = typed tck.TestActor
+    let pref = spawn tck "p-1" <| propsPersist (fun ctx ->
+        let rec loop () = actor {
+            let! msg = ctx.Receive()
+            match msg with
+            | "cmd" -> return Defer ["evt"]
+            | "evt" when ctx.HasDeffered() ->
+                q <! "deferred"
+                return Ignore
+            | _ -> return Unhandled }
+        loop ())
+    pref <! "cmd"
+    expectMsg tck "deferred" |> ignore
