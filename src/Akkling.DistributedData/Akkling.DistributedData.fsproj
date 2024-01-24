@@ -2,11 +2,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
-    <Version>0.14.0</Version>
+    <Version>0.14.0-rc.1</Version>
     <Authors>Bartosz Sypytkowski</Authors>
+    <Copyright>Bartosz Sypytkowski</Copyright>
     <Description>F# wrapper library for Akka.NET with geo-replicated distributed data support (CRDT)</Description>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Horusiath/Akkling</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/Horusiath/Akkling/blob/master/LICENSE</PackageLicenseUrl>
     <PackageTags>akka.net fsharp crdt replication geo</PackageTags>
     <PackageReleaseNotes>
       * Upgraded Akka.NET dependencies to 1.5
