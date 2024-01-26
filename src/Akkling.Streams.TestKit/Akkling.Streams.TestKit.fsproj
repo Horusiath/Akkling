@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
-    <Version>0.14.0-rc.1</Version>
+    <Version>0.14.0</Version>
     <Authors>Bartosz Sypytkowski</Authors>
     <Copyright>Bartosz Sypytkowski</Copyright>
     <Description>F# wrapper library for Akka.NET Streams TestKit library using FsCheck and xUnit.</Description>
