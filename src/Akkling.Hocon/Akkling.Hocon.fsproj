@@ -2,9 +2,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
-    <Version>0.14.0</Version>
-    <Authors>Bartosz Sypytkowski</Authors>
-    <Copyright>Bartosz Sypytkowski</Copyright>
+    <Version>0.15.0</Version>
+    <Authors>Bartosz Sypytkowski and contributors</Authors>
+    <Copyright>Bartosz Sypytkowski and contributors</Copyright>
     <Description>Akka.NET HOCON computation expressions</Description>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Horusiath/Akkling</PackageProjectUrl>

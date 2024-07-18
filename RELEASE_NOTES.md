@@ -1,3 +1,6 @@
+## New in 0.15 (Released 2024/07/18)
+* Applied pull request from @sbacquet (Use Async.StartImmediateAsTask instead of Async.StartAsTask in effects)
+
 ## New in 0.14 (Released 2024/01/11)
 * Upgraded Akka.NET dependencies to 1.5.15
 * Revised internal TypedMessageExtractor type to support new version of IMessageExtractor

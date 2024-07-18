@@ -33,7 +33,7 @@ let summary = "F# wrapper library for Akka.NET"
 let description = "Library used for working with Akka.NET using F# in type safe manner with functional principles in mind"
 
 // List of author names (for NuGet package)
-let authors = [ "Bartosz Sypytkowski" ]
+let authors = [ "Bartosz Sypytkowski and contributors" ]
 
 // Tags for your project (for NuGet package)
 let tags = "akka.net fsharp"

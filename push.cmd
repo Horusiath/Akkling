@@ -1,1 +1,1 @@
-﻿call nuget push .\src\%1\bin\Release\%1.%2.nupkg  -Source https://api.nuget.org/v3/index.json -apikey %3
+﻿dotnet nuget push ./src/%1/bin/Release/%1.%2.nupkg  -Source https://api.nuget.org/v3/index.json -apikey %3
