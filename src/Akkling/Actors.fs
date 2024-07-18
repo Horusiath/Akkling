@@ -208,7 +208,7 @@ and AsyncEffect<'Message> =
                 | :? AsyncEffect<'Message> as e ->
                     let! eff =
                         match e with
-                        | AsyncEffect x -> task { return! x }
+                        | AsyncEffect x -> Async.StartImmediateAsTask x
                         | TaskEffect x -> x
                     return! runAsync eff
                 | effect -> effect.OnApplied(ctx, msg)
