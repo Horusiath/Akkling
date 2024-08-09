@@ -212,3 +212,44 @@ let ``persistentActor supports persist after async and task computations`` () : 
     expectMsg tck 2 |> ignore
     expectMsg tck 3 |> ignore
     expectNoMsgWithin tck (TimeSpan.FromSeconds 1.)
+
+[<Fact>]
+let ``sender must be set when sending message in async blocks`` () : unit = testDefault <| fun tck ->
+    let behaviorC (ctx:Actor<string>) =
+        let rec loop () = actor {
+            let! _ = ctx.Receive()
+            let sender = ctx.Sender()
+            Assert.NotEqual<string>(sender.Path.Name, "deadLetters")
+            do! task { return sender <! "whatever" }
+            return! loop ()
+        }
+        loop ()
+    let C = spawn tck "C" <| props behaviorC
+
+    let behaviorB (ctx:Actor<string>) =
+        let rec loop () = actor {
+            let! _ = ctx.Receive()
+            do! Async.Sleep 10
+            C <<! "something"
+            return! loop ()
+        }
+        loop ()
+    let B = spawn tck "B" <| props behaviorB
+
+    let behaviorA targetActor (ctx:Actor<string>) =
+        let rec loop () = actor {
+            let! msg = ctx.Receive()
+            match msg with
+            | "Go" ->
+                do! Task.Delay 10
+                B <! "forward something to C"
+                return! loop ()
+            | _ ->
+                do! async { return targetActor <! "It's working" }
+                return! loop ()
+        }
+        loop ()
+    let A = spawn tck "A" <| props (behaviorA (typed tck.TestActor))
+
+    A <! "Go"
+    expectMsg tck "It's working" |> ignore
