@@ -1,3 +1,7 @@
+## New in 0.16 (Released 2024/08/14)
+* Applied pull request from @sbacquet (Fix the context not being valid when an actor receives a message sent from an async/task block)
+* Upgraded Akka.NET dependencies to 1.5.27
+
 ## New in 0.15 (Released 2024/07/18)
 * Applied pull request from @sbacquet (Use Async.StartImmediateAsTask instead of Async.StartAsTask in effects)
 

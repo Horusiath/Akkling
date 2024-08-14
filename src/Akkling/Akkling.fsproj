@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
-    <Version>0.15.0</Version>
+    <Version>0.16.0</Version>
     <Authors>Bartosz Sypytkowski and contributors</Authors>
     <Copyright>Bartosz Sypytkowski and contributors</Copyright>
     <Description>Library used for working with Akka.NET using F# in type safe manner with functional principles in mind</Description>
@@ -35,8 +35,8 @@
     <Compile Include="IO.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Akka" Version="1.5.15" />
-    <PackageReference Include="Akka.Serialization.Hyperion" Version="1.5.15" />
+    <PackageReference Include="Akka" Version="1.5.27.1" />
+    <PackageReference Include="Akka.Serialization.Hyperion" Version="1.5.27.1" />
     <PackageReference Update="FSharp.Core" Version="6.0.4" />
   </ItemGroup>
 </Project>
