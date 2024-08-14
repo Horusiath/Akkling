@@ -25,18 +25,27 @@ type ActorBuilder() =
         | :? Become<'In> as become -> upcast Become<'In>(fun message -> this.Bind(become.Next message, continuation))
         | returned -> continuation returned    
     member __.Bind(asyncInput: Async<'In>, continuation: 'In -> Effect<'Out>) : Effect<'Out> =
+        let currentActorCell = Akka.Actor.Internal.InternalCurrentActorCellKeeper.Current
         upcast AsyncEffect (async {
             let! returned = asyncInput 
+            // Here the thread may have changed => set the ThreadStatic singleton for this new thread
+            Akka.Actor.Internal.InternalCurrentActorCellKeeper.Current <- currentActorCell
             return continuation returned 
         })
     member __.Bind(taskInput: Task<'In>, continuation: 'In -> Effect<'Out>) : Effect<'Out> =
+        let currentActorCell = Akka.Actor.Internal.InternalCurrentActorCellKeeper.Current
         upcast TaskEffect (task {
             let! returned = taskInput
+            // Here the thread may have changed => set the ThreadStatic singleton for this new thread
+            Akka.Actor.Internal.InternalCurrentActorCellKeeper.Current <- currentActorCell
             return continuation returned
         })
     member __.Bind(taskInput: Task, continuation: unit -> Effect<'Out>) : Effect<'Out> =
+        let currentActorCell = Akka.Actor.Internal.InternalCurrentActorCellKeeper.Current
         upcast TaskEffect (task {
             do! taskInput
+            // Here the thread may have changed => set the ThreadStatic singleton for this new thread
+            Akka.Actor.Internal.InternalCurrentActorCellKeeper.Current <- currentActorCell
             return continuation ()
         })
     member __.ReturnFrom (effect: Effect<'Message>) = effect
