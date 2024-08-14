@@ -1,21 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
-    <Authors>Bartosz Sypytkowski and contributors</Authors>
-    <Copyright>Bartosz Sypytkowski and contributors</Copyright>
     <Description>Akka.NET HOCON computation expressions</Description>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/Horusiath/Akkling</PackageProjectUrl>
-    <PackageTags>akka.net fsharp hocon</PackageTags>
-    <PackageReleaseNotes>$([System.IO.File]::ReadAllText("$(MSBuildProjectDirectory)/../../RELEASE_NOTES.md"))</PackageReleaseNotes>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageTags>akka.net fsharp akkling hocon</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="../../README.md" Pack="true" PackagePath="\"/>
-    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Common.fs" />
     <Compile Include="Shared.fs" />

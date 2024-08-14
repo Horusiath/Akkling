@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Description>Tests for F# wrapper library for Akka.NET.</Description>
+    <PackageTags>akka.net fsharp akkling testing</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <None Include="app.config">

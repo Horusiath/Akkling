@@ -1,22 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
-    <Authors>Bartosz Sypytkowski and contributors</Authors>
-    <Copyright>Bartosz Sypytkowski and contributors</Copyright>
     <Description>Library used for working with Akka.NET using F# in type safe manner with functional principles in mind</Description>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/Horusiath/Akkling</PackageProjectUrl>
-    <PackageTags>akka.net fsharp</PackageTags>
-    <PackageReleaseNotes>$([System.IO.File]::ReadAllText("$(MSBuildProjectDirectory)/../../RELEASE_NOTES.md"))</PackageReleaseNotes>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <RepositoryUrl>https://github.com/Horusiath/Akkling</RepositoryUrl>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageTags>akka.net fsharp akkling</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="../../README.md" Pack="true" PackagePath="\"/>
-    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Atomics.fs" />
     <Compile Include="ActorRefs.fs" />
     <Compile Include="Actors.fs" />
