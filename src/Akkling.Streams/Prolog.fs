@@ -1,8 +1,8 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="Prolog.fs" company="Akka.NET Project">
-//     Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
-//     Copyright (C) 2013-2015 Akka.NET project <https://github.com/akkadotnet/akka.net>
-//     Copyright (C) 2015-2020 Bartosz Sypytkowski <gttps://github.com/Horusiath>
+//     Copyright (C) 2009-2024 Lightbend Inc. <https://www.lightbend.com>
+//     Copyright (C) 2013-2024 Akka.NET project <https://github.com/akkadotnet/akka.net>
+//     Copyright (C) 2015-2024 Bartosz Sypytkowski and contributors <https://github.com/Horusiath/Akkling>
 // </copyright>
 //-----------------------------------------------------------------------
 
