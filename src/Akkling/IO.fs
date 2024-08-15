@@ -72,6 +72,7 @@ module IO =
             | :? Tcp.ConfirmedClosed -> ConfirmedClosed
             | :? Tcp.PeerClosed -> PeerClosed
             | :? Tcp.ErrorClosed -> ErrorClosed
+            | _ -> invalidArg "msg" $"Expected message of type Tcp.ConnectionClosed, was {msg.GetType()}" // Should not happen
             
     /// Helper module with active patterns for UDP-related commands and events.
     module Udp =

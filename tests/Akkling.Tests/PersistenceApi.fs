@@ -38,13 +38,16 @@ let unreliable dropMod target (ctx: Actor<_>) =
 let destination target (ctx: Actor<_>) =
     let rec loop received = actor {
         let! msg = ctx.Receive()
-        match msg with
-        | Action(id,_) when Set.contains id received ->
-            ctx.Sender() <! ActionAck id
-            return! loop received
-        | Action(id,_) -> 
-            target <! msg
-            return! loop (Set.add id received)
+        return!
+            match msg with
+            | Action(id,_) when Set.contains id received ->
+                ctx.Sender() <! ActionAck id
+                loop received
+            | Action(id,_) -> 
+                target <! msg
+                loop (Set.add id received)
+            | ReqAck ->
+                loop received
     }
     loop Set.empty
 
