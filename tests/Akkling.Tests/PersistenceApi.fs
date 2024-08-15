@@ -171,7 +171,7 @@ let ``Effects.andThen should be called after event was persisted`` () =
         expectMsg tck "andThen2" |> ignore
 
 [<Fact>]
-let ``HasDeffered should be true when deferred`` () =
+let ``HasDeferred should be true when deferred`` () =
     testDefault
     <| fun tck ->
         let q = typed tck.TestActor
@@ -185,7 +185,7 @@ let ``HasDeffered should be true when deferred`` () =
 
                         match msg with
                         | "cmd" -> return Defer [ "evt" ]
-                        | "evt" when ctx.HasDeffered() ->
+                        | "evt" when ctx.HasDeferred() ->
                             q <! "deferred"
                             return Ignore
                         | _ -> return Unhandled

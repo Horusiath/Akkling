@@ -55,7 +55,7 @@ type Eventsourced<'Message> =
     /// <summary>
     /// Flag which informs if current actor is actually during execution of deferred handler.
     /// </summary>
-    abstract HasDeffered: unit -> bool
+    abstract HasDeferred: unit -> bool
 
 and [<Interface>] PersistentContext<'Event> =
 
@@ -191,7 +191,7 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
     interface ExtEventsourced<'Message> with
         member _.UntypedContext = context
         member _.HasPersisted() = hasPersisted
-        member _.HasDeffered() = hasDeferred
+        member _.HasDeferred() = hasDeferred
         member _.Receive() = Input
         member _.Self = typed self
 

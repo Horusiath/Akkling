@@ -22,8 +22,8 @@ let (|SnapshotOffer|_|) (msg: obj) : 'Snapshot option =
 let (|Persisted|_|) (context: Eventsourced<'Message>) (msg: 'Message) : 'Message option =
     if context.HasPersisted() then Some msg else None
 
-let (|Deffered|_|) (context: Eventsourced<'Message>) (msg: 'Message) : 'Message option =
-    if context.HasDeffered() then Some msg else None
+let (|Deferred|_|) (context: Eventsourced<'Message>) (msg: 'Message) : 'Message option =
+    if context.HasDeferred() then Some msg else None
 
 let (|PersistentLifecycleEvent|_|) (message: obj) : PersistentLifecycleEvent option =
     match message with
