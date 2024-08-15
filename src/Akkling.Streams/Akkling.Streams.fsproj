@@ -23,6 +23,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Akka.Streams" Version="1.5.27.1" />
-    <PackageReference Update="FSharp.Core" Version="6.0.4" />
+    <PackageReference Update="FSharp.Core" Version="8.0.400" />
   </ItemGroup>
 </Project>
