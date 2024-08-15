@@ -28,46 +28,54 @@ type Cmd =
     | Confirm of int64
 
 type Evt =
-    | MessageSent of string * IActorRef<Delivery> 
+    | MessageSent of string * IActorRef<Delivery>
     | Confirmed of int64
 
-let system = System.create "system" <| Configuration.defaultConfig()
+let system = System.create "system" <| Configuration.defaultConfig ()
 
-let messenger = 
-    spawn system "counter-1" (propsPersist(fun mailbox ->
-        let deliverer = AtLeastOnceDelivery.createDefault mailbox
-        let rec loop () = 
-            actor {
-                let! msg = mailbox.Receive()
-                let effect = deliverer.Receive (upcast mailbox) msg
-                if effect.WasHandled()
-                then return effect
-                else 
-                    match msg with
-                    | SnapshotOffer snap ->
-                        deliverer.DeliverySnapshot <- snap
-                    | :? Cmd as cmd ->
-                        match cmd with
-                        | DeliverOrder(payload, recipient) ->
-                            return Persist(upcast MessageSent(payload, recipient))
-                        | Confirm(deliveryId) ->
-                            return Persist(upcast Confirmed(deliveryId))
-                    | :? Evt as evt ->
-                        match evt with
-                        | MessageSent(payload, recipient) ->
-                            let fac d = { Payload = payload; DeliveryId = d }
-                            return deliverer.Deliver(recipient.Path, fac, mailbox.IsRecovering()) |> ignored
-                        | Confirmed(deliveryId) ->
-                            printfn "Message %d confirmed" deliveryId
-                            return deliverer.Confirm deliveryId |> ignored
-                    | _ -> return Unhandled
-            }
-        loop ())) 
+let messenger =
+    spawn
+        system
+        "counter-1"
+        (propsPersist (fun mailbox ->
+            let deliverer = AtLeastOnceDelivery.createDefault mailbox
+
+            let rec loop () =
+                actor {
+                    let! msg = mailbox.Receive()
+                    let effect = deliverer.Receive (upcast mailbox) msg
+
+                    if effect.WasHandled() then
+                        return effect
+                    else
+                        match msg with
+                        | SnapshotOffer snap -> deliverer.DeliverySnapshot <- snap
+                        | :? Cmd as cmd ->
+                            match cmd with
+                            | DeliverOrder(payload, recipient) ->
+                                return Persist(upcast MessageSent(payload, recipient))
+                            | Confirm(deliveryId) -> return Persist(upcast Confirmed(deliveryId))
+                        | :? Evt as evt ->
+                            match evt with
+                            | MessageSent(payload, recipient) ->
+                                let fac d = { Payload = payload; DeliveryId = d }
+                                return deliverer.Deliver(recipient.Path, fac, mailbox.IsRecovering()) |> ignored
+                            | Confirmed(deliveryId) ->
+                                printfn "Message %d confirmed" deliveryId
+                                return deliverer.Confirm deliveryId |> ignored
+                        | _ -> return Unhandled
+                }
+
+            loop ()))
     |> retype
 
-let echo = spawn system "echo" <| props(actorOf2(fun mailbox msg ->
-    printfn "Received: %s. Confirming" msg.Payload
-    mailbox.Sender() <! Confirm msg.DeliveryId
-    Ignore))
+let echo =
+    spawn system "echo"
+    <| props (
+        actorOf2 (fun mailbox msg ->
+            printfn "Received: %s. Confirming" msg.Payload
+            mailbox.Sender() <! Confirm msg.DeliveryId
+            Ignore)
+    )
 
 messenger <! DeliverOrder("hello world", echo)

@@ -26,13 +26,17 @@ module Source =
 
     /// Creates a source from an stream created by the given function.
     let inline ofStream (streamFn: unit -> Stream) : Source<ByteString, Async<IOResult>> =
-        StreamConverters.FromInputStream(Func<_>(streamFn)).MapMaterializedValue(Func<_,_>(Async.AwaitTask))
+        StreamConverters
+            .FromInputStream(Func<_>(streamFn))
+            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// Creates a source from an stream created by the given function.
     /// Emitted elements are chunk sized ByteString elements,
     /// except the final element, which will be up to chunkSize in size.
     let inline ofStreamChunked (chunkSize: int) (streamFn: unit -> Stream) : Source<ByteString, Async<IOResult>> =
-        StreamConverters.FromInputStream(Func<_>(streamFn), chunkSize).MapMaterializedValue(Func<_,_>(Async.AwaitTask))
+        StreamConverters
+            .FromInputStream(Func<_>(streamFn), chunkSize)
+            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// Creates a source which when materialized will return an stream which it is possible
     /// to write the ByteStrings to the stream this Source is attached to.
@@ -42,45 +46,61 @@ module Source =
     /// Creates a source which when materialized will return an stream which it is possible
     /// to write the ByteStrings to the stream this Source is attached to.
     /// This Source is intended for inter-operation with legacy APIs since it is inherently blocking.
-    let inline asStreamWithTimeout (timeout: TimeSpan) : Source<ByteString, Stream> = StreamConverters.AsOutputStream(Nullable timeout)
+    let inline asStreamWithTimeout (timeout: TimeSpan) : Source<ByteString, Stream> =
+        StreamConverters.AsOutputStream(Nullable timeout)
 
     /// Creates a Source from a Files contents.
     let inline ofFile (filePath: string) : Source<ByteString, Async<IOResult>> =
-        FileIO.FromFile(FileInfo filePath).MapMaterializedValue(Func<_,_>(Async.AwaitTask))
+        FileIO
+            .FromFile(FileInfo filePath)
+            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// Creates a Source from a Files contents.
     /// Emitted elements are chunkSize sized ByteString elements,
     /// except the final element, which will be up to chunkSize in size.
     let inline ofFileChunked (chunkSize: int) (filePath: string) : Source<ByteString, Async<IOResult>> =
-        FileIO.FromFile(FileInfo filePath, chunkSize).MapMaterializedValue(Func<_,_>(Async.AwaitTask))
+        FileIO
+            .FromFile(FileInfo filePath, chunkSize)
+            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// Construct a transformation starting with given publisher. The transformation steps
     /// are executed by a series of processor instances
     /// that mediate the flow of elements downstream and the propagation of
     /// back-pressure upstream.
-    let inline ofPublisher (p: #IPublisher<'t>) : Source<'t, unit> = Source.FromPublisher(p).MapMaterializedValue(Func<NotUsed,unit>(ignore))
+    let inline ofPublisher (p: #IPublisher<'t>) : Source<'t, unit> =
+        Source.FromPublisher(p).MapMaterializedValue(Func<NotUsed, unit>(ignore))
 
     /// Helper to create source from seq.
-    let inline ofSeq (elements: 't seq) : Source<'t, unit> = Source.From(elements).MapMaterializedValue(Func<NotUsed,unit>(ignore))
+    let inline ofSeq (elements: 't seq) : Source<'t, unit> =
+        Source.From(elements).MapMaterializedValue(Func<NotUsed, unit>(ignore))
 
     /// Helper to create source from array.
-    let inline ofArray (elements: 't []) : Source<'t, unit> = Source.From(elements).MapMaterializedValue(Func<NotUsed,unit>(ignore))
+    let inline ofArray (elements: 't[]) : Source<'t, unit> =
+        Source.From(elements).MapMaterializedValue(Func<NotUsed, unit>(ignore))
 
     /// Helper to create source from list.
-    let inline ofList (elements: 't list) : Source<'t, unit> = Source.From(elements).MapMaterializedValue(Func<NotUsed,unit>(ignore))
-    
+    let inline ofList (elements: 't list) : Source<'t, unit> =
+        Source.From(elements).MapMaterializedValue(Func<NotUsed, unit>(ignore))
+
     /// Start a new source attached to an existing `observable`. In case when upstream (an observable)
     /// is producing events in a faster pace, than downstream is able to consume them, a buffering will occur.
     /// It can be configured via `maxCapacity` and `overflowStrategy` parameters.
-    let inline ofObservableBounded (overflowStrategy: OverflowStrategy) (maxCapacity: int) (observable: IObservable<'t>) : Source<'t,unit> =
-        Source.FromObservable(observable, maxCapacity, overflowStrategy).MapMaterializedValue(Func<NotUsed,unit>(ignore))
-        
+    let inline ofObservableBounded
+        (overflowStrategy: OverflowStrategy)
+        (maxCapacity: int)
+        (observable: IObservable<'t>)
+        : Source<'t, unit> =
+        Source
+            .FromObservable(observable, maxCapacity, overflowStrategy)
+            .MapMaterializedValue(Func<NotUsed, unit>(ignore))
+
     /// Create a source with one element.
-    let inline singleton (elem: 't) : Source<'t, unit> = Source.Single(elem).MapMaterializedValue(Func<NotUsed,unit>(ignore))
+    let inline singleton (elem: 't) : Source<'t, unit> =
+        Source.Single(elem).MapMaterializedValue(Func<NotUsed, unit>(ignore))
 
     /// Transforms only the materialized value of the Source.
     let inline mapMaterializedValue (fn: 'mat -> 'mat2) (source: Source<'t, 'mat>) : Source<'t, 'mat2> =
-        source.MapMaterializedValue(Func<_,_>(fn))
+        source.MapMaterializedValue(Func<_, _>(fn))
 
     /// A graph with the shape of a source logically is a source, this method makes
     /// it so also in type.
@@ -91,7 +111,7 @@ module Source =
     /// may happen before or after materializing the flow.
     /// The stream terminates with a failure if the task is completed with a failure.
     let inline ofAsync (a: Async<'t>) : Source<'t, unit> =
-        Source.FromTask(a |> Async.StartAsTask).MapMaterializedValue(Func<_,_>(ignore))
+        Source.FromTask(a |> Async.StartAsTask).MapMaterializedValue(Func<_, _>(ignore))
 
     /// Elements are emitted periodically with the specified interval.
     /// The tick element will be delivered to downstream consumers that has requested any elements.
@@ -103,42 +123,56 @@ module Source =
 
     /// Create a source that will continually emit the given element.
     let inline replicate (elem: 't) : Source<'t, unit> =
-        Source.Repeat(elem).MapMaterializedValue(Func<_,_>(ignore))
+        Source.Repeat(elem).MapMaterializedValue(Func<_, _>(ignore))
 
     /// Create a source that will unfold a value of one type into
     /// a pair of the next state and output elements of type another type
-    let unfold (fn: 's -> struct('s * 'e) option) (state: 's) : Source<'e, unit> =
-        Source.Unfold(state, Func<_,_>(fun x -> 
-            match fn x with
-            | Some tuple -> Akka.Util.Option.Create tuple
-            | None -> Akka.Util.Option<_>.None
-            )).MapMaterializedValue(Func<_,_>(ignore))
+    let unfold (fn: 's -> struct ('s * 'e) option) (state: 's) : Source<'e, unit> =
+        Source
+            .Unfold(
+                state,
+                Func<_, _>(fun x ->
+                    match fn x with
+                    | Some tuple -> Akka.Util.Option.Create tuple
+                    | None -> Akka.Util.Option<_>.None)
+            )
+            .MapMaterializedValue(Func<_, _>(ignore))
 
     /// Same as unfold, but uses an async function to generate the next state-element tuple.
-    let asyncUnfold (fn: 's -> Async<struct('s * 'e) option>) (state: 's) : Source<'e, unit> =
-        Source.UnfoldAsync(state, Func<_, _>(fun x -> 
-            async { 
-                let! r = fn x 
-                match r with
-                | Some tuple -> return Akka.Util.Option.Create tuple
-                | None -> return Akka.Util.Option<_>.None } 
-                |> Async.StartAsTask<_>)).MapMaterializedValue(Func<_,_>(ignore))
+    let asyncUnfold (fn: 's -> Async<struct ('s * 'e) option>) (state: 's) : Source<'e, unit> =
+        Source
+            .UnfoldAsync(
+                state,
+                Func<_, _>(fun x ->
+                    async {
+                        let! r = fn x
+
+                        match r with
+                        | Some tuple -> return Akka.Util.Option.Create tuple
+                        | None -> return Akka.Util.Option<_>.None
+                    }
+                    |> Async.StartAsTask<_>)
+            )
+            .MapMaterializedValue(Func<_, _>(ignore))
 
     /// Simpler unfold, for infinite sequences.
-    let inline infiniteUnfold (fn: 's -> struct('s * 'e)) (state: 's) : Source<'e, unit> =
-        Source.UnfoldInfinite(state, Func<_,_>(fn)).MapMaterializedValue(Func<_,_>(ignore))
+    let inline infiniteUnfold (fn: 's -> struct ('s * 'e)) (state: 's) : Source<'e, unit> =
+        Source
+            .UnfoldInfinite(state, Func<_, _>(fn))
+            .MapMaterializedValue(Func<_, _>(ignore))
 
     /// A source with no elements, i.e. an empty stream that is completed immediately for every connected sink.
     let inline empty<'t> : Source<'t, unit> =
-        Source.Empty<'t>().MapMaterializedValue(Func<_,_>(ignore))
+        Source.Empty<'t>().MapMaterializedValue(Func<_, _>(ignore))
 
     /// Create a source which materializes a completion result which controls what element
     /// will be emitted by the Source.
-    let inline option<'t> : Source<'t, System.Threading.Tasks.TaskCompletionSource<'t>> = Source.Maybe<'t>()
+    let inline option<'t> : Source<'t, System.Threading.Tasks.TaskCompletionSource<'t>> =
+        Source.Maybe<'t>()
 
     /// Create a source that immediately ends the stream with the error to every connected sink.
     let inline raise (error: exn) : Source<'t, unit> =
-        Source.Failed(error).MapMaterializedValue(Func<_,_>(ignore))
+        Source.Failed(error).MapMaterializedValue(Func<_, _>(ignore))
 
     /// Creates a source that is materialized as a subscriber
     let inline subscriber<'t> : Source<'t, ISubscriber<'t>> = Source.AsSubscriber<'t>()
@@ -147,13 +181,13 @@ module Source =
     /// created according to the passed in props. Actor created by the props must
     /// be ActorPublisher<'t>.
     let inline ofProps (props: Props<'t>) : Source<'t, IActorRef<'t>> =
-        Source.ActorPublisher(props.ToProps()).MapMaterializedValue(Func<_,_>(typed))
+        Source.ActorPublisher(props.ToProps()).MapMaterializedValue(Func<_, _>(typed))
 
     /// Creates a source that is materialized as an actor ref
     /// Messages sent to this actor will be emitted to the stream if there is demand from downstream,
     /// otherwise they will be buffered until request for demand is received.
-    let inline actorRef (overflowStrategy: OverflowStrategy) (count: int) : Source<'t, IActorRef<'t>>  =
-        Source.ActorRef(count, overflowStrategy).MapMaterializedValue(Func<_,_>(typed))
+    let inline actorRef (overflowStrategy: OverflowStrategy) (count: int) : Source<'t, IActorRef<'t>> =
+        Source.ActorRef(count, overflowStrategy).MapMaterializedValue(Func<_, _>(typed))
 
     /// Creates a source that is materialized as an source queue.
     /// You can push elements to the queue and they will be emitted to the stream if there is demand from downstream,
@@ -170,13 +204,21 @@ module Source =
     /// RecoverWith allows to switch to alternative Source on flow failure. It will stay in effect after
     /// a failure has been recovered so that each time there is a failure it is fed into the <paramref name="partialFunc"/> and a new
     /// Source may be materialized.
-    let inline recoverWithRetries (attempts: int) (fn: exn -> #IGraph<SourceShape<'out>, 'mat>) (source) : Source<'out, 'mat> =
-        SourceOperations.RecoverWithRetries(source, Func<exn, Akka.Streams.IGraph<SourceShape<_>, _>>(fun ex -> upcast fn ex), attempts)
-    
+    let inline recoverWithRetries
+        (attempts: int)
+        (fn: exn -> #IGraph<SourceShape<'out>, 'mat>)
+        (source)
+        : Source<'out, 'mat> =
+        SourceOperations.RecoverWithRetries(
+            source,
+            Func<exn, Akka.Streams.IGraph<SourceShape<_>, _>>(fun ex -> upcast fn ex),
+            attempts
+        )
+
     /// While similar to recover, this stage can be used to transform an error signal to a different one without logging
     /// it as an error in the process. So in that sense it is NOT exactly equivalent to Recover(e => throw e2) since Recover
-    /// would log the e2 error. 
-    let inline mapError (fn: exn -> #exn) (source) : Source<'out,'mat> =
+    /// would log the e2 error.
+    let inline mapError (fn: exn -> #exn) (source) : Source<'out, 'mat> =
         SourceOperations.SelectError(source, Func<exn, exn>(fun e -> upcast fn e))
 
     /// Transform this stream by applying the given function to each of the elements
@@ -199,15 +241,15 @@ module Source =
     /// These tasks may complete in any order, but the elements that
     /// are emitted downstream are in the same order as received from upstream.
     let inline asyncMap (parallelism: int) (fn: 't -> Async<'u>) (source) : Source<'u, 'mat> =
-        SourceOperations.SelectAsync(source, parallelism, Func<_, _>(fun x -> fn(x) |> Async.StartAsTask))
-        
+        SourceOperations.SelectAsync(source, parallelism, Func<_, _>(fun x -> fn (x) |> Async.StartAsTask))
+
     /// Transform this stream by applying the given function to each of the elements
     /// as they pass through this processing step. The function returns a Task and the
     /// value of that computation will be emitted downstream. The number of tasks
     /// that shall run in parallel is given as the first argument.
     /// These tasks may complete in any order, but the elements that
     /// are emitted downstream are in the same order as received from upstream.
-    let inline taskMap (parallelism: int) (fn: 't -> Task<'u>) source : Source<'u,'mat> =
+    let inline taskMap (parallelism: int) (fn: 't -> Task<'u>) source : Source<'u, 'mat> =
         SourceOperations.SelectAsync(source, parallelism, Func<_, _>(fn))
 
     /// Transform this stream by applying the given function to each of the elements
@@ -217,7 +259,7 @@ module Source =
     /// as soon as it is ready, i.e. it is possible that the elements are not emitted downstream
     /// in the same order as received from upstream.
     let inline asyncMapUnordered (parallelism: int) (fn: 't -> Async<'u>) (source) : Source<'u, 'mat> =
-        SourceOperations.SelectAsyncUnordered(source, parallelism, Func<_, _>(fun x -> fn(x) |> Async.StartAsTask))
+        SourceOperations.SelectAsyncUnordered(source, parallelism, Func<_, _>(fun x -> fn (x) |> Async.StartAsTask))
 
     /// Only pass on those elements that satisfy the given predicate function.
     let inline filter (pred: 't -> bool) (source) : Source<'t, 'mat> =
@@ -239,13 +281,15 @@ module Source =
     /// on which the function is defined (read: returns Some) as they pass through this processing step.
     /// Non-matching elements are filtered out.
     let inline choose (fn: 't -> 'u option) (source) : Source<'u, 'mat> =
-        SourceOperations.Collect(source, Func<_, _>(fn)).Where(Predicate<_>(Option.isSome)).Select(Func<_,_>(Option.get))
+        SourceOperations
+            .Collect(source, Func<_, _>(fn))
+            .Where(Predicate<_>(Option.isSome))
+            .Select(Func<_, _>(Option.get))
 
     /// Chunk up this stream into groups of the given size, with the last group
     /// possibly smaller than requested due to end-of-stream.
     /// N must be positive, otherwise ArgumentException is thrown.
-    let inline windowed (n: int) (source) : Source<'t seq, 'mat> =
-        SourceOperations.Grouped(source, n)
+    let inline windowed (n: int) (source) : Source<'t seq, 'mat> = SourceOperations.Grouped(source, n)
 
     /// Ensure stream boundedness by limiting the number of elements from upstream.
     /// If the number of incoming elements exceeds max parameter, it will signal
@@ -257,8 +301,7 @@ module Source =
     ///
     /// The stream will be completed without producing any elements if max parameter
     /// is zero or negative.
-    let inline limit (max: int64) (source) : Source<'t, 'mat> =
-        SourceOperations.Limit(source, max)
+    let inline limit (max: int64) (source) : Source<'t, 'mat> = SourceOperations.Limit(source, max)
 
     /// Ensure stream boundedness by evaluating the cost of incoming elements
     /// using a cost function. Exactly how many elements will be allowed to travel downstream depends on the
@@ -276,12 +319,11 @@ module Source =
 
     /// Apply a sliding window over the stream and return the windows as groups of elements, with the last group
     /// possibly smaller than requested due to end-of-stream.
-    let inline sliding (n: int) (source) : Source<'t seq, 'mat> =
-        SourceOperations.Sliding(source, n)
+    let inline sliding (n: int) (source) : Source<'t seq, 'mat> = SourceOperations.Sliding(source, n)
 
     /// Apply a sliding window over the stream and return the windows as groups of elements, with the last group
     /// possibly smaller than requested due to end-of-stream.
-    let inline slidingBy (n: int) (step: int) (source) : Source<'t seq , 'mat> =
+    let inline slidingBy (n: int) (step: int) (source) : Source<'t seq, 'mat> =
         SourceOperations.Sliding(source, n, step)
 
     /// Similar to fold but is not a terminal operation,
@@ -292,13 +334,13 @@ module Source =
     /// If the function throws an exception and the supervision decision is
     /// restart current value starts at zero again the stream will continue.
     let inline scan (folder: 'state -> 't -> 'state) (zero: 'state) (source) : Source<'state, 'mat> =
-        SourceOperations.Scan(source, zero, Func<_,_,_>(folder))
+        SourceOperations.Scan(source, zero, Func<_, _, _>(folder))
 
-    /// Similar to scan but with a asynchronous function, emits its current value which 
+    /// Similar to scan but with a asynchronous function, emits its current value which
     /// starts at zero and then applies the current and next value to the given function
     /// emitting an Async that resolves to the next current value.
-    let inline asyncScan (folder: 'state -> 't -> Async<'state>) (zero: 'state) (source) : Source<'state,'mat> =
-        SourceOperations.ScanAsync(source, zero, Func<_,_,_>(fun s e -> folder s e |> Async.StartAsTask))
+    let inline asyncScan (folder: 'state -> 't -> Async<'state>) (zero: 'state) (source) : Source<'state, 'mat> =
+        SourceOperations.ScanAsync(source, zero, Func<_, _, _>(fun s e -> folder s e |> Async.StartAsTask))
 
     /// Similar to scan but only emits its result when the upstream completes,
     /// after which it also completes. Applies the given function towards its current and next value,
@@ -307,23 +349,23 @@ module Source =
     /// If the function throws an exception and the supervision decision is
     /// restart current value starts at state again the stream will continue.
     let inline fold (folder: 'state -> 't -> 'state) (zero: 'state) (source) : Source<'state, 'mat> =
-        SourceOperations.Aggregate(source, zero, Func<_,_,_>(folder))
-    
+        SourceOperations.Aggregate(source, zero, Func<_, _, _>(folder))
+
     /// Similar to fold but with an asynchronous function.
     /// Applies the given function towards its current and next value,
     /// yielding the next current value.
-    /// 
+    ///
     /// If the function 'folder' returns a failure and the supervision decision is
     /// Directive.Restart current value starts at 'state' again
-    /// the stream will continue. 
+    /// the stream will continue.
     let inline asyncFold (folder: 'state -> 't -> Async<'state>) (zero: 'state) (source) : Source<'state, 'mat> =
-        SourceOperations.AggregateAsync(source, zero, Func<_,_,_>(fun acc x -> folder acc x |> Async.StartAsTask))
+        SourceOperations.AggregateAsync(source, zero, Func<_, _, _>(fun acc x -> folder acc x |> Async.StartAsTask))
 
     /// Similar to fold but uses first element as zero element.
     /// Applies the given function towards its current and next value,
     /// yielding the next current value.
     let inline reduce (acc: 't -> 't -> 't) (source) : Source<'t, 'mat> =
-        SourceOperations.Sum(source, Func<_,_,_>(acc))
+        SourceOperations.Sum(source, Func<_, _, _>(acc))
 
     /// Intersperses stream with provided element, similar to how string.Join
     /// injects a separator between a collection's elements.
@@ -349,8 +391,7 @@ module Source =
     /// in internal buffer while waiting for next element to be emitted.
     ///
     /// Delay precision is 10ms to avoid unnecessary timer scheduling cycles
-    let inline delay (by: TimeSpan) (source) : Source<'t, 'mat>=
-        SourceOperations.Delay(source, by)
+    let inline delay (by: TimeSpan) (source) : Source<'t, 'mat> = SourceOperations.Delay(source, by)
 
     /// Shifts elements emission in time by a specified amount. It allows to store elements
     /// in internal buffer while waiting for next element to be emitted.Depending on the defined
@@ -363,8 +404,7 @@ module Source =
 
     /// Discard the given number of elements at the beginning of the stream.
     /// No elements will be dropped if parameter is zero or negative.
-    let inline skip (n: int64) (source) : Source<'t, 'mat> =
-        SourceOperations.Skip(source, n)
+    let inline skip (n: int64) (source) : Source<'t, 'mat> = SourceOperations.Skip(source, n)
 
     /// Discard the elements received within the given duration at beginning of the stream.
     let inline skipWithin (timeout: TimeSpan) (source) : Source<'t, 'mat> =
@@ -377,8 +417,7 @@ module Source =
     ///
     /// The stream will be completed without producing any elements if parameter is zero
     /// or negative.
-    let inline take (n: int64) (source) : Source<'t, 'mat> =
-        SourceOperations.Take(source, n)
+    let inline take (n: int64) (source) : Source<'t, 'mat> = SourceOperations.Take(source, n)
 
     /// Terminate processing (and cancel the upstream publisher) after the given
     /// duration. Due to input buffering some elements may have been
@@ -397,7 +436,7 @@ module Source =
     /// This element only rolls up elements if the upstream is faster, but if the downstream is faster it will not
     /// duplicate elements.
     let inline conflateSeeded (folder: 't -> 'u -> 't) (seed: 'u -> 't) (source) : Source<'t, 'mat> =
-        SourceOperations.ConflateWithSeed(source, Func<_,_>(seed), Func<_,_,_>(folder))
+        SourceOperations.ConflateWithSeed(source, Func<_, _>(seed), Func<_, _, _>(folder))
 
     /// Allows a faster upstream to progress independently of a slower subscriber by conflating elements into a summary
     /// until the subscriber is ready to accept them. For example a conflate step might average incoming numbers if the
@@ -409,18 +448,24 @@ module Source =
     /// This element only rolls up elements if the upstream is faster, but if the downstream is faster it will not
     /// duplicate elements.
     let inline conflate (folder: 't -> 't -> 't) (source) : Source<'t, 'mat> =
-        SourceOperations.Conflate(source, Func<_,_,_>(folder))
+        SourceOperations.Conflate(source, Func<_, _, _>(folder))
 
     /// Allows a faster upstream to progress independently of a slower subscriber by aggregating elements into batches
     /// until the subscriber is ready to accept them.For example a batch step might store received elements in
     /// an array up to the allowed max limit if the upstream publisher is faster.
     let inline batch (max: int64) (seed: 'u -> 't) (folder: 't -> 'u -> 't) (source) : Source<'t, 'mat> =
-        SourceOperations.Batch(source, max, Func<_,_>(seed), Func<_,_,_>(folder))
+        SourceOperations.Batch(source, max, Func<_, _>(seed), Func<_, _, _>(folder))
 
     /// Allows a faster upstream to progress independently of a slower subscriber by aggregating elements into batches
     /// until the subscriber is ready to accept them.
-    let inline batchWeighted (max: int64) (costFn: 'u -> int64) (seed: 'u -> 't) (folder: 't -> 'u -> 't) (source) : Source<'t, 'mat> =
-        SourceOperations.BatchWeighted(source, max, Func<_,_>(costFn), Func<_,_>(seed), Func<_,_,_>(folder))
+    let inline batchWeighted
+        (max: int64)
+        (costFn: 'u -> int64)
+        (seed: 'u -> 't)
+        (folder: 't -> 'u -> 't)
+        (source)
+        : Source<'t, 'mat> =
+        SourceOperations.BatchWeighted(source, max, Func<_, _>(costFn), Func<_, _>(seed), Func<_, _, _>(folder))
 
     /// Allows a faster downstream to progress independently of a slower publisher by extrapolating elements from an older
     /// element until new element comes from the upstream. For example an expand step might repeat the last element for
@@ -431,8 +476,8 @@ module Source =
     /// subscriber.
     ///
     /// Expand does not support restart and resume directives. Exceptions from the extrapolate function will complete the stream with failure.
-    let inline expand (extrapolate: 'u -> #seq<'t>) (source) : Source<'t, 'mat>  =
-        SourceOperations.Expand(source, Func<_,_>(fun x -> (extrapolate x).GetEnumerator()))
+    let inline expand (extrapolate: 'u -> #seq<'t>) (source) : Source<'t, 'mat> =
+        SourceOperations.Expand(source, Func<_, _>(fun x -> (extrapolate x).GetEnumerator()))
 
     /// Adds a fixed size buffer in the flow that allows to store elements from a faster upstream until it becomes full.
     /// Depending on the defined strategy it might drop elements or backpressure the upstream if
@@ -443,10 +488,14 @@ module Source =
     /// Takes up to n elements from the stream and returns a pair containing a strict sequence of the taken element
     /// and a stream representing the remaining elements. If `n` is zero or negative, then this will return a pair
     /// of an empty collection and a stream containing the whole upstream unchanged.
-    let inline prefixAndTail (n: int) (source) : Source<'out list * Source<'out, unit>, 'mat> = 
-        SourceOperations.PrefixAndTail(source, n).Select(Func<_,_>(fun (struct(imm, source)) -> 
-            let s = source.MapMaterializedValue(Func<_,_>(ignore))
-            (List.ofSeq imm), s))
+    let inline prefixAndTail (n: int) (source) : Source<'out list * Source<'out, unit>, 'mat> =
+        SourceOperations
+            .PrefixAndTail(source, n)
+            .Select(
+                Func<_, _>(fun (struct (imm, source)) ->
+                    let s = source.MapMaterializedValue(Func<_, _>(ignore))
+                    (List.ofSeq imm), s)
+            )
 
     /// This operation demultiplexes the incoming stream into separate output
     /// streams, one for each element key. The key is computed for each element
@@ -458,7 +507,7 @@ module Source =
     /// care to unblock (or cancel) all of the produced streams even if you want
     /// to consume only one of them.
     let inline groupBy (max: int) (groupFn: 'u -> 't) (source) : SubFlow<'u, 'mat, IRunnableGraph<'mat>> =
-        SourceOperations.GroupBy(source, max, Func<_,_>(groupFn))
+        SourceOperations.GroupBy(source, max, Func<_, _>(groupFn))
 
     /// This operation applies the given predicate to all incoming elements and
     /// emits them to a stream of output streams, always beginning a new one with
@@ -469,37 +518,44 @@ module Source =
     /// This operation applies the given predicate to all incoming elements and
     /// emits them to a stream of output streams, always beginning a new one with
     /// the current element if the given predicate returns true for it.
-    let inline splitWhenCancellable (cancelStrategy: SubstreamCancelStrategy) (pred: 't -> bool) (source) : SubFlow<'t, 'mat, IRunnableGraph<'mat>> =
-        SourceOperations.SplitWhen(source, cancelStrategy, Func<_,_>(pred))
+    let inline splitWhenCancellable
+        (cancelStrategy: SubstreamCancelStrategy)
+        (pred: 't -> bool)
+        (source)
+        : SubFlow<'t, 'mat, IRunnableGraph<'mat>> =
+        SourceOperations.SplitWhen(source, cancelStrategy, Func<_, _>(pred))
 
     /// This operation applies the given predicate to all incoming elements and
     /// emits them to a stream of output streams. It *ends* the current substream when the
     /// predicate is true.
     let inline splitAfter (pred: 't -> bool) (source) : SubFlow<'t, 'mat, IRunnableGraph<'mat>> =
-        SourceOperations.SplitAfter(source, Func<_,_>(pred))
+        SourceOperations.SplitAfter(source, Func<_, _>(pred))
 
     /// This operation applies the given predicate to all incoming elements and
     /// emits them to a stream of output streams. It *ends* the current substream when the
     /// predicate is true.
-    let inline splitAfterCancellable (strategy: SubstreamCancelStrategy) (pred: 't -> bool) (source) : SubFlow<'t, 'mat, IRunnableGraph<'mat>> =
-        SourceOperations.SplitAfter(source, strategy, Func<_,_>(pred))
+    let inline splitAfterCancellable
+        (strategy: SubstreamCancelStrategy)
+        (pred: 't -> bool)
+        (source)
+        : SubFlow<'t, 'mat, IRunnableGraph<'mat>> =
+        SourceOperations.SplitAfter(source, strategy, Func<_, _>(pred))
 
     /// Transform each input element into a source of output elements that is
     /// then flattened into the output stream by concatenation,
     /// fully consuming one Source after the other.
     let inline collectMap (flatten: 'u -> #IGraph<SourceShape<'t>, 'mat>) (source) : Source<'t, 'mat> =
-        SourceOperations.ConcatMany(source, Func<_,_>(fun x -> upcast flatten x))
+        SourceOperations.ConcatMany(source, Func<_, _>(fun x -> upcast flatten x))
 
     /// Transform each input element into a source of output elements that is
     /// then flattened into the output stream by merging, where at most breadth
     /// substreams are being consumed at any given time.
     let inline collectMerge (breadth: int) (flatten: 'u -> #IGraph<SourceShape<'t>, 'mat>) (source) : Source<'t, 'mat> =
-        SourceOperations.MergeMany(source, breadth, Func<_,_>(fun x -> upcast flatten x))
+        SourceOperations.MergeMany(source, breadth, Func<_, _>(fun x -> upcast flatten x))
 
     /// Combine the elements of current flow into a stream of tuples consisting
     /// of all elements paired with their index. Indices start at 0.
-    let inline zipi (source) : Source<struct('out * int64), 'mat> =
-        SourceOperations.ZipWithIndex(source)
+    let inline zipi (source) : Source<struct ('out * int64), 'mat> = SourceOperations.ZipWithIndex(source)
 
     /// If the first element has not passed through this stage before the provided timeout, the stream is failed
     /// with a TimeoutException
@@ -546,13 +602,24 @@ module Source =
     /// to allow some burstyness. Whenever stream wants to send an element, it takes as many
     /// tokens from the bucket as number of elements. If there isn't any, throttle waits until the
     /// bucket accumulates enough tokens.
-    let inline throttleWeighted (mode: ThrottleMode) (maxBurst: int) (n: int) (per: TimeSpan) (costFn: 't -> int) (source) : Source<'t, 'mat> =
-        SourceOperations.Throttle(source, n, per, maxBurst, Func<_,_>(costFn), mode)
+    let inline throttleWeighted
+        (mode: ThrottleMode)
+        (maxBurst: int)
+        (n: int)
+        (per: TimeSpan)
+        (costFn: 't -> int)
+        (source)
+        : Source<'t, 'mat> =
+        SourceOperations.Throttle(source, n, per, maxBurst, Func<_, _>(costFn), mode)
 
     /// Attaches the given sink graph to this flow, meaning that elements that passes
     /// through will also be sent to the sink.
-    let inline alsoToMat (sink: #IGraph<SinkShape<'t>, 'mat2>) (matFn: 'mat -> 'mat2 -> 'mat3) (source) : Source<'t, 'mat3> =
-        SourceOperations.AlsoToMaterialized(source, sink, Func<_,_,_>(matFn))
+    let inline alsoToMat
+        (sink: #IGraph<SinkShape<'t>, 'mat2>)
+        (matFn: 'mat -> 'mat2 -> 'mat3)
+        (source)
+        : Source<'t, 'mat3> =
+        SourceOperations.AlsoToMaterialized(source, sink, Func<_, _, _>(matFn))
 
     /// Attaches the given sink to this flow, meaning that elements that passes
     /// through will also be sent to the sink.
@@ -564,30 +631,28 @@ module Source =
     /// from downstream. It fails with the same error when received error message from
     /// downstream.
     let inline watchTermination (matFn: 'mat -> Async<Done> -> 'mat2) (source) : Source<'t, 'mat2> =
-        SourceOperations.WatchTermination(source, Func<_,_,_>(fun m t -> matFn m (t |> Async.AwaitTask)))
-      
+        SourceOperations.WatchTermination(source, Func<_, _, _>(fun m t -> matFn m (t |> Async.AwaitTask)))
+
     /// Materializes to IFlowMonitor that allows monitoring of the the current flow. All events are propagated
     /// by the monitor unchanged. Note that the monitor inserts a memory barrier every time it processes an
-    /// event, and may therefor affect performance.  
+    /// event, and may therefor affect performance.
     let inline monitor (combine: 'mat -> IFlowMonitor -> 'mat2) (source) : Source<'t, 'mat2> =
-        SourceOperations.Monitor(source, Func<_,_,_>(combine))
+        SourceOperations.Monitor(source, Func<_, _, _>(combine))
 
     /// Detaches upstream demand from downstream demand without detaching the
     /// stream rates; in other words acts like a buffer of size 1.
-    let inline detach (source) : Source<'t, 'mat> =
-        SourceOperations.Detach(source)
+    let inline detach (source) : Source<'t, 'mat> = SourceOperations.Detach(source)
 
     /// Delays the initial element by the specified duration.
     let inline initDelay (delay: TimeSpan) (source) : Source<'t, 'mat> =
         SourceOperations.InitialDelay(source, delay)
 
     /// Logs elements flowing through the stream as well as completion and erroring.
-    let inline log (stageName: string) (source) : Source<'t, 'mat> =
-        SourceOperations.Log(source, stageName)
+    let inline log (stageName: string) (source) : Source<'t, 'mat> = SourceOperations.Log(source, stageName)
 
     /// Logs elements flowing through the stream as well as completion and erroring.
     let inline logf (stageName: string) format (source) : Source<'t, 'mat> =
-        SourceOperations.Log(source, stageName, Func<_,_>(format >> box))
+        SourceOperations.Log(source, stageName, Func<_, _>(format >> box))
 
     /// Logs elements flowing through the stream as well as completion and erroring.
     let inline logWith (stageName: string) (logger: Akka.Event.ILoggingAdapter) (source) : Source<'t, 'mat> =
@@ -595,16 +660,16 @@ module Source =
 
     /// Logs elements flowing through the stream as well as completion and erroring.
     let inline logWithf (stageName: string) format (logger: Akka.Event.ILoggingAdapter) (source) : Source<'t, 'mat> =
-        SourceOperations.Log(source, stageName, Func<_,_>(format >> box), logger)
+        SourceOperations.Log(source, stageName, Func<_, _>(format >> box), logger)
 
     /// Combine the elements of current flow and the given source into a stream of tuples.
     let inline zip (other: #IGraph<SourceShape<'u>, 'mat>) (source) : Source<'t * 'u, 'mat> =
-        SourceOperations.ZipWith(source, other, Func<_,_,_>(fun x y -> (x,y)))
+        SourceOperations.ZipWith(source, other, Func<_, _, _>(fun x y -> (x, y)))
 
     /// Put together the elements of current flow and the given source
     /// into a stream of combined elements using a combiner function.
     let inline zipWith (other: #IGraph<SourceShape<'u>, 'mat>) (combineFn: 't -> 'u -> 'x) (source) : Source<'x, 'mat> =
-        SourceOperations.ZipWith(source, other, Func<_,_,_>(combineFn))
+        SourceOperations.ZipWith(source, other, Func<_, _, _>(combineFn))
 
     /// Interleave is a deterministic merge of the given source with elements of this flow.
     /// It first emits number of elements from this flow to downstream, then - same amount for other
@@ -615,8 +680,13 @@ module Source =
     /// Interleave is a deterministic merge of the given source with elements of this flow.
     /// It first emits count number of elements from this flow to downstream, then - same amount for source,
     /// then repeat process.
-    let inline interleaveMat (count: int) (other: #IGraph<SourceShape<_>, 'mat2>) (combineFn: 'mat -> 'mat2 -> 'mat3) (source) : Source<_, 'mat3> =
-        SourceOperations.InterleaveMaterialized(source, other, count, Func<_,_,_>(combineFn))
+    let inline interleaveMat
+        (count: int)
+        (other: #IGraph<SourceShape<_>, 'mat2>)
+        (combineFn: 'mat -> 'mat2 -> 'mat3)
+        (source)
+        : Source<_, 'mat3> =
+        SourceOperations.InterleaveMaterialized(source, other, count, Func<_, _, _>(combineFn))
 
     /// Merge the given source to this flow, taking elements as they arrive from input streams,
     /// picking randomly when several elements ready.
@@ -625,8 +695,12 @@ module Source =
 
     /// Merge the given source to this flow, taking elements as they arrive from input streams,
     /// picking randomly when several elements ready.
-    let inline mergeMat (other: #IGraph<SourceShape<_>, 'mat2>) (combineFn: 'mat -> 'mat2 -> 'mat3) (source) : Source<_, 'mat3> =
-        SourceOperations.MergeMaterialized(source, other, Func<_,_,_>(combineFn))
+    let inline mergeMat
+        (other: #IGraph<SourceShape<_>, 'mat2>)
+        (combineFn: 'mat -> 'mat2 -> 'mat3)
+        (source)
+        : Source<_, 'mat3> =
+        SourceOperations.MergeMaterialized(source, other, Func<_, _, _>(combineFn))
 
     /// Merge the given source to this flow, taking elements as they arrive from input streams,
     /// picking always the smallest of the available elements(waiting for one element from each side
@@ -634,7 +708,7 @@ module Source =
     /// waiting for elements, this merge will block when one of the inputs does not have more elements(and
     /// does not complete).
     let inline mergeSort (other: #IGraph<SourceShape<'t>, 'mat>) (sortFn: 't -> 't -> int) (source) : Source<'t, 'mat> =
-        SourceOperations.MergeSorted(source, other, Func<_,_,_>(sortFn))
+        SourceOperations.MergeSorted(source, other, Func<_, _, _>(sortFn))
 
     /// Concatenate the given source to this flow, meaning that once this
     /// Flow’s input is exhausted and all result elements have been generated,
@@ -651,14 +725,18 @@ module Source =
     /// Provides a secondary source that will be consumed if this stream completes without any
     /// elements passing by. As soon as the first element comes through this stream, the alternative
     /// will be cancelled.
-    let inline orElse (other: #IGraph<SourceShape<'t>, 'mat>) (source): Source<'t, 'mat> =
+    let inline orElse (other: #IGraph<SourceShape<'t>, 'mat>) (source) : Source<'t, 'mat> =
         SourceOperations.OrElse(source, other)
-        
+
     /// Provides a secondary source that will be consumed if this source completes without any
     /// elements passing by. As soon as the first element comes through this stream, the alternative
     /// will be cancelled.
-    let inline orElseMat (combine: 'mat -> 'mat2 -> 'mat3) (other: #IGraph<SourceShape<'t>, 'mat2>) (source): Source<'t, 'mat3> =
-        SourceOperations.OrElseMaterialized(source, other, Func<_,_,_>(combine))
+    let inline orElseMat
+        (combine: 'mat -> 'mat2 -> 'mat3)
+        (other: #IGraph<SourceShape<'t>, 'mat2>)
+        (source)
+        : Source<'t, 'mat3> =
+        SourceOperations.OrElseMaterialized(source, other, Func<_, _, _>(combine))
 
     /// Put an asynchronous boundary around this Source.
     let inline async (source: Source<'t, 'mat>) : Source<'t, 'mat> = source.Async()
@@ -670,24 +748,32 @@ module Source =
     let inline attrs (a: Attributes) (source: Source<'t, 'mat>) : Source<'t, 'mat> = source.WithAttributes(a)
 
     /// Transform the materialized value of this Source, leaving all other properties as they were.
-    let inline mapMatValue (fn: 'mat -> 'mat2) (source: Source<'t,'mat>) : Source<'t,'mat2> = 
-        source.MapMaterializedValue(Func<_,_> fn)
+    let inline mapMatValue (fn: 'mat -> 'mat2) (source: Source<'t, 'mat>) : Source<'t, 'mat2> =
+        source.MapMaterializedValue(Func<_, _> fn)
 
     /// Transform this source by appending the given processing steps.
     /// The materialized value of the combined source will be the materialized
     /// value of the current flow (ignoring the other flow’s value).
-    let inline via (flow: #IGraph<FlowShape<'t,'u>, 'mat2>) (source: Source<'t, 'mat>) : Source<'u, 'mat> =
+    let inline via (flow: #IGraph<FlowShape<'t, 'u>, 'mat2>) (source: Source<'t, 'mat>) : Source<'u, 'mat> =
         source.Via(flow)
 
     /// Transform this source by appending the given processing steps.
     /// The combine function is used to compose the materialized values of this flow and that
     /// flow into the materialized value of the resulting Flow.
-    let inline viaMat (flow: #IGraph<FlowShape<'t,'u>, 'mat2>) (combineFn: 'mat -> 'mat2 -> 'mat3) (source: Source<'t, 'mat>) : Source<'u, 'mat3> =
-        source.ViaMaterialized(flow, Func<_,_,_>(combineFn))
+    let inline viaMat
+        (flow: #IGraph<FlowShape<'t, 'u>, 'mat2>)
+        (combineFn: 'mat -> 'mat2 -> 'mat3)
+        (source: Source<'t, 'mat>)
+        : Source<'u, 'mat3> =
+        source.ViaMaterialized(flow, Func<_, _, _>(combineFn))
 
     /// Connect this source to a sink concatenating the processing steps of both.
-    let inline toMat (sink: #IGraph<SinkShape<'t>, 'mat2>) (combineFn: 'mat -> 'mat2 -> 'mat3) (source: Source<'t, 'mat>) : IRunnableGraph<'mat3> =
-        source.ToMaterialized(sink, Func<_,_,_>(combineFn))
+    let inline toMat
+        (sink: #IGraph<SinkShape<'t>, 'mat2>)
+        (combineFn: 'mat -> 'mat2 -> 'mat3)
+        (source: Source<'t, 'mat>)
+        : IRunnableGraph<'mat3> =
+        source.ToMaterialized(sink, Func<_, _, _>(combineFn))
 
     /// Connect this source to a sink and run it. The returned value is the materialized value of the sink
     let inline runWith (mat: #IMaterializer) (sink: #IGraph<SinkShape<'t>, 'mat2>) (source: Source<'t, 'mat>) : 'mat2 =
@@ -699,8 +785,14 @@ module Source =
     /// The returned Async computation will be completed with value of the final
     /// function evaluation when the input stream ends, or completed with Failure
     /// if there is a failure signaled in the stream.
-    let inline runFold (mat: #IMaterializer) (folder: 'state -> 't -> 'state) (zero: 'state) (source: Source<'t, 'mat>) : Async<'state> =
-        source.RunAggregate(zero, Func<_,_,_>(folder), mat :> IMaterializer) |> Async.AwaitTask
+    let inline runFold
+        (mat: #IMaterializer)
+        (folder: 'state -> 't -> 'state)
+        (zero: 'state)
+        (source: Source<'t, 'mat>)
+        : Async<'state> =
+        source.RunAggregate(zero, Func<_, _, _>(folder), mat :> IMaterializer)
+        |> Async.AwaitTask
 
     /// Shortcut for running this surce with a reduce function.
     /// The given function is invoked for every received element, giving it its previous
@@ -709,7 +801,7 @@ module Source =
     /// function evaluation when the input stream ends, or completed with Failure
     /// if there is a failure signaled in the stream.
     let inline runReduce (mat: #IMaterializer) (folder: 't -> 't -> 't) (source: Source<'t, 'mat>) : Async<'t> =
-        source.RunSum(Func<_,_,_>(folder), mat :> IMaterializer) |> Async.AwaitTask
+        source.RunSum(Func<_, _, _>(folder), mat :> IMaterializer) |> Async.AwaitTask
 
     /// Shortcut for running this source with a foreach procedure. The given procedure is invoked
     /// for each received element.
@@ -719,24 +811,23 @@ module Source =
     let inline runForEach (mat: #IMaterializer) (fn: 't -> unit) (source: Source<'t, 'mat>) : Async<unit> =
         source.RunForeach(Action<_>(fn), mat :> IMaterializer) |> Async.AwaitTask
 
-    /// A MergeHub is a special streaming hub that is able to collect streamed elements from a 
+    /// A MergeHub is a special streaming hub that is able to collect streamed elements from a
     /// dynamic set of producers
-    let inline mergeHub (perProducerBufferSize: int) : Source<'t, Sink<'t, unit>> = 
-        MergeHub.Source(perProducerBufferSize) 
-        |> mapMatValue (Sink.mapMatValue ignore)
-            
+    let inline mergeHub (perProducerBufferSize: int) : Source<'t, Sink<'t, unit>> =
+        MergeHub.Source(perProducerBufferSize) |> mapMatValue (Sink.mapMatValue ignore)
+
     /// Combines current source with provided sink, resulting in a completed runnable graph.
-    let inline toSink (sink: #IGraph<SinkShape<'t>,'mat2>) (source: Source<'t,'mat>) : IRunnableGraph<'mat> = 
+    let inline toSink (sink: #IGraph<SinkShape<'t>, 'mat2>) (source: Source<'t, 'mat>) : IRunnableGraph<'mat> =
         source.To(sink)
-        
+
     let zipn (sources: #(Source<'t, unit> seq)) : Source<'t seq, unit> =
         Source.ZipN(sources |> Seq.map (mapMaterializedValue (fun () -> NotUsed.Instance)))
         |> map (fun list -> list :> _ seq)
-        |> mapMaterializedValue ignore 
-    
-    /// Filters our consecutive duplicated elements from the stream (uniqueness is recognized 
+        |> mapMaterializedValue ignore
+
+    /// Filters our consecutive duplicated elements from the stream (uniqueness is recognized
     /// by provided function).
-    let inline deduplicate (eq: 'a -> 'a -> bool) (source: Source<'a,'mat>) : Source<'a, 'mat> =
+    let inline deduplicate (eq: 'a -> 'a -> bool) (source: Source<'a, 'mat>) : Source<'a, 'mat> =
         source.Via(Deduplicate<'a>(eq))
 
     /// Pulse stage signals demand only once every "pulse" interval and then back-pressures.
@@ -744,53 +835,60 @@ module Source =
     /// It can be used to implement simple time-window processing
     /// where data is aggregated for predefined amount of time and the computed aggregate is emitted once per this time.
     let inline pulse (initiallyOpen: bool) (interval: TimeSpan) (source: Source<'t, 'mat>) : Source<'t, 'mat> =
-        source.Via (new Pulse<_>(interval, initiallyOpen))
-        
+        source.Via(new Pulse<_>(interval, initiallyOpen))
+
     /// Flow stage for universal delay management, allows to manage delay through a given strategy.
     let managedDelay (strategy: DelayStrategy<'t>) (source: Source<'t, 'mat>) : Source<'t, 'mat> =
         let strategySupplier () : IDelayStrategy<'t> =
             match strategy with
             | FixedDelay delay -> upcast FixedDelay<_>(delay)
-            | LinearIncreasingDelay(init, step, max:TimeSpan, increaseCheck) ->
-                upcast LinearIncreasingDelay<_>(step, Func<_,_>(increaseCheck), init, max)
+            | LinearIncreasingDelay(init, step, max: TimeSpan, increaseCheck) ->
+                upcast LinearIncreasingDelay<_>(step, Func<_, _>(increaseCheck), init, max)
             | CustomDelay fn ->
                 { new IDelayStrategy<'t> with
-                    member x.NextDelay(element:'t) : TimeSpan = fn element }
-            
-        source.Via (new DelayFlow<_>(Func<_> strategySupplier))
-        
+                    member x.NextDelay(element: 't) : TimeSpan = fn element }
+
+        source.Via(new DelayFlow<_>(Func<_> strategySupplier))
+
     /// A local source which materializes a sink ref which can be used by other streams (including remote ones),
     /// to consume data from this local stream, as if they were attached in the spot of the local Sink directly.
     let ref<'t> : Source<'t, Async<ISinkRef<'t>>> =
-        StreamRefs.SinkRef().MapMaterializedValue(Func<_,_>(Async.AwaitTask<ISinkRef<'t>>))
-        
+        StreamRefs
+            .SinkRef()
+            .MapMaterializedValue(Func<_, _>(Async.AwaitTask<ISinkRef<'t>>))
+
     let inline ofRef (sourceRef: ISourceRef<'t>) : Source<'t, unit> =
-        sourceRef.Source.MapMaterializedValue(Func<_,_>(Microsoft.FSharp.Core.Operators.ignore))
-        
+        sourceRef.Source.MapMaterializedValue(Func<_, _>(Microsoft.FSharp.Core.Operators.ignore))
+
     /// The operator fails with an `WatchedActorTerminatedException` if the target actor is terminated.
-    let inline watch (actorRef: IActorRef<_>) (source: Source<'t,'mat>) : Source<'t,'mat> =
-         source.Watch(ActorRefs.untyped actorRef)
-        
+    let inline watch (actorRef: IActorRef<_>) (source: Source<'t, 'mat>) : Source<'t, 'mat> =
+        source.Watch(ActorRefs.untyped actorRef)
+
     /// Use the `ask` pattern to send a request-reply message to the target `actorRef`.
     /// If any of the asks times out it will fail the stream with a `AskTimeoutException`.
-    /// 
+    ///
     /// Parallelism limits the number of how many asks can be "in flight" at the same time.
     /// Please note that the elements emitted by this operator are in-order with regards to the asks being issued
     /// (i.e. same behaviour as `asyncMap`).
-    /// 
+    ///
     /// The operator fails with an `WatchedActorTerminatedException` if the target actor is terminated,
     /// or with an `TimeoutException` in case the ask exceeds the timeout passed in.
-    let inline askParallel (maxParallelism: int) (timeout: TimeSpan) (actorRef: IActorRef<'t>) (source: Source<'t,'mat>) : Source<'u,'mat> =
+    let inline askParallel
+        (maxParallelism: int)
+        (timeout: TimeSpan)
+        (actorRef: IActorRef<'t>)
+        (source: Source<'t, 'mat>)
+        : Source<'u, 'mat> =
         source.Ask(ActorRefs.untyped actorRef, timeout, maxParallelism)
-        
+
     /// Use the `ask` pattern to send a request-reply message to the target `actorRef`.
     /// If any of the asks times out it will fail the stream with a `AskTimeoutException`.
-    /// 
+    ///
     /// The operator fails with an `WatchedActorTerminatedException` if the target actor is terminated,
     /// or with an `TimeoutException` in case the ask exceeds the timeout passed in.
-    let inline ask (timeout: TimeSpan) (actorRef: IActorRef<'t>) (source: Source<'t,'mat>) : Source<'u,'mat> =
+    let inline ask (timeout: TimeSpan) (actorRef: IActorRef<'t>) (source: Source<'t, 'mat>) : Source<'u, 'mat> =
         askParallel 1 timeout actorRef source
-                
+
     /// Turns a source into a SourceWithContext which manages a context per element along a stream.
-    let inline withContext (extract: 'o -> 'ctx) (source: Source<'o,'mat>) =
-        source.AsSourceWithContext(Func<_,_>(extract))
+    let inline withContext (extract: 'o -> 'ctx) (source: Source<'o, 'mat>) =
+        source.AsSourceWithContext(Func<_, _>(extract))

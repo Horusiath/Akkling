@@ -20,14 +20,11 @@ type MyEnum =
 let ceConfig =
     akka {
         actor {
-            debug {
-                autoreceive true
-            }
+            debug { autoreceive true }
 
-            default_dispatcher {
-                executor "hello"
-            }
+            default_dispatcher { executor "hello" }
         }
+
         "multi-part-property = 999999999999"
         "an-integer = 1"
         "some-strange-float = 2.5"
@@ -38,7 +35,9 @@ let ceConfig =
     }
     |> Configuration.parse
 
-let config = Configuration.parse """
+let config =
+    Configuration.parse
+        """
 outer {
     inner {
         inner2 {
@@ -59,22 +58,22 @@ outer {
 """
 
 [<Fact>]
-let ``Dynamic config operation must return Config`` () = 
-    let c1 = config?outer 
+let ``Dynamic config operation must return Config`` () =
+    let c1 = config?outer
     let c2 = ceConfig?akka
-    
+
     let (value: Config) = c1?Inner?Inner2
     let (value2: Config) = c2?actor?debug
 
     equals typeof<Config> <| value.GetType()
     equals typeof<Config> <| value2.GetType()
-    
+
     equals true <| value.HasPath "my-prop"
     equals true <| value2.HasPath "autoreceive"
 
 [<Fact>]
-let ``Dynamic config operation must return string`` () = 
-    let c1 = config?outer 
+let ``Dynamic config operation must return string`` () =
+    let c1 = config?outer
     let c2 = ceConfig?akka
 
     let (value: string) = c1?Inner?Inner2?MyProp
@@ -84,8 +83,8 @@ let ``Dynamic config operation must return string`` () =
     equals "hello" value2
 
 [<Fact>]
-let ``Dynamic config operation must return int32`` () = 
-    let c1 = config?outer 
+let ``Dynamic config operation must return int32`` () =
+    let c1 = config?outer
     let c2 = ceConfig?akka
 
     let (value: int) = c1?AnInteger
@@ -95,7 +94,7 @@ let ``Dynamic config operation must return int32`` () =
     equals 1 value2
 
 [<Fact>]
-let ``Dynamic config operation must return int64`` () = 
+let ``Dynamic config operation must return int64`` () =
     let c1 = config?outer
     let c2 = ceConfig?akka
 
@@ -106,10 +105,10 @@ let ``Dynamic config operation must return int64`` () =
     equals 999999999999L value2
 
 [<Fact>]
-let ``Dynamic config operation must return bool`` () = 
+let ``Dynamic config operation must return bool`` () =
     let c1 = config?outer
     let c2 = ceConfig?akka
-    
+
     let (value: bool) = c1?ABoolean
     let (value2: bool) = c2?LoggerAsyncStart
 
@@ -117,19 +116,19 @@ let ``Dynamic config operation must return bool`` () =
     equals true value2
 
 [<Fact>]
-let ``Dynamic config operation must return TimeSpan`` () = 
-    let c1 = config?outer 
+let ``Dynamic config operation must return TimeSpan`` () =
+    let c1 = config?outer
     let c2 = ceConfig?akka
 
     let (value: TimeSpan) = c1?ATime
     let (value2: TimeSpan) = c2?LoggerStartupTimeout
 
     equals (TimeSpan.FromSeconds 30.) value
-    equals (TimeSpan.FromSeconds 30.) value2    
+    equals (TimeSpan.FromSeconds 30.) value2
 
 [<Fact>]
-let ``Dynamic config operation must return float`` () = 
-    let c1 = config?outer 
+let ``Dynamic config operation must return float`` () =
+    let c1 = config?outer
     let c2 = ceConfig?akka
 
     let (value: float32) = c1?SomeStrangeFloat
@@ -139,8 +138,8 @@ let ``Dynamic config operation must return float`` () =
     equals 2.5f value2
 
 [<Fact>]
-let ``Dynamic config operation must return double`` () = 
-    let c1 = config?outer 
+let ``Dynamic config operation must return double`` () =
+    let c1 = config?outer
     let c2 = ceConfig?akka
 
     let (value: float) = c1?SomeStrangeFloat
@@ -150,8 +149,8 @@ let ``Dynamic config operation must return double`` () =
     equals 2.5f value2
 
 [<Fact>]
-let ``Dynamic config operation must return decimal`` () = 
-    let c1 = config?outer 
+let ``Dynamic config operation must return decimal`` () =
+    let c1 = config?outer
     let c2 = ceConfig?akka
 
     let (value: decimal) = c1?SomeStrangeFloat
@@ -161,24 +160,24 @@ let ``Dynamic config operation must return decimal`` () =
     equals 2.5M value2
 
 [<Fact>]
-let ``Dynamic config operation must return string list`` () = 
-    let c1 = config?outer 
+let ``Dynamic config operation must return string list`` () =
+    let c1 = config?outer
     let c2 = ceConfig?akka
 
     let (value: string seq) = c1?ListOfStrings
     let (value2: string seq) = c2?loggers
 
-    equals ["hello";"hocon"] <| List.ofSeq value
-    equals ["hello";"hocon"] <| List.ofSeq value2    
+    equals [ "hello"; "hocon" ] <| List.ofSeq value
+    equals [ "hello"; "hocon" ] <| List.ofSeq value2
 
 [<Fact>]
-let ``Dynamic config operation must return an enum`` () = 
-    let c1 = config?outer 
+let ``Dynamic config operation must return an enum`` () =
+    let c1 = config?outer
     let c2 = ceConfig?akka
 
     let (value: MyEnum) = c1?OptionType
     let (value2: MyEnum) = c2?OptionType
-    
+
     equals MyEnum.B value
     equals MyEnum.B value2
 
@@ -209,14 +208,14 @@ let akkaDefaultConfig () =
             serialize_creators false
             unstarted_push_timeout 10<s>
             ask_timeout Hocon.infinite
-            
+
             typed'.timeout 5<s>
-            
+
             inbox {
                 inbox_size 1000
                 default_timeout 5<s>
             }
-            
+
             router.type_mapping {
                 from_code "Akka.Routing.NoRouter"
                 round_robin_pool "Akka.Routing.RoundRobinPool"
@@ -284,15 +283,17 @@ let akkaDefaultConfig () =
             default_dispatcher {
                 type' "Dispatcher"
                 executor "default-executor"
-                
+
                 default_executor { "" }
                 thread_pool_executor { "" }
+
                 fork_join_executor {
                     parallelism_min 8
                     parallelism_factor 1.0
                     parallelism_max 64
                     task_peeking_mode Hocon.TaskPeekingMode.FIFO
                 }
+
                 current_context_executor { "" }
 
                 shutdown_timeout 1<s>
@@ -328,15 +329,15 @@ let akkaDefaultConfig () =
             }
 
             mailbox {
-                requirements [
-                    "Akka.Dispatch.IUnboundedMessageQueueSemantics" ,"akka.actor.mailbox.unbounded-queue-based"
-                    "Akka.Dispatch.IBoundedMessageQueueSemantics" ,"akka.actor.mailbox.bounded-queue-based"
-                    "Akka.Dispatch.IDequeBasedMessageQueueSemantics" ,"akka.actor.mailbox.unbounded-deque-based"
-                    "Akka.Dispatch.IUnboundedDequeBasedMessageQueueSemantics" ,"akka.actor.mailbox.unbounded-deque-based"
-                    "Akka.Dispatch.IBoundedDequeBasedMessageQueueSemantics" ,"akka.actor.mailbox.bounded-deque-based"
-                    "Akka.Dispatch.IMultipleConsumerSemantics" ,"akka.actor.mailbox.unbounded-queue-based"
-                    "Akka.Event.ILoggerMessageQueueSemantics" ,"akka.actor.mailbox.logger-queue"
-                ]
+                requirements
+                    [ "Akka.Dispatch.IUnboundedMessageQueueSemantics", "akka.actor.mailbox.unbounded-queue-based"
+                      "Akka.Dispatch.IBoundedMessageQueueSemantics", "akka.actor.mailbox.bounded-queue-based"
+                      "Akka.Dispatch.IDequeBasedMessageQueueSemantics", "akka.actor.mailbox.unbounded-deque-based"
+                      "Akka.Dispatch.IUnboundedDequeBasedMessageQueueSemantics",
+                      "akka.actor.mailbox.unbounded-deque-based"
+                      "Akka.Dispatch.IBoundedDequeBasedMessageQueueSemantics", "akka.actor.mailbox.bounded-deque-based"
+                      "Akka.Dispatch.IMultipleConsumerSemantics", "akka.actor.mailbox.unbounded-queue-based"
+                      "Akka.Event.ILoggerMessageQueueSemantics", "akka.actor.mailbox.logger-queue" ]
 
                 unbounded_queue_based.mailbox_type typeof<Akka.Dispatch.UnboundedMailbox>
                 bounded_queue_based.mailbox_type typeof<Akka.Dispatch.BoundedMailbox>
@@ -359,15 +360,11 @@ let akkaDefaultConfig () =
                 bytes "Akka.Serialization.ByteArraySerializer, Akka"
             }
 
-            serialization_bindings [
-                typeof<byte []>, "bytes"
-                typeof<obj>, "json"
-            ]
+            serialization_bindings [ typeof<byte[]>, "bytes"; typeof<obj>, "json" ]
 
-            serialization_identifiers [
-                typeof<Akka.Serialization.ByteArraySerializer>, 4
-                typeof<Akka.Serialization.NewtonSoftJsonSerializer>, 1
-            ]
+            serialization_identifiers
+                [ typeof<Akka.Serialization.ByteArraySerializer>, 4
+                  typeof<Akka.Serialization.NewtonSoftJsonSerializer>, 1 ]
 
             serialization_settings { "" }
         }
@@ -380,7 +377,7 @@ let akkaDefaultConfig () =
         }
 
         io {
-            
+
             pinned_dispatcher {
                 type' "PinnedDispatcher"
                 executor "fork-join-executor"
@@ -397,6 +394,7 @@ let akkaDefaultConfig () =
 
             tcp {
                 ioDirectBufferPool
+
                 disabled_buffer_pool {
                     class' "Akka.IO.Buffers.DisabledBufferPool, Akka"
                     buffer_size 512
@@ -409,7 +407,7 @@ let akkaDefaultConfig () =
                 register_timeout 5<s>
                 max_received_message_size Hocon.unlimited
                 trace_logging false
-                
+
                 selector_dispatcher "akka.io.pinned-dispatcher"
                 worker_dispatcher "akka.actor.internal-dispatcher"
                 management_dispatcher "akka.actor.internal-dispatcher"
@@ -434,7 +432,7 @@ let akkaDefaultConfig () =
                 direct_buffer_pool_limit 1000
                 received_message_size_limit Hocon.unlimited
                 trace_logging false
-                
+
                 selector_dispatcher "akka.io.pinned-dispatcher"
                 worker_dispatcher "akka.actor.internal-dispatcher"
                 management_dispatcher "akka.actor.internal-dispatcher"
@@ -453,7 +451,7 @@ let akkaDefaultConfig () =
                 direct_buffer_pool_limit 1000
                 received_message_size_limit Hocon.unlimited
                 trace_logging false
-                
+
                 selector_dispatcher "akka.io.pinned-dispatcher"
                 worker_dispatcher "akka.actor.internal-dispatcher"
                 management_dispatcher "akka.actor.internal-dispatcher"
@@ -488,14 +486,14 @@ let akkaDefaultConfig () =
                 service_unbind.depends_on [ before_service_unbind ]
                 service_stop.depends_on [ service_requests_done ]
                 before_cluster_shutdown.depends_on [ service_stop ]
-                
+
                 cluster_sharding_shutdown_region {
                     timeout 10<s>
                     depends_on [ before_cluster_shutdown ]
                 }
-                
+
                 cluster_leave.depends_on [ cluster_sharding_shutdown_region ]
-                
+
                 cluster_exiting {
                     timeout 10<s>
                     depends_on [ cluster_leave ]
@@ -525,13 +523,13 @@ let ``Hocon CE builds configuration faithfully`` () =
     //    |> List.map (fun kvPair -> kvPair.Key,kvPair.Value.GetHashCode())
     //    |> List.sort
 
-    //let def = 
+    //let def =
     //    Akka.Configuration.ConfigurationFactory.Default()
     //    |> cleanup
 
     try
-        akkaDefaultConfig()
-        |> ignore
+        akkaDefaultConfig () |> ignore
         true
-    with _ -> false
+    with _ ->
+        false
     |> equals true

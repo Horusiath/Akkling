@@ -21,8 +21,15 @@ open Akkling
 /// <param name="system">Actor system used to spawn an actor</param>
 /// <param name="name">Actor singleton name.</param>
 /// <param name="props">Props used to build an actor.</param>
-let spawnSingleton (stopMessage: obj) (system: ActorSystem) (name: string) (props: Props<'Message>) : IActorRef<'Message> =
-    let singletonProps = ClusterSingletonManager.Props(props.ToProps(), stopMessage, ClusterSingletonManagerSettings.Create(system))
+let spawnSingleton
+    (stopMessage: obj)
+    (system: ActorSystem)
+    (name: string)
+    (props: Props<'Message>)
+    : IActorRef<'Message> =
+    let singletonProps =
+        ClusterSingletonManager.Props(props.ToProps(), stopMessage, ClusterSingletonManagerSettings.Create(system))
+
     typed (system.ActorOf(singletonProps, name))
 
 /// <summary>
@@ -32,5 +39,7 @@ let spawnSingleton (stopMessage: obj) (system: ActorSystem) (name: string) (prop
 /// <param name="name">Actor proxy name</param>
 /// <param name="singletonPath">Relative path to cluster singleton actor manager</param>
 let spawnSingletonProxy (system: ActorSystem) (name: string) (singletonPath: string) : IActorRef<'Message> =
-    let proxyProps = ClusterSingletonProxy.Props(singletonPath, ClusterSingletonProxySettings.Create(system))
+    let proxyProps =
+        ClusterSingletonProxy.Props(singletonPath, ClusterSingletonProxySettings.Create(system))
+
     typed (system.ActorOf(proxyProps, name))

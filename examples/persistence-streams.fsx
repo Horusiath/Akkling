@@ -18,8 +18,10 @@ open Akkling
 open Akkling.Persistence
 open Akkling.Streams
 
-let configWith() =
-    let config = Configuration.parse("""
+let configWith () =
+    let config =
+        Configuration.parse (
+            """
         akka {
             persistence {
                 view.auto-update-interval = 100
@@ -45,15 +47,16 @@ let configWith() =
                 }
             }
         }
-        """)
-    config.WithFallback <| Configuration.defaultConfig()
+        """
+        )
+
+    config.WithFallback <| Configuration.defaultConfig ()
 
 
-let system = System.create "persisting-streams-sys" <| configWith()
+let system = System.create "persisting-streams-sys" <| configWith ()
 let mat = system.Materializer()
 
-type CounterChanged =
-    { Delta : int }
+type CounterChanged = { Delta: int }
 
 type CounterCommand =
     | Inc
@@ -65,10 +68,11 @@ type CounterMessage =
     | Event of CounterChanged
 
 let persistActor (queue: ISourceQueue<CounterChanged>) =
-    propsPersist(fun mailbox ->
+    propsPersist (fun mailbox ->
         let rec loop state =
             actor {
                 let! msg = mailbox.Receive()
+
                 match msg with
                 | Event(changed) ->
                     queue.AsyncOffer(changed) |!> retype mailbox.Self
@@ -78,23 +82,27 @@ let persistActor (queue: ISourceQueue<CounterChanged>) =
                     | GetState ->
                         mailbox.Sender() <! state
                         return! loop state
-                    | Inc -> return Persist (Event { Delta = 1 })
-                    | Dec -> return Persist (Event { Delta = -1 })
+                    | Inc -> return Persist(Event { Delta = 1 })
+                    | Dec -> return Persist(Event { Delta = -1 })
             }
+
         loop 0)
 
 let persistentQueue<'T> system pid (overflowStrategy: OverflowStrategy) (maxBuffer: int) =
     Source.queue overflowStrategy maxBuffer
-    |> Source.mapMaterializedValue(persistActor >> spawn system pid)
+    |> Source.mapMaterializedValue (persistActor >> spawn system pid)
 
-let source = persistentQueue<CounterChanged> system "pa1" OverflowStrategy.DropNew 1000
+let source =
+    persistentQueue<CounterChanged> system "pa1" OverflowStrategy.DropNew 1000
 
-let actorRef, arr = async {
-                        return source
-                                |> Source.toMat (Sink.forEach(printfn "Piu: %A")) Keep.both
-                                |> Graph.run mat
-                    }
-                    |> Async.RunSynchronously
+let actorRef, arr =
+    async {
+        return
+            source
+            |> Source.toMat (Sink.forEach (printfn "Piu: %A")) Keep.both
+            |> Graph.run mat
+    }
+    |> Async.RunSynchronously
 
 arr |> Async.Start
 
@@ -103,6 +111,7 @@ let persistView pid (queue: ISourceQueue<obj>) =
         let rec loop state =
             actor {
                 let! msg = mailbox.Receive()
+
                 match msg with
                 | Event(changed) ->
                     queue.AsyncOffer(changed) |!> retype mailbox.Self
@@ -114,20 +123,23 @@ let persistView pid (queue: ISourceQueue<obj>) =
                         return! loop state
                     | _ -> return! loop (state) // ignoring
             }
+
         loop 0)
 
 let persistentViewQueue system pid (overflowStrategy: OverflowStrategy) (maxBuffer: int) =
     Source.queue overflowStrategy maxBuffer
-    |> Source.mapMaterializedValue(persistView pid >> spawnAnonymous system)
+    |> Source.mapMaterializedValue (persistView pid >> spawnAnonymous system)
 
 let sourceView = persistentViewQueue system "pa1" OverflowStrategy.DropNew 1000
 
-let aa, aar = async {
-                    return sourceView
-                            |> Source.toMat (Sink.forEach(printfn "Piu2: %A")) Keep.both
-                            |> Graph.run mat
-                }
-                |> Async.RunSynchronously
+let aa, aar =
+    async {
+        return
+            sourceView
+            |> Source.toMat (Sink.forEach (printfn "Piu2: %A")) Keep.both
+            |> Graph.run mat
+    }
+    |> Async.RunSynchronously
 
 aar |> Async.Start
 
@@ -137,9 +149,15 @@ retype aa <! (Akka.Persistence.Update true)
 actorRef <! Command Inc
 actorRef <! Command Inc
 actorRef <! Command Dec
-async { let! reply = actorRef <? Command GetState
-        printfn "Current state of %A: %i" actorRef reply } |> Async.RunSynchronously
 
-async { let! reply = aa <? Command GetState
-        printfn "Current state of %A: %i" actorRef reply } |> Async.RunSynchronously
+async {
+    let! reply = actorRef <? Command GetState
+    printfn "Current state of %A: %i" actorRef reply
+}
+|> Async.RunSynchronously
 
+async {
+    let! reply = aa <? Command GetState
+    printfn "Current state of %A: %i" actorRef reply
+}
+|> Async.RunSynchronously

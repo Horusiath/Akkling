@@ -1,4 +1,5 @@
 ﻿namespace System
+
 open System.Reflection
 
 [<assembly: AssemblyTitle("Akkling.Hocon")>]
@@ -7,6 +8,11 @@ open System.Reflection
 do ()
 
 module internal AssemblyVersionInformation =
-    let [<Literal>] AssemblyTitle = "Akkling.Hocon"
-    let [<Literal>] AssemblyProduct = "Akkling"
-    let [<Literal>] AssemblyDescription = "F# wrapper library for Akka.NET"
+    [<Literal>]
+    let AssemblyTitle = "Akkling.Hocon"
+
+    [<Literal>]
+    let AssemblyProduct = "Akkling"
+
+    [<Literal>]
+    let AssemblyDescription = "F# wrapper library for Akka.NET"

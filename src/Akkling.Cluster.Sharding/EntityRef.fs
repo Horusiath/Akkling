@@ -16,7 +16,7 @@ open Akka.Util
 /// <summary>
 /// A typed reference for a sharded entity, which lifecycle and placement is managed by cluster sharding plugin.
 /// It may be serialized and used to route a message to an entity (even after rebalancing) or to create it ad-hoc
-/// if it didn't exist yet. IEntityRef cannot be used on nodes which have not started shard regions for a 
+/// if it didn't exist yet. IEntityRef cannot be used on nodes which have not started shard regions for a
 /// corresponding <see cref="TypeName"/>.
 /// </summary>
 [<Interface>]
@@ -32,69 +32,99 @@ type IEntityRef<'Message> =
     abstract member ShardId: string
 
     /// <summary>
-    /// Unique entity identifier in scope of the shard. Along with <see cref="TypeName"/> and <see cref="ShardId"/> 
+    /// Unique entity identifier in scope of the shard. Along with <see cref="TypeName"/> and <see cref="ShardId"/>
     /// is a globaly distinct identifier of a target entity, persisted between its incarnations and rebalancing between nodes.
     /// </summary>
     abstract member EntityId: string
     inherit ICanTell<'Message>
-    
-type ShardEnvelope = 
+
+type ShardEnvelope =
     { ShardId: string
       EntityId: string
       Message: obj }
 
 [<Sealed>]
-type internal EntityRef<'Message>(shardRegion: IActorRef, typeName: string, shardId: string, entityId:string) =
+type internal EntityRef<'Message>(shardRegion: IActorRef, typeName: string, shardId: string, entityId: string) =
     interface IEntityRef<'Message> with
-        member __.TypeName = typeName
-        member __.ShardId = shardId
-        member __.EntityId = entityId
-    interface ICanTell<'Message> with
-        member __.Ask(msg, ?timeout) = async {
-                let env = { ShardId = shardId; EntityId = entityId; Message = box msg }
-                let! reply = shardRegion.Ask(env, Option.toNullable timeout) |> Async.AwaitTask
-                match reply with
-                | :? Status.Failure as f -> 
-                    raise f.Cause
-                    return Unchecked.defaultof<_>()
-                | other -> return other :?> _ } 
-        member __.AskWith(fac: ICanTell<'Reply> -> 'Message, ?timeout) = async {
-                let env = System.Func<IActorRef,obj>(fun reply -> upcast { ShardId = shardId; EntityId = entityId; Message = fac (typed reply) })
-                let! reply = shardRegion.Ask(env, Option.toNullable timeout) |> Async.AwaitTask
-                match reply with
-                | :? Status.Failure as f -> 
-                    raise f.Cause
-                    return Unchecked.defaultof<_>()
-                | other -> return other :?> _ }             
-        member __.Tell(msg, sender) =
-            let env = { ShardId = shardId; EntityId = entityId; Message = box msg }
-            shardRegion.Tell(env, sender)
-        member __.Underlying = upcast shardRegion
-    interface ISurrogated with
-        member __.ToSurrogate(_system) = upcast { TypeName = typeName; ShardId = shardId; EntityId = entityId }
+        member _.TypeName = typeName
+        member _.ShardId = shardId
+        member _.EntityId = entityId
 
-and EntityRefSurrogate<'Message> = 
+    interface ICanTell<'Message> with
+        member _.Ask(msg, ?timeout) =
+            async {
+                let env =
+                    { ShardId = shardId
+                      EntityId = entityId
+                      Message = box msg }
+
+                let! reply = shardRegion.Ask(env, Option.toNullable timeout) |> Async.AwaitTask
+
+                match reply with
+                | :? Status.Failure as f ->
+                    raise f.Cause
+                    return Unchecked.defaultof<_> ()
+                | other -> return other :?> _
+            }
+
+        member _.AskWith(fac: ICanTell<'Reply> -> 'Message, ?timeout) =
+            async {
+                let env =
+                    System.Func<IActorRef, obj>(fun reply ->
+                        upcast
+                            { ShardId = shardId
+                              EntityId = entityId
+                              Message = fac (typed reply) })
+
+                let! reply = shardRegion.Ask(env, Option.toNullable timeout) |> Async.AwaitTask
+
+                match reply with
+                | :? Status.Failure as f ->
+                    raise f.Cause
+                    return Unchecked.defaultof<_> ()
+                | other -> return other :?> _
+            }
+
+        member _.Tell(msg, sender) =
+            let env =
+                { ShardId = shardId
+                  EntityId = entityId
+                  Message = box msg }
+
+            shardRegion.Tell(env, sender)
+
+        member _.Underlying = upcast shardRegion
+
+    interface ISurrogated with
+        member _.ToSurrogate(_system) =
+            upcast
+                { TypeName = typeName
+                  ShardId = shardId
+                  EntityId = entityId }
+
+and EntityRefSurrogate<'Message> =
     { TypeName: string
       ShardId: string
       EntityId: string }
+
     interface ISurrogate with
-        member x.FromSurrogate(system) = 
+        member x.FromSurrogate(system) =
             let sharding = ClusterSharding.Get system
             let shardRegion = sharding.ShardRegion x.TypeName
             upcast EntityRef<'Message>(shardRegion, x.TypeName, x.ShardId, x.EntityId)
 
 type EntityFac<'Message> =
-    { ShardRegion: IActorRef;
+    { ShardRegion: IActorRef
       TypeName: string }
-    member x.RefFor shardId entityId = EntityRef<'Message>(x.ShardRegion, x.TypeName, shardId, entityId) :> IEntityRef<'Message>
-    
+
+    member x.RefFor shardId entityId =
+        EntityRef<'Message>(x.ShardRegion, x.TypeName, shardId, entityId) :> IEntityRef<'Message>
+
 module EntityRefs =
 
     /// <summary>
     /// Returns an entity message extractor prepared to work with <see cref="IEntityRef{T}"/>.
     /// </summary>
     /// <param name="env"></param>
-    let inline entityRefExtractor<'Message> (env: ShardEnvelope): (string * string * 'Message)  = 
+    let inline entityRefExtractor<'Message> (env: ShardEnvelope) : (string * string * 'Message) =
         (env.ShardId, env.EntityId, env.Message :?> 'Message)
-
-

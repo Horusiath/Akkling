@@ -19,5 +19,5 @@ module Props =
     /// Creates a props describing a way to incarnate persistent actor with behavior described by <paramref name="receive"/> function.
     /// </summary>
     let propsPersist (receive: Eventsourced<'Message> -> Effect<'Message>) : Props<'Message> =
-        Props<'Message>.Create<FunPersistentActor<'Message>, Eventsourced<'Message>, 'Message>(receive)
-        
+        Props<'Message>
+            .Create<FunPersistentActor<'Message>, Eventsourced<'Message>, 'Message>(receive)

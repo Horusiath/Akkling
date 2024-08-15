@@ -11,15 +11,18 @@ namespace Akkling
 open Akka.Actor
 open System
 
-module System = 
+module System =
     /// Creates an actor system with remote deployment serialization enabled.
-    let create (name : string) (config : Akka.Configuration.Config) : ActorSystem = 
-        let _ = Akka.Serialization.HyperionSerializer           // I don't know why, but without this system cannot instantiate serializer
-        let system = ActorSystem.Create(name, config.WithFallback Configuration.extendedConfig)
+    let create (name: string) (config: Akka.Configuration.Config) : ActorSystem =
+        let _ = Akka.Serialization.HyperionSerializer // I don't know why, but without this system cannot instantiate serializer
+
+        let system =
+            ActorSystem.Create(name, config.WithFallback Configuration.extendedConfig)
+
         system
 
 [<AutoOpen>]
-module Spawn = 
+module Spawn =
 
     /// <summary>
     /// Spawns an actor using specified actor <see cref="Props{Message}"/>.
@@ -27,7 +30,7 @@ module Spawn =
     /// <param name="actorFactory">Either actor system or parent actor</param>
     /// <param name="name">Name of spawned child actor</param>
     /// <param name="p">Used by actor for handling response for incoming request</param>
-    let spawn (actorFactory : IActorRefFactory) (name : string) (p: Props<'Message>) : IActorRef<'Message> = 
+    let spawn (actorFactory: IActorRefFactory) (name: string) (p: Props<'Message>) : IActorRef<'Message> =
         typed (actorFactory.ActorOf(p.ToProps(), name)) :> IActorRef<'Message>
 
     /// <summary>
@@ -35,32 +38,34 @@ module Spawn =
     /// </summary>
     /// <param name="actorFactory">Either actor system or parent actor</param>
     /// <param name="p">Used by actor for handling response for incoming request</param>
-    let inline spawnAnonymous (actorFactory : IActorRefFactory) (p: Props<'Message>) : IActorRef<'Message> = 
+    let inline spawnAnonymous (actorFactory: IActorRefFactory) (p: Props<'Message>) : IActorRef<'Message> =
         spawn actorFactory null p
 
     /// <summary>
-    /// Wraps provided function with actor behavior. 
-    /// It will be invoked each time, an actor will receive a message. 
+    /// Wraps provided function with actor behavior.
+    /// It will be invoked each time, an actor will receive a message.
     /// </summary>
-    let actorOf (fn : 'Message -> #Effect<'Message>) (mailbox : Actor<'Message>) : Effect<'Message> = 
-        let rec loop() = 
-            actor { 
+    let actorOf (fn: 'Message -> #Effect<'Message>) (mailbox: Actor<'Message>) : Effect<'Message> =
+        let rec loop () =
+            actor {
                 let! msg = mailbox.Receive()
-                return fn msg 
+                return fn msg
             }
-        loop()
-    
+
+        loop ()
+
     /// <summary>
-    /// Wraps provided function with actor behavior. 
-    /// It will be invoked each time, an actor will receive a message. 
+    /// Wraps provided function with actor behavior.
+    /// It will be invoked each time, an actor will receive a message.
     /// </summary>
-    let actorOf2 (fn : Actor<'Message> -> 'Message -> #Effect<'Message>) (mailbox : Actor<'Message>) : Effect<'Message> = 
-        let rec loop() = 
+    let actorOf2 (fn: Actor<'Message> -> 'Message -> #Effect<'Message>) (mailbox: Actor<'Message>) : Effect<'Message> =
+        let rec loop () =
             actor {
                 let! msg = mailbox.Receive()
                 return fn mailbox msg
             }
-        loop()
+
+        loop ()
 
     /// <summary>
     /// Returns an actor effect causing no changes in message handling pipeline.
@@ -70,7 +75,8 @@ module Spawn =
     /// <summary>
     /// Returns an actor effect causing messages to become unhandled.
     /// </summary>
-    let inline unhandled (_: 'Any) : Effect<'Message> = ActorEffect.Unhandled :> Effect<'Message>
+    let inline unhandled (_: 'Any) : Effect<'Message> =
+        ActorEffect.Unhandled :> Effect<'Message>
 
     /// <summary>
     /// Returns an actor effect causing actor to stop.
@@ -84,23 +90,27 @@ module Spawn =
     let inline become (next) : Effect<'Message> = Become(next) :> Effect<'Message>
 
     /// <summary>
-    /// Joins two receive functions, passing message to the <paramref name="right"/> one 
+    /// Joins two receive functions, passing message to the <paramref name="right"/> one
     /// only when result of a <paramref name="left"/> one is other than <see cref="Unhandled"/>
     /// </summary>
-    let (<&>) (left: Receive<'Message, 'Context>) (right: Receive<'Message, 'Context>): Receive<'Message, 'Context> =
+    let (<&>) (left: Receive<'Message, 'Context>) (right: Receive<'Message, 'Context>) : Receive<'Message, 'Context> =
         fun context message ->
             let result = left context message
-            if result.WasHandled() 
-            then right context message
-            else result
-        
+
+            if result.WasHandled() then
+                right context message
+            else
+                result
+
     /// <summary>
-    /// Joins two receive functions, passing message to the <paramref name="right"/> one 
+    /// Joins two receive functions, passing message to the <paramref name="right"/> one
     /// only when result of a <paramref name="left"/> one is <see cref="Unhandled"/>
     /// </summary>
-    let (<|>) (left: Receive<'Message, 'Context>) (right: Receive<'Message, 'Context>): Receive<'Message, 'Context> =
+    let (<|>) (left: Receive<'Message, 'Context>) (right: Receive<'Message, 'Context>) : Receive<'Message, 'Context> =
         fun context message ->
             let result = left context message
-            if result.WasHandled() 
-            then result
-            else right context message
+
+            if result.WasHandled() then
+                result
+            else
+                right context message

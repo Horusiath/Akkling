@@ -11,5 +11,3 @@ module Akkling.Cluster.DistributedPubSub
 open Akkling
 open Akka.Actor
 open Akka.Cluster.Tools.PublishSubscribe
-
-

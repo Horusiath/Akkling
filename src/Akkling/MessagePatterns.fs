@@ -18,7 +18,7 @@ let (|Terminated|_|) (msg: obj) : (IActorRef<'T> * bool * bool) option =
     match msg with
     | :? Terminated as t -> Some((typed t.ActorRef, t.ExistenceConfirmed, t.AddressTerminated))
     | _ -> None
-    
+
 /// <summary>
 /// Active pattern that matches message agains <see cref="ActorIdentity"/> message.
 /// This is the result of <see cref="Identify"/> request send with matching correlation id.
@@ -26,10 +26,12 @@ let (|Terminated|_|) (msg: obj) : (IActorRef<'T> * bool * bool) option =
 /// </summary>
 let (|ActorIdentity|_|) (msg: obj) : ('CorrelationId * IActorRef<'T> option) option =
     match msg with
-    | :? ActorIdentity as identity -> 
-        let ref = 
-            if identity.Subject <> null
-            then Some (typed identity.Subject)
-            else None
+    | :? ActorIdentity as identity ->
+        let ref =
+            if identity.Subject <> null then
+                Some(typed identity.Subject)
+            else
+                None
+
         Some((identity.MessageId :?> 'CorrelationId, ref))
     | _ -> None

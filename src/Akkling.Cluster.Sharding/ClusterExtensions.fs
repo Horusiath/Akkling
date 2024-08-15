@@ -17,14 +17,16 @@ open Akkling
 
 let joinCluster (system: ActorSystem) (addresses: Address seq) : unit =
     let cluster = Cluster.Get system
-    cluster.JoinSeedNodes (ImmutableList.CreateRange(addresses))
+    cluster.JoinSeedNodes(ImmutableList.CreateRange(addresses))
 
 let (|IMemberEvent|_|) (msg: obj) : ClusterEvent.IMemberEvent option =
     match msg with
     | :? ClusterEvent.IMemberEvent as e -> Some e
     | _ -> None
 
-let (|MemberJoined|MemberUp|MemberLeft|MemberExited|MemberRemoved|MemberDowned|MemberWeaklyUp|) (msg: ClusterEvent.IMemberEvent): Choice<Member, Member, Member, Member, Member, Member, Member> =
+let (|MemberJoined|MemberUp|MemberLeft|MemberExited|MemberRemoved|MemberDowned|MemberWeaklyUp|)
+    (msg: ClusterEvent.IMemberEvent)
+    : Choice<Member, Member, Member, Member, Member, Member, Member> =
     match msg with
     | :? ClusterEvent.MemberUp as up -> Choice1Of7(up.Member)
     | :? ClusterEvent.MemberJoined as joined -> Choice2Of7(joined.Member)
@@ -34,4 +36,3 @@ let (|MemberJoined|MemberUp|MemberLeft|MemberExited|MemberRemoved|MemberDowned|M
     | :? ClusterEvent.MemberDowned as downed -> Choice6Of7(downed.Member)
     | :? ClusterEvent.MemberWeaklyUp as up -> Choice7Of7(up.Member)
     | _ -> failwith ("unknown cluster event type " + msg.GetType().ToString())
- 

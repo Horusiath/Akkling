@@ -20,4 +20,6 @@ let receptionist (system: ActorSystem) : ClusterClientReceptionist = ClusterClie
 /// <summary>
 /// Returns actor reference to cluster client, allowing you to send messages to cluster.
 /// </summary>
-let clusterClient (system: ActorSystem) : IActorRef<obj> = typed <| system.ActorOf(ClusterClient.Props(ClusterClientSettings.Create system))
+let clusterClient (system: ActorSystem) : IActorRef<obj> =
+    typed
+    <| system.ActorOf(ClusterClient.Props(ClusterClientSettings.Create system))

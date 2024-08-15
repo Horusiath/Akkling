@@ -27,7 +27,9 @@ open Akkling.Cluster.Sharding
 open Akkling.Streams
 
 let configWithPort port =
-    let config = Configuration.parse ("""
+    let config =
+        Configuration.parse (
+            """
         akka {
           actor {
             provider = cluster
@@ -36,7 +38,9 @@ let configWithPort port =
             dot-netty.tcp {
               public-hostname = "localhost"
               hostname = "localhost"
-              port = """ + port.ToString() + """
+              port = """
+            + port.ToString()
+            + """
             }
           }
           cluster {
@@ -48,21 +52,23 @@ let configWithPort port =
             snapshot-store.plugin = "akka.persistence.snapshot-store.local"
           }
         }
-        """)
+        """
+        )
+
     config.WithFallback(ClusterSingletonManager.DefaultConfig())
 
 let (|SubscribeAck|_|) (msg: obj) : Akka.Cluster.Tools.PublishSubscribe.SubscribeAck option =
     match msg with
     | :? Akka.Cluster.Tools.PublishSubscribe.SubscribeAck as e -> Some e
     | _ -> None
+
 let (|UnsubscribeAck|_|) (msg: obj) : Akka.Cluster.Tools.PublishSubscribe.UnsubscribeAck option =
     match msg with
     | :? Akka.Cluster.Tools.PublishSubscribe.UnsubscribeAck as e -> Some e
     | _ -> None
 
 
-type DistPubSubMessage<'T> =
-    | Message of 'T
+type DistPubSubMessage<'T> = Message of 'T
 
 type MediatorPublisher<'T>(topic: string, queue: ISourceQueue<'T>, log: string -> unit) as actor =
     inherit Akka.Actor.ActorBase()
@@ -70,7 +76,8 @@ type MediatorPublisher<'T>(topic: string, queue: ISourceQueue<'T>, log: string -
     let mdr = typed (DistributedPubSub.Get(ActorBase.Context.System).Mediator)
     do mdr <! new Subscribe(topic, actor.Self)
     do log "Initialized"
-    override actor.Receive (msg: obj) =
+
+    override actor.Receive(msg: obj) =
         match msg with
         | SubscribeAck _ ->
             log (sprintf "Actor subscribed to topic: %s" topic)
@@ -95,7 +102,9 @@ type MediatorPublisher<'T>(topic: string, queue: ISourceQueue<'T>, log: string -
             log (sprintf "Unhandled: %A" msg)
             actor.Unhandled msg
             false
-    static member Props (topic: string, queue: ISourceQueue<'T>, log: string -> unit) = Props.Create<MediatorPublisher<'T>>(topic, queue, log)
+
+    static member Props(topic: string, queue: ISourceQueue<'T>, log: string -> unit) =
+        Props.Create<MediatorPublisher<'T>>(topic, queue, log)
 
 
 let system1 = System.create "cluster-system" (configWithPort 5000)
@@ -103,27 +112,26 @@ let mat = system1.Materializer()
 
 let distPubSub<'T> system topic (overflowStrategy: OverflowStrategy) (maxBuffer: int) =
     Source.queue overflowStrategy maxBuffer
-    |> Source.mapMaterializedValue(fun queue ->
-                                    MediatorPublisher<'T>.Props(topic, queue, printfn "%A")
-                                    |> Props.From
-                                    |> spawnAnonymous system
-                                    |> ignore // TODO: Add actor removing
-                                    Akka.NotUsed.Instance)
+    |> Source.mapMaterializedValue (fun queue ->
+        MediatorPublisher<'T>.Props(topic, queue, printfn "%A")
+        |> Props.From
+        |> spawnAnonymous system
+        |> ignore // TODO: Add actor removing
+
+        Akka.NotUsed.Instance)
 
 let topic = "distpubsub"
-let mediator = DistributedPubSub.Get(system1).Mediator;
-mediator.Tell(new Publish(topic, Message "msg 1"));
+let mediator = DistributedPubSub.Get(system1).Mediator
+mediator.Tell(new Publish(topic, Message "msg 1"))
 
 let source = distPubSub<string> system1 topic OverflowStrategy.DropNew 1000
 
-source
-|> Source.runForEach mat (printfn "Piu: %A")
-|> Async.Start
+source |> Source.runForEach mat (printfn "Piu: %A") |> Async.Start
 
 let system2 = System.create "cluster-system" (configWithPort 5001)
-let mediator2 = DistributedPubSub.Get(system2).Mediator;
-mediator2.Tell(new Publish(topic, Message "msg 2"));
+let mediator2 = DistributedPubSub.Get(system2).Mediator
+mediator2.Tell(new Publish(topic, Message "msg 2"))
 
-while true do 
-  let msg = Console.ReadLine()
-  mediator.Tell(new Publish(topic, Message msg));
+while true do
+    let msg = Console.ReadLine()
+    mediator.Tell(new Publish(topic, Message msg))

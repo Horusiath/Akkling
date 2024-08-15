@@ -11,7 +11,7 @@ module Tests
 
 open Xunit
 
-let equals (expected: 'a) (value: 'a) = Assert.Equal<'a>(expected, value) 
+let equals (expected: 'a) (value: 'a) = Assert.Equal<'a>(expected, value)
 let success = ()
 
 let (|String|_|) (message: obj) =

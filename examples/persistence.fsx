@@ -8,10 +8,9 @@ open System
 open Akkling
 open Akkling.Persistence
 
-let system = System.create "persisting-sys" <| Configuration.defaultConfig()
+let system = System.create "persisting-sys" <| Configuration.defaultConfig ()
 
-type CounterChanged =
-    { Delta : int }
+type CounterChanged = { Delta: int }
 
 type CounterCommand =
     | Inc
@@ -23,10 +22,12 @@ type CounterMessage =
     | Event of CounterChanged
 
 let counter =
-    spawn system "counter-1" <| propsPersist(fun mailbox ->
+    spawn system "counter-1"
+    <| propsPersist (fun mailbox ->
         let rec loop state =
             actor {
                 let! msg = mailbox.Receive()
+
                 match msg with
                 | Event(changed) -> return! loop (state + changed.Delta)
                 | Command(cmd) ->
@@ -34,13 +35,18 @@ let counter =
                     | GetState ->
                         mailbox.Sender() <! state
                         return! loop state
-                    | Inc -> return Persist (Event { Delta = 1 })
-                    | Dec -> return Persist (Event { Delta = -1 })
+                    | Inc -> return Persist(Event { Delta = 1 })
+                    | Dec -> return Persist(Event { Delta = -1 })
             }
+
         loop 0)
 
 counter <! Command Inc
 counter <! Command Inc
 counter <! Command Dec
-async { let! reply = counter <? Command GetState
-        printfn "Current state of %A: %i" counter reply } |> Async.RunSynchronously
+
+async {
+    let! reply = counter <? Command GetState
+    printfn "Current state of %A: %i" counter reply
+}
+|> Async.RunSynchronously

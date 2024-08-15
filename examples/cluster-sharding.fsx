@@ -19,7 +19,9 @@ open Akkling.Cluster.Sharding
 open Hyperion
 
 let configWithPort port =
-    let config = Configuration.parse ("""
+    let config =
+        Configuration.parse (
+            """
         akka {
             actor {
               provider = "Akka.Cluster.ClusterActorRefProvider, Akka.Cluster"
@@ -34,7 +36,9 @@ let configWithPort port =
             helios.tcp {
               public-hostname = "localhost"
               hostname = "localhost"
-              port = """ + port.ToString() + """
+              port = """
+            + port.ToString()
+            + """
             }
           }
           cluster {
@@ -46,10 +50,13 @@ let configWithPort port =
             snapshot-store.plugin = "akka.persistence.snapshot-store.local"
           }
         }
-        """)
+        """
+        )
+
     config.WithFallback(ClusterSingletonManager.DefaultConfig())
 
-let behavior (ctx : Actor<_>) msg = printfn "%A received %s" (ctx.Self.Path.ToStringWithAddress()) msg |> ignored
+let behavior (ctx: Actor<_>) msg =
+    printfn "%A received %s" (ctx.Self.Path.ToStringWithAddress()) msg |> ignored
 
 // spawn two separate systems with shard regions on each of them
 
@@ -84,9 +91,11 @@ open Akka.Cluster.Sharding
 let printShards shardReg =
     async {
         let! (stats: ShardRegionStats) = (typed shardReg) <? GetShardRegionStats.Instance
+
         for kv in stats.Stats do
             printfn "\tShard '%s' has %d entities on it" kv.Key kv.Value
-    } |> Async.RunSynchronously
+    }
+    |> Async.RunSynchronously
 
 printfn "Shards active on node 'localhost:5000':"
 printShards fac1.ShardRegion

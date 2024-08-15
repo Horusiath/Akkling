@@ -7,20 +7,17 @@ module Typed =
     open System.ComponentModel
 
     [<AbstractClass>]
-    type TypedBuilder<'T when 'T :> IField> () =
+    type TypedBuilder<'T when 'T :> IField>() =
         inherit BaseBuilder<'T>()
 
-        [<CustomOperation("timeout");EditorBrowsable(EditorBrowsableState.Never)>]
-        member inline _.Timeout (state: string list, value: 'Duration) =
-            durationField "timeout" value::state
-        member inline this.timeout (value: 'Duration) =
-            this.Timeout([], value)
-            |> this.Run
+        [<CustomOperation("timeout"); EditorBrowsable(EditorBrowsableState.Never)>]
+        member inline _.Timeout(state: string list, value: 'Duration) = durationField "timeout" value :: state
+
+        member inline this.timeout(value: 'Duration) = this.Timeout([], value) |> this.Run
 
     /// THIS DOES NOT APPLY TO .NET
     [<EditorBrowsable(EditorBrowsableState.Never)>]
-    let typed' = 
+    let typed' =
         { new TypedBuilder<Akka.Actor.Field>() with
-            member _.Run (state: string list) =
-                objExpr "typed" 3 state
-                |> Akka.Actor.Field }
+            member _.Run(state: string list) =
+                objExpr "typed" 3 state |> Akka.Actor.Field }
