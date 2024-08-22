@@ -117,6 +117,7 @@ module Operators =
         with
 
 
+
             static member inline (?<-)(l: FOps<'i, 'mat>, ForwardFunctor, r: FlowShape<'i, 'o>) = l.Via(r)
 
             static member inline (?<-)(l: FOps<'i, 'mat>, ForwardFunctor, r: IGraph<FlowShape<'i, 'o>, NotUsed>) =
@@ -136,8 +137,8 @@ module Operators =
 
             static member inline (?<-)(l: ROps<'o, 'mat>, ReverseFunctor, r: FlowShape<'i, 'o>) = l.Via(r)
             static member inline (?<-)(l: ROps<'o, 'mat>, ReverseFunctor, r: IGraph<FlowShape<'i, 'o>, 'mat>) = l.Via(r)
-            static member inline (?<-)(l: ROps<'i, 'mat>, ReverseFunctor, r: UniformFanInShape<'i, 'o>) = l.Via(r)
-            static member inline (?<-)(l: ROps<'i, 'mat>, ReverseFunctor, r: UniformFanOutShape<'i, 'o>) = l.Via(r)
+            static member inline (?<-)(l: ROps<_, 'mat>, ReverseFunctor, r: UniformFanInShape<_, 'o>) = l.Via(r)
+            static member inline (?<-)(l: ROps<_, 'mat>, ReverseFunctor, r: UniformFanOutShape<_, 'o>) = l.Via(r)
 
     //static member inline (?<-) (l: GraphDsl.ReverseOps<'i,'mat>, ReverseFunctor, r: IGraph<SourceShape<'o>,'mat>) = l.From(r)
     //static member inline (?<-) (l: GraphDsl.ReverseOps<'i,'mat>, ReverseFunctor, r: SourceShape<'o>) = l.From(r)

@@ -282,7 +282,7 @@ module Source =
     /// Non-matching elements are filtered out.
     let inline choose (fn: 't -> 'u option) (source) : Source<'u, 'mat> =
         SourceOperations
-            .Collect(source, Func<_, _>(fn))
+            .Collect(source, null, Func<_, _>(fn))
             .Where(Predicate<_>(Option.isSome))
             .Select(Func<_, _>(Option.get))
 

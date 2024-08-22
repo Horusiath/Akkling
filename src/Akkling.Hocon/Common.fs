@@ -45,6 +45,7 @@ module InternalHocon =
         with
 
 
+
             static member (&.)(DurationToText, x: float<ns>) =
                 fun D1 _ _ _ _ _ _ _ -> string x + " nanoseconds"
 
@@ -92,6 +93,7 @@ module InternalHocon =
 
     type BytesToText = BytesToText
         with
+
 
 
             static member (&.)(BytesToText, x: int<B>) =

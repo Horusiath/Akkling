@@ -67,9 +67,18 @@ module Sink =
     /// A sink that will invoke the given function
     /// to each of the elements as they pass in.
     /// The sink is materialized into an Async computation.
+    [<Obsolete("Use `forEachAsync` instead, it allows you to choose how to run the procedure, by calling some other API returning a Task or using Task.Run. Obsolete since 0.17.0")>]
     let inline forEachParallel (parallelism: int) (fn: 't -> unit) : Sink<'t, Async<Akka.Done>> =
         Sink
             .ForEachParallel(parallelism, Action<_>(fn))
+            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
+
+    /// A sink that will invoke the given function
+    /// to each of the elements as they pass in.
+    /// The sink is materialized into an Async computation.
+    let inline forEachAsync (parallelism: int) (fn: 't -> Threading.Tasks.Task) : Sink<'t, Async<Akka.Done>> =
+        Sink
+            .ForEachAsync(parallelism, Func<_, _>(fn))
             .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// A sink that will invoke the given folder function for every received element,
@@ -107,7 +116,7 @@ module Sink =
     /// message will be sent to the destination actor.
     let inline toActorRef (completeMsg: 't) (ref: IActorRef<'t>) : Sink<'t, unit> =
         Sink
-            .ActorRef(untyped ref, completeMsg)
+            .ActorRef(untyped ref, completeMsg, null)
             .MapMaterializedValue(Func<_, _>(Microsoft.FSharp.Core.Operators.ignore))
 
     /// Sends the elements of the stream to the given actor ref that sends back back-pressure signal.

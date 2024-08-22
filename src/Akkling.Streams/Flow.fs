@@ -133,7 +133,7 @@ module Flow =
     /// Non-matching elements are filtered out.
     let inline choose (fn: 'u -> 'w option) (flow) : Flow<'t, 'w, 'mat> =
         FlowOperations
-            .Collect(flow, Func<_, _>(fn))
+            .Collect(flow, null, Func<_, _>(fn))
             .Where(Predicate<_>(Option.isSome))
             .Select(Func<_, _>(Option.get))
 
