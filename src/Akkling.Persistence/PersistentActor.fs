@@ -220,7 +220,7 @@ and TypedPersistentContext<'Message, 'Actor when 'Actor :> FunPersistentActor<'M
             context.System.Scheduler.ScheduleTellOnceCancelable(delay, untyped target, message, self)
 
         member _.ScheduleRepeatedly (delay: TimeSpan) (interval: TimeSpan) target message =
-            context.System.Scheduler.ScheduleTellOnceCancelable(delay, untyped target, message, self)
+            context.System.Scheduler.ScheduleTellRepeatedlyCancelable(delay, interval, untyped target, message, self)
 
         member _.Incarnation() = actor :> ActorBase
         member _.Stop(ref: IActorRef<'T>) = context.Stop(untyped ref)
