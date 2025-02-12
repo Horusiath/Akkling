@@ -26,17 +26,13 @@ module Source =
 
     /// Creates a source from an stream created by the given function.
     let inline ofStream (streamFn: unit -> Stream) : Source<ByteString, Async<IOResult>> =
-        StreamConverters
-            .FromInputStream(Func<_>(streamFn))
-            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
+        StreamConverters.FromInputStream(Func<_>(streamFn)).MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// Creates a source from an stream created by the given function.
     /// Emitted elements are chunk sized ByteString elements,
     /// except the final element, which will be up to chunkSize in size.
     let inline ofStreamChunked (chunkSize: int) (streamFn: unit -> Stream) : Source<ByteString, Async<IOResult>> =
-        StreamConverters
-            .FromInputStream(Func<_>(streamFn), chunkSize)
-            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
+        StreamConverters.FromInputStream(Func<_>(streamFn), chunkSize).MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// Creates a source which when materialized will return an stream which it is possible
     /// to write the ByteStrings to the stream this Source is attached to.
@@ -51,17 +47,13 @@ module Source =
 
     /// Creates a Source from a Files contents.
     let inline ofFile (filePath: string) : Source<ByteString, Async<IOResult>> =
-        FileIO
-            .FromFile(FileInfo filePath)
-            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
+        FileIO.FromFile(FileInfo filePath).MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// Creates a Source from a Files contents.
     /// Emitted elements are chunkSize sized ByteString elements,
     /// except the final element, which will be up to chunkSize in size.
     let inline ofFileChunked (chunkSize: int) (filePath: string) : Source<ByteString, Async<IOResult>> =
-        FileIO
-            .FromFile(FileInfo filePath, chunkSize)
-            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
+        FileIO.FromFile(FileInfo filePath, chunkSize).MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// Construct a transformation starting with given publisher. The transformation steps
     /// are executed by a series of processor instances
@@ -157,9 +149,7 @@ module Source =
 
     /// Simpler unfold, for infinite sequences.
     let inline infiniteUnfold (fn: 's -> struct ('s * 'e)) (state: 's) : Source<'e, unit> =
-        Source
-            .UnfoldInfinite(state, Func<_, _>(fn))
-            .MapMaterializedValue(Func<_, _>(ignore))
+        Source.UnfoldInfinite(state, Func<_, _>(fn)).MapMaterializedValue(Func<_, _>(ignore))
 
     /// A source with no elements, i.e. an empty stream that is completed immediately for every connected sink.
     let inline empty<'t> : Source<'t, unit> =
@@ -853,9 +843,7 @@ module Source =
     /// A local source which materializes a sink ref which can be used by other streams (including remote ones),
     /// to consume data from this local stream, as if they were attached in the spot of the local Sink directly.
     let ref<'t> : Source<'t, Async<ISinkRef<'t>>> =
-        StreamRefs
-            .SinkRef()
-            .MapMaterializedValue(Func<_, _>(Async.AwaitTask<ISinkRef<'t>>))
+        StreamRefs.SinkRef().MapMaterializedValue(Func<_, _>(Async.AwaitTask<ISinkRef<'t>>))
 
     let inline ofRef (sourceRef: ISourceRef<'t>) : Source<'t, unit> =
         sourceRef.Source.MapMaterializedValue(Func<_, _>(Microsoft.FSharp.Core.Operators.ignore))

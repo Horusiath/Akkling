@@ -69,17 +69,13 @@ module Sink =
     /// The sink is materialized into an Async computation.
     [<Obsolete("Use `forEachAsync` instead, it allows you to choose how to run the procedure, by calling some other API returning a Task or using Task.Run. Obsolete since 0.17.0")>]
     let inline forEachParallel (parallelism: int) (fn: 't -> unit) : Sink<'t, Async<Akka.Done>> =
-        Sink
-            .ForEachParallel(parallelism, Action<_>(fn))
-            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
+        Sink.ForEachParallel(parallelism, Action<_>(fn)).MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// A sink that will invoke the given function
     /// to each of the elements as they pass in.
     /// The sink is materialized into an Async computation.
     let inline forEachAsync (parallelism: int) (fn: 't -> Threading.Tasks.Task) : Sink<'t, Async<Akka.Done>> =
-        Sink
-            .ForEachAsync(parallelism, Func<_, _>(fn))
-            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
+        Sink.ForEachAsync(parallelism, Func<_, _>(fn)).MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// A sink that will invoke the given folder function for every received element,
     /// giving it its previous output (or the given zero value) and the element as input.
@@ -87,9 +83,7 @@ module Sink =
     /// function evaluation when the input stream ends, or completed with the streams exception
     /// if there is a failure signaled in the stream.
     let inline fold (zero: 'state) (folder: 'state -> 'elem -> 'state) : Sink<'elem, Async<'state>> =
-        Sink
-            .Aggregate(zero, Func<_, _, _>(folder))
-            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
+        Sink.Aggregate(zero, Func<_, _, _>(folder)).MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// A sink that will invoke the given folder for every received element, giving it its previous
     /// output (from the second element) and the element as input.
@@ -97,9 +91,7 @@ module Sink =
     /// function evaluation when the input stream ends, or completed with `Failure`
     /// if there is a failure signaled in the stream.
     let inline reduce (folder: 't -> 't -> 't) : Sink<'t, Async<'t>> =
-        Sink
-            .Sum(Func<_, _, _>(folder))
-            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
+        Sink.Sum(Func<_, _, _>(folder)).MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// A sink that when the flow is completed, either through a failure or normal
     /// completion, apply the provided function with None or Some exn.
@@ -162,29 +154,21 @@ module Sink =
     /// Creates a Sink which writes incoming ByteString elements to the given file and either overwrites
     /// or appends to it.
     let inline toFile (filePath: string) : Sink<ByteString, Async<IOResult>> =
-        FileIO
-            .ToFile(FileInfo filePath)
-            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
+        FileIO.ToFile(FileInfo filePath).MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// Creates a Sink which writes incoming ByteString elements to the given file and either overwrites
     /// or appends to it.
     let inline toFileWithMode (fileMode: FileMode) (filePath: string) : Sink<ByteString, Async<IOResult>> =
-        FileIO
-            .ToFile(FileInfo filePath, Nullable fileMode)
-            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
+        FileIO.ToFile(FileInfo filePath, Nullable fileMode).MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// Creates a Sink which writes incoming ByteStrings to a stream created by the given function.
     let inline ofStream (streamFn: unit -> Stream) : Sink<ByteString, Async<IOResult>> =
-        StreamConverters
-            .FromOutputStream(Func<_>(streamFn))
-            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
+        StreamConverters.FromOutputStream(Func<_>(streamFn)).MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// Creates a Sink which writes incoming ByteStrings to a stream created by the given function.
     /// Stream will be flushed whenever a byte array is written.
     let inline ofStreamFlushed (streamFn: unit -> Stream) : Sink<ByteString, Async<IOResult>> =
-        StreamConverters
-            .FromOutputStream(Func<_>(streamFn), true)
-            .MapMaterializedValue(Func<_, _>(Async.AwaitTask))
+        StreamConverters.FromOutputStream(Func<_>(streamFn), true).MapMaterializedValue(Func<_, _>(Async.AwaitTask))
 
     /// Creates a Sink which when materialized will return an stream which it is possible
     /// to read the values produced by the stream this Sink is attached to.
@@ -238,9 +222,7 @@ module Sink =
     /// A local sink which materializes a source ref which can be used by other streams (including remote ones),
     /// to consume data from this local stream, as if they were attached in the spot of the local Sink directly.
     let ref<'t> : Sink<'t, Async<ISourceRef<'t>>> =
-        StreamRefs
-            .SourceRef()
-            .MapMaterializedValue(Func<_, _>(Async.AwaitTask<ISourceRef<'t>>))
+        StreamRefs.SourceRef().MapMaterializedValue(Func<_, _>(Async.AwaitTask<ISourceRef<'t>>))
 
     let inline ofRef (sourceRef: ISinkRef<'t>) : Sink<'t, unit> =
         sourceRef.Sink.MapMaterializedValue(Func<_, _>(Microsoft.FSharp.Core.Operators.ignore))

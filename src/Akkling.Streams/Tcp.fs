@@ -39,6 +39,4 @@ module Tcp =
         (port: int)
         (tcp: TcpExt)
         : Flow<ByteString, ByteString, Async<Tcp.OutgoingConnection>> =
-        tcp
-            .OutgoingConnection(host, port)
-            .MapMaterializedValue(Func<_, _> Async.AwaitTask)
+        tcp.OutgoingConnection(host, port).MapMaterializedValue(Func<_, _> Async.AwaitTask)
