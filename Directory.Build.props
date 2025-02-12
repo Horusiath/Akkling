@@ -1,6 +1,6 @@
 ﻿<Project>
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+        <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
         <Authors>Bartosz Sypytkowski and contributors</Authors>
         <Copyright>Bartosz Sypytkowski and contributors</Copyright>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
