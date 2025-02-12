@@ -1,3 +1,8 @@
+## New in 0.17 (Released 2025/02/12)
+* Applied pull request from @anpin (Source.log fails after migration to Akka 1.5.37)
+* Updated .NET SDK from 6.0 to 8.0 due to end of support for version 6.
+* Upgraded Akka.NET dependencies to 1.5.37
+
 ## New in 0.16 (Released 2024/08/14)
 * Applied pull request from @sbacquet (Fix the context not being valid when an actor receives a message sent from an async/task block)
 * Upgraded Akka.NET dependencies to 1.5.27
