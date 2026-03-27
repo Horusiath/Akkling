@@ -6,11 +6,11 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-namespace Akkling.Streams.TestKit
+namespace Akkling.Streams.TestKit.Xunit2
 
 open System
 open Reactive.Streams
-open Akkling.TestKit
+open Akkling.TestKit.Xunit2
 open Akka.Streams.TestKit
 
 [<AutoOpen>]

@@ -8,8 +8,7 @@
 module Akkling.Tests.AsyncSupport
 
 open Akkling
-open Akkling.TestKit
-open Akka.Actor
+open Akkling.TestKit.Xunit2
 open System
 open Xunit
 open Akkling.Persistence

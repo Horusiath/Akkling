@@ -9,10 +9,9 @@ module Akkling.Tests.PersistenceApi
 
 open Akkling
 open Akkling.Persistence
-open Akkling.TestKit
+open Akkling.TestKit.Xunit2
 open Akka.Actor
 open System
-open System.Threading
 open Xunit
 
 type Request =

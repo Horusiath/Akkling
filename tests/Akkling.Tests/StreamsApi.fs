@@ -11,13 +11,10 @@ module Akkling.Tests.StreamsApi
 open Akkling
 open Akkling.Streams
 open Akkling.Streams.Operators
-open Akkling.TestKit
-open Akka.Actor
-open System
+open Akkling.TestKit.Xunit2
 open Xunit
 open Akka.Streams.Dsl
 open Akka.Streams
-//open Akka.Streams.TestKit
 
 let config () =
     Configuration.parse "akka.logLevel = DEBUG"
@@ -90,9 +87,8 @@ let ``Graph DSL operators should work`` () =
         max |> equals 3
 
 open Akka.Streams.TestKit
-open Akkling.Streams
-open Akkling.Streams.TestKit
-open Akkling.Streams.TestKit.ManualSubscriberProbe
+open Akkling.Streams.TestKit.Xunit2
+open Akkling.Streams.TestKit.Xunit2.ManualSubscriberProbe
 
 [<Fact>]
 let ``A deduplicate must remove consecutive duplicates`` () =

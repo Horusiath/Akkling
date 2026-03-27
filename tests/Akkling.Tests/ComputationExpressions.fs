@@ -9,7 +9,7 @@
 module Akkling.Tests.ComputationExpression
 
 open Akkling
-open Akkling.TestKit
+open Akkling.TestKit.Xunit2
 open Akkling.Extensions
 open System
 open System.Threading.Tasks

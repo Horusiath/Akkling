@@ -6,7 +6,7 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-module Akkling.TestKit
+module Akkling.TestKit.Xunit2
 
 open System
 open Akkling
