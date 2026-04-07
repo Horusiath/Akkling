@@ -3,6 +3,7 @@
   <PropertyGroup>
     <Description>Tests for F# wrapper library for Akka.NET.</Description>
     <PackageTags>akka.net fsharp akkling testing</PackageTags>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
     <None Include="app.config">
@@ -22,20 +23,16 @@
     <ProjectReference Include="..\..\src\Akkling.DistributedData\Akkling.DistributedData.fsproj" />
     <ProjectReference Include="..\..\src\Akkling.Hocon\Akkling.Hocon.fsproj" />
     <ProjectReference Include="..\..\src\Akkling.Persistence\Akkling.Persistence.fsproj" />
-    <ProjectReference Include="..\..\src\Akkling.Streams.TestKit.Xunit2\Akkling.Streams.TestKit.Xunit2.fsproj" />
+    <ProjectReference Include="..\..\src\Akkling.Streams.TestKit.Xunit\Akkling.Streams.TestKit.Xunit.fsproj" />
     <ProjectReference Include="..\..\src\Akkling.Streams\Akkling.Streams.fsproj" />
-    <ProjectReference Include="..\..\src\Akkling.TestKit.Xunit2\Akkling.TestKit.Xunit2.fsproj" />
+    <ProjectReference Include="..\..\src\Akkling.TestKit.Xunit\Akkling.TestKit.Xunit.fsproj" />
     <ProjectReference Include="..\..\src\Akkling\Akkling.fsproj" />
-    <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FsCheck.Xunit" Version="3.1.0" />
+    <PackageReference Include="FsCheck.Xunit.v3" Version="3.3.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
-    <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageReference Update="FSharp.Core" Version="10.1.201" />
   </ItemGroup>
 </Project>
