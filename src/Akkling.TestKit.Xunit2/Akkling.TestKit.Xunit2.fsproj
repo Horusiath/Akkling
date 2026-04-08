@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>F# wrapper library for Akka.NET TestKit library using FsCheck and xUnit.</Description>
+    <PackageTags>akka.net fsharp akkling testing fscheck</PackageTags>
+    <RootNamespace>Akkling.TestKit</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="TestKit.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Akkling\Akkling.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Akka.TestKit.Xunit2" Version="1.5.63" />
+    <PackageReference Update="FSharp.Core" Version="10.1.201" />
+  </ItemGroup>
+</Project>

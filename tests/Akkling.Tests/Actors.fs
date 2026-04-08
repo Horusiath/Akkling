@@ -9,10 +9,9 @@
 module Akkling.Tests.Actors
 
 open Akkling
-open Akkling.TestKit
+open Akkling.TestKit.Xunit2
 open Akkling.Extensions
 open Akka.Actor
-open System
 open Xunit
 
 [<Fact>]

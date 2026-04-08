@@ -3,16 +3,17 @@
   <PropertyGroup>
     <Description>F# wrapper library for Akka.NET Streams TestKit library using FsCheck and xUnit.</Description>
     <PackageTags>akka.net fsharp akkling reactive streams testing fscheck</PackageTags>
+    <RootNamespace>Akkling.Streams.TestKit</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Library.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akkling.TestKit\Akkling.TestKit.fsproj" />
+    <ProjectReference Include="..\Akkling.TestKit.Xunit\Akkling.TestKit.Xunit.fsproj" />
     <ProjectReference Include="..\Akkling\Akkling.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Akka.Streams.TestKit" Version="1.5.37" />
-    <PackageReference Update="FSharp.Core" Version="8.0.400" />
+    <PackageReference Include="Akka.Streams.TestKit" Version="1.5.63" />
+    <PackageReference Update="FSharp.Core" Version="10.1.201" />
   </ItemGroup>
 </Project>

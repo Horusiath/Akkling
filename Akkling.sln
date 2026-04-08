@@ -1,4 +1,4 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30611.23
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -32,7 +32,7 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Akkling.Streams", "src\Akkl
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Akkling.Persistence", "src\Akkling.Persistence\Akkling.Persistence.fsproj", "{4DA81EFB-5C88-48EB-9E6A-3092B5C741B7}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Akkling.TestKit", "src\Akkling.TestKit\Akkling.TestKit.fsproj", "{9197ADEE-4A2F-4D34-8369-5C28A075C381}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Akkling.TestKit.Xunit2", "src\Akkling.TestKit.Xunit2\Akkling.TestKit.Xunit2.fsproj", "{9197ADEE-4A2F-4D34-8369-5C28A075C381}"
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Akkling.DistributedData", "src\Akkling.DistributedData\Akkling.DistributedData.fsproj", "{6311E40F-824E-4634-8AB1-1B4DB5FD9379}"
 EndProject
@@ -40,9 +40,13 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Akkling.Cluster.Sharding", 
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Akkling.Tests", "tests\Akkling.Tests\Akkling.Tests.fsproj", "{574F1D50-44F6-453C-B36E-F9067EF5A938}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Akkling.Streams.TestKit", "src\Akkling.Streams.TestKit\Akkling.Streams.TestKit.fsproj", "{5FCF0FB2-3C53-4CC5-8383-89888422D40C}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Akkling.Streams.TestKit.Xunit2", "src\Akkling.Streams.TestKit.Xunit2\Akkling.Streams.TestKit.Xunit2.fsproj", "{5FCF0FB2-3C53-4CC5-8383-89888422D40C}"
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Akkling.Hocon", "src\Akkling.Hocon\Akkling.Hocon.fsproj", "{4E04FB08-075D-4E83-8644-B0A5382E78EF}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Akkling.TestKit.Xunit", "src\Akkling.TestKit.Xunit\Akkling.TestKit.Xunit.fsproj", "{585780C7-9F42-40C0-AF20-DD655B5C760B}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Akkling.Streams.TestKit.Xunit", "src\Akkling.Streams.TestKit.Xunit\Akkling.Streams.TestKit.Xunit.fsproj", "{DC5A94FB-F93E-4EED-B45D-252AC8785D73}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -86,6 +90,14 @@ Global
 		{4E04FB08-075D-4E83-8644-B0A5382E78EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E04FB08-075D-4E83-8644-B0A5382E78EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E04FB08-075D-4E83-8644-B0A5382E78EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{585780C7-9F42-40C0-AF20-DD655B5C760B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{585780C7-9F42-40C0-AF20-DD655B5C760B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{585780C7-9F42-40C0-AF20-DD655B5C760B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{585780C7-9F42-40C0-AF20-DD655B5C760B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC5A94FB-F93E-4EED-B45D-252AC8785D73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC5A94FB-F93E-4EED-B45D-252AC8785D73}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC5A94FB-F93E-4EED-B45D-252AC8785D73}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC5A94FB-F93E-4EED-B45D-252AC8785D73}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

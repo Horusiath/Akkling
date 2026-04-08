@@ -10,11 +10,10 @@ module Akkling.Tests.Api
 open Akka.Remote
 open Akkling
 open Akkling.Hocon
-open Akkling.TestKit
+open Akkling.TestKit.Xunit2
 open Akka.Actor
 open System
 open Xunit
-open Akka.Routing
 open Akka.Routing
 
 type TraceableMessage<'a> = { Trace: TraceMetadata; Message: 'a }
