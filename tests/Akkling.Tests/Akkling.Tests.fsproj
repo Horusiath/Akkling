@@ -4,6 +4,8 @@
     <Description>Tests for F# wrapper library for Akka.NET.</Description>
     <PackageTags>akka.net fsharp akkling testing</PackageTags>
     <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks />
   </PropertyGroup>
   <ItemGroup>
     <None Include="app.config">
