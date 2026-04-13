@@ -1,8 +1,8 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="Utils.fs" company="Akka.NET Project">
-//     Copyright (C) 2009-2024 Lightbend Inc. <https://www.lightbend.com>
-//     Copyright (C) 2013-2024 Akka.NET project <https://github.com/akkadotnet/akka.net>
-//     Copyright (C) 2015-2024 Bartosz Sypytkowski and contributors <https://github.com/Horusiath/Akkling>
+//     Copyright (C) 2009-2026 Lightbend Inc. <https://www.lightbend.com>
+//     Copyright (C) 2013-2026 Akka.NET project <https://github.com/akkadotnet/akka.net>
+//     Copyright (C) 2015-2026 Bartosz Sypytkowski, Vagif Abilov and contributors <https://github.com/Horusiath/Akkling>
 // </copyright>
 //-----------------------------------------------------------------------
 
