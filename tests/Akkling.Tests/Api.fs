@@ -1,8 +1,8 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="FsApi.fs" company="Akka.NET Project">
-//     Copyright (C) 2009-2024 Lightbend Inc. <https://www.lightbend.com>
-//     Copyright (C) 2013-2024 Akka.NET project <https://github.com/akkadotnet/akka.net>
-//     Copyright (C) 2013-2024 Bartosz Sypytkowski and contributors <https://github.com/Horusiath/Akkling>
+//     Copyright (C) 2009-2026 Lightbend Inc. <https://www.lightbend.com>
+//     Copyright (C) 2013-2026 Akka.NET project <https://github.com/akkadotnet/akka.net>
+//     Copyright (C) 2013-2026 Bartosz Sypytkowski, Vagif Abilov and contributors <https://github.com/Horusiath/Akkling>
 // </copyright>
 //-----------------------------------------------------------------------
 module Akkling.Tests.Api
@@ -10,7 +10,7 @@ module Akkling.Tests.Api
 open Akka.Remote
 open Akkling
 open Akkling.Hocon
-open Akkling.TestKit.Xunit2
+open Akkling.TestKit.Xunit
 open Akka.Actor
 open System
 open Xunit
